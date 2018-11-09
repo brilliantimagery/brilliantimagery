@@ -41,9 +41,9 @@ def test_default_shape():
     assert img.default_shape() == [5472, 3648]
 
 
-def test_get_crops():
+def test_get_xmp_attribute():
     img = DNG('dng_test_input.dng')
-    assert img.get_crops() == [0.0, 0.17051, 1.0, 0.92051]
+    assert img.get_xmp_attribute(b'crs:Exposure2012') == 1
 
 
 def test_is_reference_frame():

@@ -68,8 +68,8 @@ class DNG:
         def __repr__(self):
             return f'{self.tag}, {self.type}, {self.count}, {self.value_offset}'
 
-    _buffer_size = 50000000
-    _reference_frame_stars = 3
+    _BUFFER_SIZE = 50000000
+    _REFERENCE_FRAME_STARS = 3
 
     def __init__(self, path):
         """
@@ -85,7 +85,7 @@ class DNG:
         self._xmp = defaultdict(dict)
         self._updated = False
         self._xmp_length_changed = False
-        with open(self.path, 'rb', buffering=DNG._buffer_size) as f:
+        with open(self.path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
             self._byte_order = f.read(2)
             if self._byte_order == b'II':
                 self._byte_order = '<'
@@ -277,7 +277,7 @@ class DNG:
 
         :return: None
         """
-        with open(self.path, 'rb', buffering=DNG._buffer_size) as f:
+        with open(self.path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
             f.seek(self._zeroth_ifd)
             self._get_ifd_fields(f)
 
@@ -294,7 +294,7 @@ class DNG:
         self._used_fields['section_bytes'] = {}
         self._used_fields['rendered_section_bounding_box'] = []
         self._used_fields['rendered_rectangle'] = rectangle
-        with open(self.path, 'rb', buffering=DNG._buffer_size) as f:
+        with open(self.path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
             if 'tile_byte_counts' in self._used_fields:
                 section_byte_counts = self._used_fields['tile_byte_counts']
                 section_offsets = self._used_fields['tile_offsets']
@@ -418,9 +418,16 @@ class DNG:
         second is the height or length.
         """
         shape = self.default_shape()
-        crops = self.get_crops()
+        # crops = self.get_crops()
+        if not self._xmp:
+            self.get_xmp()
 
-        return [round(shape[0] * (crops[2] - crops[0])), round(shape[1] * (crops[3] - crops[1]))]
+        left = self._xmp[b'crs:CropLeft'].get('val', 0)
+        top = self._xmp[b'crs:CropTop'].get('val', 0)
+        right = self._xmp[b'crs:CropRight'].get('val', 1)
+        bottom = self._xmp[b'crs:CropBottom'].get('val', 1)
+
+        return [round(shape[0] * (right - left)), round(shape[1] * (bottom - top))]
 
     def default_shape(self) -> List[int]:
         """
@@ -435,27 +442,33 @@ class DNG:
             self._get_fields_required_to_render('RAW')
         return [int(a) for a in self._used_fields['default_crop_size']]
 
-    def get_crops(self) -> List[float]:
-        """
-        Get the percent crop of the 4 sides of the image.
+    # def get_crops(self) -> List[float]:
+    #     """
+    #     Get the percent crop of the 4 sides of the image.
+    #
+    #     Compared to the top left corner of the image, this represents
+    #     how far down or across each edge is cropped as a percent of
+    #     the dimensions specified by DNG.rendered_shape()
+    #
+    #     :return: A list of the crops as floats where:
+    #     list[0] is the left crop,
+    #     list[1] is the top crop,
+    #     list[2] is the right crop,
+    #     list[3] is the bottom crop
+    #     """
+    #     if not self._xmp:
+    #         self.get_xmp()
+    #
+    #     return [self._xmp[b'crs:CropLeft'].get('val', 0),
+    #             self._xmp[b'crs:CropTop'].get('val', 0),
+    #             self._xmp[b'crs:CropRight'].get('val', 1),
+    #             self._xmp[b'crs:CropBottom'].get('val', 1)]
 
-        Compared to the top left corner of the image, this represents
-        how far down or across each edge is cropped as a percent of
-        the dimensions specified by DNG.rendered_shape()
-
-        :return: A list of the crops as floats where:
-        list[0] is the left crop,
-        list[1] is the top crop,
-        list[2] is the right crop,
-        list[3] is the bottom crop
-        """
+    def get_xmp_attribute(self, xmp_attribute):
         if not self._xmp:
             self.get_xmp()
 
-        return [self._xmp[b'crs:CropLeft'].get('val', 0),
-                self._xmp[b'crs:CropTop'].get('val', 0),
-                self._xmp[b'crs:CropRight'].get('val', 1),
-                self._xmp[b'crs:CropBottom'].get('val', 1)]
+        return self._xmp[xmp_attribute].get('val')
 
     def save(self) -> None:
         """
@@ -473,7 +486,7 @@ class DNG:
                             last_item = field.value_offset
 
                 if last_item == self._ifds[self._xmp_ifd_offset][700].value_offset:
-                    with open(self.path, 'r+b', DNG._buffer_size) as f:
+                    with open(self.path, 'r+b', DNG._BUFFER_SIZE) as f:
                         f.seek(self._ifds[self._xmp_ifd_offset][700].value_offset)
                         f.write(self._ifds[self._xmp_ifd_offset][700].values[0])
                         if f.tell() % 1:
@@ -481,7 +494,7 @@ class DNG:
                 else:
                     self._write_dng()
             else:
-                with open(self.path, 'wb', DNG._buffer_size) as f:
+                with open(self.path, 'wb', DNG._BUFFER_SIZE) as f:
                     f.seek(self._ifds[self._xmp_ifd_offset][700].value_offset)
                     f.write(self._ifds[self._xmp_ifd_offset][700].values[0])
 
@@ -494,8 +507,8 @@ class DNG:
         first_ifd_location = 8
         with open(self.path + '.temp', 'w+b') as wf:
             pass
-        with open(self.path + '.temp', 'r+b', DNG._buffer_size) as wf:
-            with open(self.path, 'rb', DNG._buffer_size) as rf:
+        with open(self.path + '.temp', 'r+b', DNG._BUFFER_SIZE) as wf:
+            with open(self.path, 'rb', DNG._BUFFER_SIZE) as rf:
                 if self._byte_order == '>':
                     wf.write(bytes('MM', 'utf-8'))
                 else:
@@ -667,4 +680,4 @@ class DNG:
         if not self._xmp:
             self.get_xmp()
 
-        return int(self._xmp[b'xmp:Rating'].get('val')) == DNG._reference_frame_stars
+        return int(self._xmp[b'xmp:Rating'].get('val', 0)) == DNG._REFERENCE_FRAME_STARS

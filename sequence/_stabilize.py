@@ -28,19 +28,28 @@ class Stabilizer:
         example_image = next(iter(self.images.values()))
         min_x, min_y, max_x, max_y = sutil.misalignment_bounding_box(self.images.values())
         shape = example_image.rendered_shape()
-        crops = example_image.get_crops()
-        if (max_x < crops[0] * shape[0] and max_y < crops[1] * shape[1] and
-                -min_x < (1 - crops[2]) * shape[0] and -min_y < (1 - crops[3]) * shape[1]):
+        left = example_image.get_xmp_attribute('CropLeft')
+        top = example_image.get_xmp_attribute('CropTop')
+        right = example_image.get_xmp_attribute('CropRight')
+        bottom = example_image.get_xmp_attribute('CropBottom')
+        if (max_x < left * shape[0] and max_y < top * shape[1] and
+                -min_x < (1 - right) * shape[0] and -min_y < (1 - bottom) * shape[1]):
             for image in self.images.values():
-                left = crops[0] + image.misalignment.x / shape[0]
-                top = crops[1] + image.misalignment.y / shape[1]
-                right = crops[2] + image.misalignment.x / shape[0]
-                bottom = crops[3] + image.misalignment.y / shape[1]
-                image = sutil.update_xmp_attributes(image, left, top, right, bottom)
+                left = image.get_xmp_attribute('CropLeft') + image.misalignment.x / shape[0]
+                image.update_xmp_attribute('CropLeft', left)
+                top = image.get_xmp_attribute('CropTop') + image.misalignment.y / shape[1]
+                image.update_xmp_attribute('CropTop', top)
+                right = image.get_xmp_attribute('CropRight') + image.misalignment.x / shape[0]
+                image.update_xmp_attribute('CropRight', right)
+                bottom = image.get_xmp_attribute('CropBottom') + image.misalignment.y / shape[1]
+                image.update_xmp_attribute('CropBottom', bottom)
         else:
             for image in self.images.values():
-                left = crops[0] + (max_x - min_x + image.misalignment.x) / shape[0]
-                top = crops[1] + (max_y - min_y + image.misalignment.y) / shape[1]
-                right = crops[2] + (-max_x + min_x + image.misalignment.x) / shape[0]
-                bottom = crops[3] + (-max_y + min_y + image.misalignment.y) / shape[1]
-                image = sutil.update_xmp_attributes(image, left, top, right, bottom)
+                left = image.get_xmp_attribute('CropLeft') + (max_x - min_x + image.misalignment.x) / shape[0]
+                image.update_xmp_attribute('CropLeft', left)
+                top = image.get_xmp_attribute('CropTop') + (max_y - min_y + image.misalignment.y) / shape[1]
+                image.update_xmp_attribute('CropTop', top)
+                right = image.get_xmp_attribute('CropRight') + (-max_x + min_x + image.misalignment.x) / shape[0]
+                image.update_xmp_attribute('CropRight', right)
+                bottom = image.get_xmp_attribute('CropBottom') + (-max_y + min_y + image.misalignment.y) / shape[1]
+                image.update_xmp_attribute('CropBottom', bottom)

@@ -25,14 +25,20 @@ class MetaImage:
     def default_shape(self):
         return self.image.default_shape()
 
-    def get_crops(self):
-        return self.image.get_crops()
+    # def get_crops(self):
+    #     return self.image.get_crops()
 
-    def update_xmp_attribute(self, xmp_property, value):
-        self.image.update_xmp_attribute(META_TO_DNG[xmp_property], value)
+    def get_xmp_attribute(self, xmp_attribute):
+        return self.image.get_xmp_attribute(META_TO_DNG[xmp_attribute])
+
+    def update_xmp_attribute(self, xmp_attribute, value):
+        self.image.update_xmp_attribute(META_TO_DNG[xmp_attribute], value)
 
     def store_xmp_field(self):
         self.image.store_xmp_field()
 
     def save(self):
         self.image.save()
+
+    def is_reference_frame(self):
+        return self.image.is_reference_frame()

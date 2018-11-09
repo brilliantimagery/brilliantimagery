@@ -2,6 +2,7 @@ from os import listdir
 from os.path import isfile, join
 
 from ._stabilize import Stabilizer
+from ._ramp import Ramper
 from meta_image import MetaImage
 
 
@@ -16,10 +17,10 @@ class Sequence:
             file = MetaImage(path)
             self._images[file.get_capture_datetime()] = file
 
-    def set_timelapse_ramps(self, rectangle):
-        pass
+    def ramp(self, rectangle):
+        ramper = Ramper(self._images, rectangle)
 
-    def stabilize_sequence(self, rectangle, max_pix_of_misalignment=5, keep_brightness=False):
+    def stabilize(self, rectangle, max_pix_of_misalignment=5, keep_brightness=False):
         stabilizer = Stabilizer(self._images, rectangle, max_pix_of_misalignment)
         stabilizer.find_misalignments(keep_brightness)
         stabilizer.update_xmp_attributes()
@@ -28,10 +29,6 @@ class Sequence:
     def store_xmp_field(self):
         for image in self._images.values():
             image.store_xmp_field()
-
-    def save_files(self):
-        for image in self._images.values():
-            image.save()
 
     def save(self):
         for image in self._images.values():
