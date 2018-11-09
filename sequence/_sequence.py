@@ -22,12 +22,12 @@ class Sequence:
     def stabilize_sequence(self, rectangle, max_pix_of_misalignment=5, keep_brightness=False):
         stabilizer = Stabilizer(self._images, rectangle, max_pix_of_misalignment)
         stabilizer.find_misalignments(keep_brightness)
-        stabilizer.update_xmp_properties()
+        stabilizer.update_xmp_attributes()
         self._images = stabilizer.images
 
-    def store_xmp_fields(self):
+    def store_xmp_field(self):
         for image in self._images.values():
-            image.store_xmp_fields()
+            image.store_xmp_field()
 
     def save_files(self):
         for image in self._images.values():
@@ -35,5 +35,5 @@ class Sequence:
 
     def save(self):
         for image in self._images.values():
-            image.store_xmp_fields()
+            image.store_xmp_field()
             image.save()

@@ -1,15 +1,16 @@
 import struct
+from typing import Optional, List
 
 
-def get_xmp_property_value(xmp_buffer, xmp_property) -> str:
-    value_start = xmp_buffer.find(xmp_property) + len(xmp_property) + 2
-    if value_start < len(xmp_property) + 2:
+def get_xmp_attribute_value(xmp_buffer: bytes, xmp_attribute: bytes) -> Optional[str]:
+    value_start = xmp_buffer.find(xmp_attribute) + len(xmp_attribute) + 2
+    if value_start < len(xmp_attribute) + 2:
         return None
     value_end = xmp_buffer.find(b'"', value_start)
     return xmp_buffer[value_start:value_end].decode('utf-8')
 
 
-def renderd_area_bounding_box(bounding_box, x0, y0, x1, y1):
+def renderd_area_bounding_box(bounding_box: List, x0, y0, x1, y1) -> List:
     """
     Finds the smallest bounding box.
 
@@ -41,7 +42,7 @@ def renderd_area_bounding_box(bounding_box, x0, y0, x1, y1):
     return bounding_box
 
 
-def convert_rectangle_percent_to_pixels(ifd, rectangle, left_crop, top_crop, right_crop, bottom_crop):
+def convert_rectangle_percent_to_pixels(ifd, rectangle, left_crop, top_crop, right_crop, bottom_crop) -> List[int]:
     """
     Reformats the rectangle into absolute pixel terms.
 
@@ -84,27 +85,8 @@ def convert_rectangle_percent_to_pixels(ifd, rectangle, left_crop, top_crop, rig
 
     return rectangle
 
-    # top = ifd['default_crop_origin'][1] + __round_to_cfa_pattern(int(rectangle[1] * ifd['default_crop_size'][1]),
-    #                                                              ifd['cfa_repeat_pattern_dim'][0])
-    # left = ifd['default_crop_origin'][0] + __round_to_cfa_pattern(int(rectangle[0] * ifd['default_crop_size'][0]),
-    #                                                               ifd['cfa_repeat_pattern_dim'][1])
-    # bottom = ifd['default_crop_origin'][1] + ifd['default_crop_size'][1] \
-    #     - int((1-rectangle[3]) * ifd['default_crop_size'][1])
-    # right = ifd['default_crop_origin'][0] + ifd['default_crop_size'][0] \
-    #     - int((1-rectangle[2]) * ifd['default_crop_size'][0])
 
-    # bottom = __round_to_cfa_pattern(bottom, ifd['cfa_repeat_pattern_dim'][0])
-    # right = __round_to_cfa_pattern(right, ifd['cfa_repeat_pattern_dim'][1])
-
-    # rectangle[0] = int(left)
-    # rectangle[1] = int(top)
-    # rectangle[2] = int(right)
-    # rectangle[3] = int(bottom)
-
-    # return rectangle
-
-
-def _round_to_cfa_pattern(number, pattern_dim):
+def _round_to_cfa_pattern(number, pattern_dim) -> int:
     """
     Rounds up to the nearest multiple.
 
@@ -135,7 +117,7 @@ def get_value_from_type(buffer, field_type, _byte_order, is_string=False):
     return val
 
 
-def get_values_from_type(buffer, field_type, _byte_order, is_string=False):
+def get_values_from_type(buffer, field_type, _byte_order, is_string=False) -> List:
     val = _get_value_from_type_format(struct.iter_unpack, buffer, field_type, _byte_order, is_string)
     val = [v[0] for v in val]
     return val
@@ -187,7 +169,7 @@ def _get_value_from_type_format(unpacking_function, buffer, field_type, _byte_or
         return unpacking_function(f'{_byte_order}d', buffer)
 
 
-def get_num_of_bytes_in_type(field_type):
+def get_num_of_bytes_in_type(field_type) -> int:
     if field_type == 1 or field_type == 2 or field_type == 6 or field_type == 7:
         return 1
     elif field_type == 3 or field_type == 8:

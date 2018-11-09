@@ -24,7 +24,7 @@ class Stabilizer:
             if keep_brightness:
                 images[ordered_times[time_index]].set_median_green_value(image1)
 
-    def update_xmp_properties(self):
+    def update_xmp_attributes(self):
         example_image = next(iter(self.images.values()))
         min_x, min_y, max_x, max_y = sutil.misalignment_bounding_box(self.images.values())
         shape = example_image.rendered_shape()
@@ -36,25 +36,11 @@ class Stabilizer:
                 top = crops[1] + image.misalignment.y / shape[1]
                 right = crops[2] + image.misalignment.x / shape[0]
                 bottom = crops[3] + image.misalignment.y / shape[1]
-                self._update(image, left, top, right, bottom)
-                # image.update_xmp_property('CropLeft', left)
-                # image.update_xmp_property('CropTop', top)
-                # image.update_xmp_property('CropRight', right)
-                # image.update_xmp_property('CropBottom', bottom)
+                image = sutil.update_xmp_attributes(image, left, top, right, bottom)
         else:
             for image in self.images.values():
                 left = crops[0] + (max_x - min_x + image.misalignment.x) / shape[0]
                 top = crops[1] + (max_y - min_y + image.misalignment.y) / shape[1]
                 right = crops[2] + (-max_x + min_x + image.misalignment.x) / shape[0]
                 bottom = crops[3] + (-max_y + min_y + image.misalignment.y) / shape[1]
-                self._update(image, left, top, right, bottom)
-                # image.update_xmp_property('CropLeft', left)
-                # image.update_xmp_property('CropTop', top)
-                # image.update_xmp_property('CropRight', right)
-                # image.update_xmp_property('CropBottom', bottom)
-
-    def _update(self, image, left, top, right, bottom):
-        image.update_xmp_property('CropLeft', left)
-        image.update_xmp_property('CropTop', top)
-        image.update_xmp_property('CropRight', right)
-        image.update_xmp_property('CropBottom', bottom)
+                image = sutil.update_xmp_attributes(image, left, top, right, bottom)

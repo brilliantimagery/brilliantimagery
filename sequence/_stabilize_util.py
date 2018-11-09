@@ -6,18 +6,6 @@ _Point = collections.namedtuple('Point', 'x y')
 
 
 def find_offset(image0, image1, max_misalignment):
-    # img0 = np.zeros((image0.shape[1] - 2, image0.shape[2] - 2), dtype=np.float)
-    # img1 = np.copy(img0)
-    #
-    # for ix in range(1, image0.shape[1] - 1):
-    #     for iy in range(1, image0.shape[2] - 1):
-    #         img0[ix - 1, iy - 1] = (image0[0, ix - 1, iy] + image0[1, ix - 1, iy] + image0[2, ix - 1, iy]
-    #                                 + image0[0, ix, iy - 1] + image0[1, ix, iy - 1] + image0[2, ix, iy - 1]
-    #                                 - 2 * image0[0, ix, iy] - 2 * image0[1, ix, iy] - 2 * image0[2, ix, iy])
-    #         img1[ix - 1, iy - 1] = (image1[0, ix - 1, iy] + image1[1, ix - 1, iy] + image1[2, ix - 1, iy]
-    #                                 + image1[0, ix, iy - 1] + image1[1, ix, iy - 1] + image1[2, ix, iy - 1]
-    #                                 - 2 * image1[0, ix, iy] - 2 * image1[1, ix, iy] - 2 * image1[2, ix, iy])
-
     img0 = _get_brightness_deltas(image0)
     img1 = _get_brightness_deltas(image1)
 
@@ -75,3 +63,12 @@ def misalignment_bounding_box(images):
             max_y = image.misalignment.y
 
     return min_x, min_y, max_x, max_y
+
+
+def update_xmp_attributes(image, left, top, right, bottom):
+    image.update_xmp_attribute('CropLeft', left)
+    image.update_xmp_attribute('CropTop', top)
+    image.update_xmp_attribute('CropRight', right)
+    image.update_xmp_attribute('CropBottom', bottom)
+
+    return image

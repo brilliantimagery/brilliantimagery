@@ -28,11 +28,11 @@ class MetaImage:
     def get_crops(self):
         return self.image.get_crops()
 
-    def update_xmp_property(self, xmp_property, value):
-        self.image.update_xmp_property(META_TO_DNG[xmp_property], value)
+    def update_xmp_attribute(self, xmp_property, value):
+        self.image.update_xmp_attribute(META_TO_DNG[xmp_property], value)
 
-    def store_xmp_fields(self):
-        self.image.store_xmp_fields()
+    def store_xmp_field(self):
+        self.image.store_xmp_field()
 
     def save(self):
         self.image.save()

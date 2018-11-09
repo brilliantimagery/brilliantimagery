@@ -1,17 +1,19 @@
-import array
 import math
 import os
 import platform
 import struct
-import sys
+from collections import defaultdict
+from typing import Dict
+from typing import IO
+from typing import List
 
+from Cython.Compiler import MemoryView
 import numpy as np
 
 from . import _dng_constants as dcnst
 from . import _dng_utils as dutils
 from . import _renderer
-# from ljpeg import decode
-# import ljpeg
+
 
 class DNG:
     """
@@ -79,7 +81,7 @@ class DNG:
         self.path = path
         self._ifds = dict()
         self._used_fields = dict()
-        self._xmp = dict()
+        self._xmp = defaultdict(dict)
         self._updated = False
         self._xmp_length_changed = False
         with open(self.path, 'rb', buffering=DNG._buffer_size) as f:
@@ -94,11 +96,20 @@ class DNG:
             assert (struct.unpack(f'{self._byte_order}H', f.read(2))[0] == 42)
             self._zeroth_ifd = struct.unpack(f'{self._byte_order}H', f.read(2))[0]
 
-    def get_capture_datetime(self):
-        self._parse_ifds()
-        self._get_idf_offsets()
+            self._parse_ifds()
+            self._get_idf_offsets()
+
+    def get_capture_datetime(self) -> str:
+        """
+        Gets a datetime for when the image was captured.
+
+        Gets the standardised capture datetime, first looking in the
+        xmp data, and then falling back to the file creation time.
+
+        :return: A creation time formatted as a string.
+        """
         xmp = self._ifds[self._xmp_ifd_offset][700].values[0]
-        capture_datetime = dutils.get_xmp_property_value(xmp, b'xmp:CreateDate')
+        capture_datetime = dutils.get_xmp_attribute_value(xmp, b'xmp:CreateDate')
         if capture_datetime:
             return capture_datetime
         else:
@@ -118,7 +129,7 @@ class DNG:
                     # so we'll settle for when its content was last modified.
                     return stat.st_mtime
 
-    def _get_fields_required_to_render(self, sub_image):
+    def _get_fields_required_to_render(self, sub_image: str):
         """
         Consolidate the required to render a DNG file.
 
@@ -153,7 +164,7 @@ class DNG:
         #     else:
         #         compression = 'lossless Huffman JPEG'
 
-    def _get_ifd_fields(self, f):
+    def _get_ifd_fields(self, f: IO):
         """
         Parses the IFD fields and gets their values
 
@@ -185,15 +196,6 @@ class DNG:
                                                                        self._byte_order, True))
                     else:
                         field_values.append(f.read(count))
-                    # if tag in (336, 338):
-                    #     assert False # they use BYTEs as datatype and may be broken
-                    # # TODO: replace with better stuff
-                    # if tag in dct.RENDERING_TAGS:
-                    #     if dct.RENDERING_TAGS[tag]['Multiple Values']:
-                    #         field_values.append(f.read(count))
-                    #     else:
-                    #         field_values.append(dutils._get_value_from_type(f.read(count), field_type, self._byte_order))
-                    # # field_values = dutils._get_values_from_type(f.read(count), field_type, self._byte_order)
                 else:
                     buffer = f.read(n_bytes)
                     field_values = dutils.get_values_from_type(buffer, field_type, self._byte_order,
@@ -217,7 +219,7 @@ class DNG:
 
         self._ifds[ifd_offset] = ifd
 
-    def get_image(self, rectangle=[0.0, 0.0, 1.0, 1.0], sub_image='RAW'):
+    def get_image(self, rectangle=[0.0, 0.0, 1.0, 1.0], sub_image='RAW') -> MemoryView:
         """
         Get the desired image, thumbnail or raw.
 
@@ -240,22 +242,19 @@ class DNG:
         The second covers the width.
         The third covers the height.
         """
-        if not self._ifds:
-            self._parse_ifds()
-            self._get_idf_offsets()
         self._get_fields_required_to_render(sub_image)
         self.get_xmp()
         rectangle = dutils.convert_rectangle_percent_to_pixels(self._used_fields, rectangle,
-                                                               self._xmp.get(b'crs:CropLeft', {'val': 0})['val'],
-                                                               self._xmp.get(b'crs:CropTop', {'val': 0})['val'],
-                                                               self._xmp.get(b'crs:CropRight', {'val': 1})['val'],
-                                                               self._xmp.get(b'crs:CropBottom', {'val': 1})['val'])
+                                                               self._xmp[b'crs:CropLeft'].get('val', 0),
+                                                               self._xmp[b'crs:CropTop'].get('val', 0),
+                                                               self._xmp[b'crs:CropRight'].get('val', 1),
+                                                               self._xmp[b'crs:CropBottom'].get('val', 1))
         self._get_tile_or_strip_bytes(rectangle)
         image = _renderer.render(self._used_fields, rectangle)
         self._clear_section_data()
         return image
 
-    def get_xmp(self):
+    def get_xmp(self) -> Dict[bytes, int]:
         """
         Gets the xmp data from the dng.
 
@@ -263,16 +262,11 @@ class DNG:
         as shown in the xmp data and values being a floats
         """
         xmp_field = self._ifds[self._xmp_ifd_offset][700].values[0]
-        for xmp_property in dcnst.XMP_TAGS.keys():
-            # name_offset = xmp_field.find(xmp_property)
-            value = dutils.get_xmp_property_value(xmp_field, xmp_property)
+        for xmp_attribute in dcnst.XMP_TAGS.keys():
+            # name_offset = xmp_field.find(xmp_attribute)
+            value = dutils.get_xmp_attribute_value(xmp_field, xmp_attribute)
             if value:
-                self._xmp[xmp_property] = {'val': float(value), 'updated': False}
-            # if name_offset > -1:
-            # TODO: probably faster to just add the len of the property name + 2
-            # value_start = xmp_field.find(b'="', name_offset) + 2
-            # value_end = xmp_field.find(b'"', value_start)
-            # self._xmp[property_name] = {'val': float(xmp_field[value_start:value_end]), 'updated': False}
+                self._xmp[xmp_attribute] = {'val': float(value), 'updated': False}
 
         return {k: v['val'] for k, v in self._xmp.items()}
 
@@ -286,7 +280,7 @@ class DNG:
             f.seek(self._zeroth_ifd)
             self._get_ifd_fields(f)
 
-    def _get_tile_or_strip_bytes(self, rectangle):
+    def _get_tile_or_strip_bytes(self, rectangle: List) -> None:
         """
         Retrieve the raw image data.
 
@@ -329,9 +323,8 @@ class DNG:
                     self._used_fields['section_bytes'][tuple([index % n_tiles_wide - x_tile_offset,
                                                               index // n_tiles_wide - y_tile_offset])] = \
                         np.fromfile(f, np.uint8, byte_counts).astype(np.intc)
-        # return sub_image_fields
 
-    def _get_idf_offsets(self):
+    def _get_idf_offsets(self) -> None:
         """
         Get the byte indexes of the thumbnail and main uncompressed/raw image in the file
 
@@ -354,30 +347,58 @@ class DNG:
             if self._orig_img_offset and self._xmp_ifd_offset:
                 break
 
-    def update_xmp_property(self, xmp_property, value):
-        # TODO: this could be better
-        if xmp_property in self._xmp:
-            if self._xmp.get(xmp_property).get('val') != value:
-                self._xmp[xmp_property] = {'val': value, 'updated': True}
-        else:
-            raise Exception("Field to be updated wasn't present")
+    def update_xmp_attribute(self, xmp_attribute: bytes, value) -> bool:
+        """
+        Updates the stored value of the xmp attribute.
 
-    def store_xmp_fields(self):
+        Can not add attributes that aren't already present. If an
+        attribute wasn't previously updated and present it can't be
+        updated.
+
+        Only updates the representation in the DNG object.
+        DNG.store_xmp_fields() and DNG.save() have to be called to
+        permanently save the updated values.
+
+        :param xmp_attribute: The xmp attribute to be updated. Should be
+        a key from the _dng_constants.XMP_TAGS Dict
+        :param value: The number to be assigned to the attribute.
+        :return: True if it's successful, False if it isn't, presumably
+        because the attribute isn't present or the value was already
+        stored.
+        """
+
+        if not self._xmp:
+            self.get_xmp()
+        if self._xmp[xmp_attribute].get('val') not in (value, None):
+            self._xmp[xmp_attribute] = {'val': value, 'updated': True}
+            return True
+        else:
+            return False
+
+    def store_xmp_field(self) -> None:
+        """
+        Consolidate updated xmp attributes in the xmp data.
+
+        If this isn't called, the xmp data won't be updated in the
+        file even if DNG.save() is called.
+
+        :return: None
+        """
         xmp_data = self._ifds[self._xmp_ifd_offset][700].values[0]
         xmp_length = len(xmp_data)
         for field, value in self._xmp.items():
             if value['updated']:
                 self._updated = True
-                xmp_property = dcnst.XMP_TAGS[field]
+                xmp_attribute = dcnst.XMP_TAGS[field]
 
                 start_offset = xmp_data.find(field) + len(field) + 2
                 end_offset = xmp_data.find(b'"', start_offset)
-                # old_value = xmp_data[start_offset: end_offset]
+
                 start = xmp_data[:start_offset]
-                mid = str(round(float(value['val']), xmp_property.n_decimal_places))
-                if not xmp_property.n_decimal_places:
+                mid = str(round(float(value['val']), xmp_attribute.n_decimal_places))
+                if not xmp_attribute.n_decimal_places:
                     mid = mid[:-2]
-                if xmp_property.is_vector and mid[0] != '-':
+                if xmp_attribute.is_vector and mid[0] != '-':
                     mid = '+' + mid
                 mid = bytes(mid, 'utf-8')
                 end = xmp_data[end_offset:]
@@ -386,23 +407,61 @@ class DNG:
         self._ifds[self._xmp_ifd_offset][700].values[0] = xmp_data
         self._ifds[self._xmp_ifd_offset][700].count = len(xmp_data)
 
-    def rendered_shape(self):
-        # TODO: who knows if it's 'initialized'
+    def rendered_shape(self) -> List[int]:
+        """
+        The dimensions of the raw image, as cropped and rendered.
+
+        Dimensions are in units of pixels.
+
+        :return: A list of ints where the first is the width and the
+        second is the height or length.
+        """
         shape = self.default_shape()
         crops = self.get_crops()
 
         return [round(shape[0] * (crops[2] - crops[0])), round(shape[1] * (crops[3] - crops[1]))]
 
-    def default_shape(self):
-        return self._used_fields['default_crop_size']
+    def default_shape(self) -> List[int]:
+        """
+        The dimensions of the raw image, before it's edited and cropped.
 
-    def get_crops(self):
-        return [self._xmp.get(b'crs:CropLeft').get('val', 0),
-                self._xmp.get(b'crs:CropTop').get('val', 0),
-                self._xmp.get(b'crs:CropRight').get('val', 1),
-                self._xmp.get(b'crs:CropBottom').get('val', 1)]
+        Dimensions are in units of pixels.
 
-    def save(self):
+        :return: A list of floats where the first is the width and the
+        second is the height or length.
+        """
+        if not self._used_fields:
+            self._get_fields_required_to_render('RAW')
+        return [int(a) for a in self._used_fields['default_crop_size']]
+
+    def get_crops(self) -> List[float]:
+        """
+        Get the percent crop of the 4 sides of the image.
+
+        Compared to the top left corner of the image, this represents
+        how far down or across each edge is cropped as a percent of
+        the dimensions specified by DNG.rendered_shape()
+
+        :return: A list of the crops as floats where:
+        list[0] is the left crop,
+        list[1] is the top crop,
+        list[2] is the right crop,
+        list[3] is the bottom crop
+        """
+        if not self._xmp:
+            self.get_xmp()
+
+        return [self._xmp[b'crs:CropLeft'].get('val', 0),
+                self._xmp[b'crs:CropTop'].get('val', 0),
+                self._xmp[b'crs:CropRight'].get('val', 1),
+                self._xmp[b'crs:CropBottom'].get('val', 1)]
+
+    def save(self) -> None:
+        """
+        Overwrites the DNG file with the updated xmp info.
+
+        :return: None
+        """
         if self._updated:
             if self._xmp_length_changed:
                 last_item = 0
@@ -426,7 +485,11 @@ class DNG:
                     f.write(self._ifds[self._xmp_ifd_offset][700].values[0])
 
     def _write_dng(self):
-        # file = array.array()
+        """
+        Writes a whole new DNG file as apposed to editing the xmp info.
+
+        :return: None
+        """
         first_ifd_location = 8
         with open(self.path + '.temp', 'w+b') as wf:
             pass
@@ -444,6 +507,16 @@ class DNG:
                 self._write_value(wf, 0, data_type=1)
 
     def _write_ifd(self, wf, rf, ifd, write_location):
+        """
+        Writes an IFD into a file.
+
+        :param wf: The io buffer for the file being written to.
+        :param rf: The io buffer for the file being referenced.
+        :param ifd: The IFD to be written.
+        :param write_location: The index of the start of the IFD from
+        the beginning of the file in units of bytes.
+        :return: None
+        """
         end_write_index = len(ifd) * 12 + 6 + write_location
         section_offsets = []
         section_byte_counts = []
@@ -537,27 +610,39 @@ class DNG:
 
         return end_write_index
 
-    def _write_value(self, f, number, data_type=4, values=None, n_bytes=None):
+    def _write_value(self, f, value, data_type=4, values=None, n_bytes=None):
+        """
+        Writes a value/values to a write buffer.
+
+        :param f: The io buffer for the file being written to.
+        :param value: The number to be written.
+        :param data_type: The datatype , 1 - 12, of the value as
+        defined by the TIFF standard.
+        :param values: The values, as a list, to be written when there
+        are multiple.
+        :param n_bytes: The number of bytes that should be used to
+        write the value or values
+        :return: None
+        """
         # TODO: make this a dict?
         bytes_to_skip = 0
         if data_type == 1:
-            f.write(struct.pack(f'{self._byte_order}B', number))
+            f.write(struct.pack(f'{self._byte_order}B', value))
             if n_bytes:
                 bytes_to_skip = n_bytes - 1
         elif data_type == 2:
-            a = 0
             if values:
                 f.write(bytes(values, 'utf-8'))
             else:
-                f.write(bytes(number, 'utf-8'))
+                f.write(bytes(value, 'utf-8'))
             if n_bytes:
-                bytes_to_skip = n_bytes - len(number)
+                bytes_to_skip = n_bytes - len(value)
         elif data_type == 3:
-            f.write(struct.pack(f'{self._byte_order}H', number))
+            f.write(struct.pack(f'{self._byte_order}H', value))
             if n_bytes:
                 bytes_to_skip = n_bytes - 2
         elif data_type == 4:
-            f.write(struct.pack(f'{self._byte_order}I', number))
+            f.write(struct.pack(f'{self._byte_order}I', value))
             if n_bytes:
                 bytes_to_skip = n_bytes - 4
 
@@ -567,4 +652,12 @@ class DNG:
         return f
 
     def _clear_section_data(self):
+        """
+        Clears the tile/strip data from the DNG object to save space.
+
+        Used to keep large collections of DNG objects from taking up
+        too much space.
+
+        :return: None
+        """
         self._used_fields['section_bytes'] = None
