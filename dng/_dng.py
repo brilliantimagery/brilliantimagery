@@ -69,6 +69,7 @@ class DNG:
             return f'{self.tag}, {self.type}, {self.count}, {self.value_offset}'
 
     _buffer_size = 50000000
+    _reference_frame_stars = 3
 
     def __init__(self, path):
         """
@@ -661,3 +662,9 @@ class DNG:
         :return: None
         """
         self._used_fields['section_bytes'] = None
+
+    def is_reference_frame(self):
+        if not self._xmp:
+            self.get_xmp()
+
+        return int(self._xmp[b'xmp:Rating'].get('val')) == DNG._reference_frame_stars

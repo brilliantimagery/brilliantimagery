@@ -1,6 +1,6 @@
 import collections
 
-__Xmp_Tag = collections.namedtuple('Xmp_Tag', 'n_decimal_places default_value is_vector is_special_case')
+__Xmp_Tag = collections.namedtuple('Xmp_Tag', 'n_decimal_places default_value is_vector not_to_bed_ramped')
 
 XMP_TAGS = {b'crs:Temperature': __Xmp_Tag(0, "6500", False, False),
             b'crs:Tint': __Xmp_Tag(0, "+7", True, False),
