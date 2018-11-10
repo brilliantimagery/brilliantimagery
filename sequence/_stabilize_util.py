@@ -66,9 +66,9 @@ def misalignment_bounding_box(images):
 
 
 def update_xmp_attributes(image, left, top, right, bottom):
-    image.update_xmp_attribute('CropLeft', left)
-    image.update_xmp_attribute('CropTop', top)
-    image.update_xmp_attribute('CropRight', right)
-    image.update_xmp_attribute('CropBottom', bottom)
+    image.set_xmp_attribute('CropLeft', left)
+    image.set_xmp_attribute('CropTop', top)
+    image.set_xmp_attribute('CropRight', right)
+    image.set_xmp_attribute('CropBottom', bottom)
 
     return image

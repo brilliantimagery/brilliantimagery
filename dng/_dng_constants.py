@@ -1,16 +1,16 @@
 import collections
 
-__Xmp_Tag = collections.namedtuple('Xmp_Tag', 'n_decimal_places default_value is_vector not_to_bed_ramped')
+__Xmp_Tag = collections.namedtuple('Xmp_Tag', 'n_decimal_places default_value is_vector is_ramped')
 
-XMP_TAGS = {b'crs:Temperature': __Xmp_Tag(0, "6500", False, False),
-            b'crs:Tint': __Xmp_Tag(0, "+7", True, False),
-            b'crs:Saturation': __Xmp_Tag(0, "0", True, False),
-            b'crs:Vibrance': __Xmp_Tag(0, "0", True, False),
-            b'crs:Sharpness': __Xmp_Tag(0, "25", False, False),
-            b'crs:VignetteAmount': __Xmp_Tag(0, "0", True, False),
-            b'crs:VignetteMidpoint': __Xmp_Tag(0, "50", False, False),
-            b'crs:ShadowTint': __Xmp_Tag(0, "0", True, False),
-            b'crs:RedHue': __Xmp_Tag(0, "0", True, False),
+XMP_TAGS = {b'crs:Temperature': __Xmp_Tag(0, "6500", False, True),
+            b'crs:Tint': __Xmp_Tag(0, "+7", True, True),
+            b'crs:Saturation': __Xmp_Tag(0, "0", True, True),
+            b'crs:Vibrance': __Xmp_Tag(0, "0", True, True),
+            b'crs:Sharpness': __Xmp_Tag(0, "25", False, True),
+            b'crs:VignetteAmount': __Xmp_Tag(0, "0", True, True),
+            b'crs:VignetteMidpoint': __Xmp_Tag(0, "50", False, True),
+            b'crs:ShadowTint': __Xmp_Tag(0, "0", True, True),
+            b'crs:RedHue': __Xmp_Tag(0, "0", True, True),
     #     CRSREDSATURATION("crs:RedSaturation", 0, "0", true, false), CRSGREENHUE("crs:GreenHue", 0, "0",
     #                 true,
     #                 false), CRSGREENSATURATION("crs:GreenSaturation", 0, "0", true, false), CRSBLUEHUE("crs:BlueHue", 0,
@@ -103,12 +103,12 @@ XMP_TAGS = {b'crs:Temperature': __Xmp_Tag(0, "6500", False, False),
     #
     # CRSDEHAZE("crs:Dehaze", 0, "0", true, false),
     # // CRSTONEMAPSTRENGTH ("crs:ToneMapStrength", 0, "0", false),
-            b'crs:CropLeft': __Xmp_Tag(6, "0", False, True),
-            b'crs:CropBottom': __Xmp_Tag(6, "1", False, True),
-            b'crs:CropRight': __Xmp_Tag(6, "1", False, True),
-            b'crs:CropTop': __Xmp_Tag(6, "0", False, True),
-            b'xmp:Rating': __Xmp_Tag(0, "0", False, True),
-            b'crs:Exposure2012': __Xmp_Tag(2, "0", True, True),
+            b'crs:CropLeft': __Xmp_Tag(6, "0", False, False),
+            b'crs:CropBottom': __Xmp_Tag(6, "1", False, False),
+            b'crs:CropRight': __Xmp_Tag(6, "1", False, False),
+            b'crs:CropTop': __Xmp_Tag(6, "0", False, False),
+            b'xmp:Rating': __Xmp_Tag(0, "0", False, False),
+            b'crs:Exposure2012': __Xmp_Tag(2, "0", True, False),
             }
 
 

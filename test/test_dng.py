@@ -25,8 +25,8 @@ def test_get_xmp():
 
 def test_update_xmp_attribute_and_store_xmp_field():
     img = DNG('dng_test_input.dng')
-    img.update_xmp_attribute(b'crs:Temperature', 700.0)
-    img.update_xmp_attribute(b'crs:Sharpness', 30.0)
+    img.set_xmp_attribute(b'crs:Temperature', 700.0)
+    img.set_xmp_attribute(b'crs:Sharpness', 30.0)
     img.store_xmp_field()
     assert img.get_xmp() == updated_xmp
 
@@ -49,6 +49,6 @@ def test_get_xmp_attribute():
 def test_is_reference_frame():
     img = DNG('dng_test_input.dng')
     assert not img.is_reference_frame()
-    img.update_xmp_attribute(b'xmp:Rating', 3)
+    img.set_xmp_attribute(b'xmp:Rating', 3)
     assert img.is_reference_frame()
 

@@ -19,12 +19,17 @@ class Sequence:
 
     def ramp(self, rectangle):
         ramper = Ramper(self._images, rectangle)
+        # ramper.ramp()
+        ramper.ramp_exposure()
+
+    def ramp_and_stabilize(self, rectangle, max_pix_of_misalignment=5):
+        # self.stabilize(rectangle, max_pix_of_misalignment, keep_brightness=True)
+        self.ramp(rectangle)
 
     def stabilize(self, rectangle, max_pix_of_misalignment=5, keep_brightness=False):
         stabilizer = Stabilizer(self._images, rectangle, max_pix_of_misalignment)
         stabilizer.find_misalignments(keep_brightness)
         stabilizer.update_xmp_attributes()
-        self._images = stabilizer.images
 
     def store_xmp_field(self):
         for image in self._images.values():

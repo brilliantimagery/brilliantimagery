@@ -348,7 +348,7 @@ class DNG:
             if self._orig_img_offset and self._xmp_ifd_offset:
                 break
 
-    def update_xmp_attribute(self, xmp_attribute: bytes, value) -> bool:
+    def set_xmp_attribute(self, xmp_attribute: bytes, value) -> bool:
         """
         Updates the stored value of the xmp attribute.
 
@@ -388,7 +388,7 @@ class DNG:
         xmp_data = self._ifds[self._xmp_ifd_offset][700].values[0]
         xmp_length = len(xmp_data)
         for field, value in self._xmp.items():
-            if value['updated']:
+            if value.get('updated', False):
                 self._updated = True
                 xmp_attribute = dcnst.XMP_TAGS[field]
 
@@ -442,28 +442,6 @@ class DNG:
             self._get_fields_required_to_render('RAW')
         return [int(a) for a in self._used_fields['default_crop_size']]
 
-    # def get_crops(self) -> List[float]:
-    #     """
-    #     Get the percent crop of the 4 sides of the image.
-    #
-    #     Compared to the top left corner of the image, this represents
-    #     how far down or across each edge is cropped as a percent of
-    #     the dimensions specified by DNG.rendered_shape()
-    #
-    #     :return: A list of the crops as floats where:
-    #     list[0] is the left crop,
-    #     list[1] is the top crop,
-    #     list[2] is the right crop,
-    #     list[3] is the bottom crop
-    #     """
-    #     if not self._xmp:
-    #         self.get_xmp()
-    #
-    #     return [self._xmp[b'crs:CropLeft'].get('val', 0),
-    #             self._xmp[b'crs:CropTop'].get('val', 0),
-    #             self._xmp[b'crs:CropRight'].get('val', 1),
-    #             self._xmp[b'crs:CropBottom'].get('val', 1)]
-
     def get_xmp_attribute(self, xmp_attribute):
         if not self._xmp:
             self.get_xmp()
@@ -494,7 +472,7 @@ class DNG:
                 else:
                     self._write_dng()
             else:
-                with open(self.path, 'wb', DNG._BUFFER_SIZE) as f:
+                with open(self.path, 'r+b', DNG._BUFFER_SIZE) as f:
                     f.seek(self._ifds[self._xmp_ifd_offset][700].value_offset)
                     f.write(self._ifds[self._xmp_ifd_offset][700].values[0])
 
@@ -614,9 +592,6 @@ class DNG:
                         end_write_index += n_bytes
                         wf.seek(left_off_at)
                     else:
-                        # end_location = wf.tell() + 4
-                        # wf.write(rf.read(n_bytes))
-                        # wf.seek(end_location)
                         wf.write(field.value_offset_buffer)
                 else:
                     wf = self._write_value(wf, field.value_offset, data_type=field.type,
@@ -681,3 +656,7 @@ class DNG:
             self.get_xmp()
 
         return int(self._xmp[b'xmp:Rating'].get('val', 0)) == DNG._REFERENCE_FRAME_STARS
+
+    @staticmethod
+    def get_possible_xmp_attributes():
+        return dcnst.XMP_TAGS
