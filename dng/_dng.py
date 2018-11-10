@@ -244,7 +244,8 @@ class DNG:
         The third covers the height.
         """
         self._get_fields_required_to_render(sub_image)
-        self.get_xmp()
+        if not self._xmp:
+            self.get_xmp()
         rectangle = dutils.convert_rectangle_percent_to_pixels(self._used_fields, rectangle,
                                                                self._xmp[b'crs:CropLeft'].get('val', 0),
                                                                self._xmp[b'crs:CropTop'].get('val', 0),
@@ -262,14 +263,15 @@ class DNG:
         :return: The xmp data as a dict with the keys being properties
         as shown in the xmp data and values being a floats
         """
-        xmp_field = self._ifds[self._xmp_ifd_offset][700].values[0]
-        for xmp_attribute in dcnst.XMP_TAGS.keys():
-            # name_offset = xmp_field.find(xmp_attribute)
-            value = dutils.get_xmp_attribute_value(xmp_field, xmp_attribute)
-            if value:
-                self._xmp[xmp_attribute] = {'val': float(value), 'updated': False}
+        if not self._xmp:
+            xmp_field = self._ifds[self._xmp_ifd_offset][700].values[0]
+            for xmp_attribute in dcnst.XMP_TAGS.keys():
+                # name_offset = xmp_field.find(xmp_attribute)
+                value = dutils.get_xmp_attribute_value(xmp_field, xmp_attribute)
+                if value:
+                    self._xmp[xmp_attribute] = {'val': float(value), 'updated': False}
 
-        return {k: v['val'] for k, v in self._xmp.items()}
+        return {k: v['val'] for k, v in self._xmp.items() if v}
 
     def _parse_ifds(self):
         """

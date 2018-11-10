@@ -2,7 +2,7 @@ import math
 
 
 class Ramper:
-    def __init__(self, images, rectangle):
+    def __init__(self, images):
         self._images = images
         self._ref_frames = []
         self._ref_frame_gaps = []
@@ -14,10 +14,6 @@ class Ramper:
                         in example_image.get_possible_xmp_attributes().items()}
         self._xmp_attributes = [attr for attr in xmp_attributes.keys() if possible_xmp.get(attr, False)]
 
-        if example_image.median_green_value == 0:
-            for image in self._images.values():
-                image.set_median_green_value(image.get_image(rectangle))
-
         index = -1
         for time in self._sorted_times:
             if self._images[time].is_reference_frame():
@@ -27,7 +23,7 @@ class Ramper:
             else:
                 self._ref_frame_gaps[index] += 1
 
-    def ramp(self):
+    def ramp_minus_exposure(self):
         ramps = {}
         for index in range(len(self._ref_frames) - 1):
             for attr in self._xmp_attributes:
@@ -52,7 +48,11 @@ class Ramper:
             for attr in self._xmp_attributes:
                 targets[attr] += ramps[attr][reference_frame_index]
 
-    def ramp_exposure(self):
+    def ramp_exposure(self, rectangle):
+        if self._images[self._sorted_times[0]].median_green_value == 0:
+            for image in self._images.values():
+                image.set_median_green_value(image.get_image(rectangle))
+
         ramp = []
         for index in range(len(self._ref_frames) - 1):
             next_brightness = self._images[self._ref_frames[index + 1]].median_green_value * \
@@ -63,8 +63,6 @@ class Ramper:
 
         ramp.append(0)
 
-        # target = self._images[self._sorted_times[0]].median_green_value * \
-        #          self._images[self._sorted_times[0]].get_xmp_attribute['Exposure']
         target = self._images[self._sorted_times[0]].median_green_value * \
                  2 ** self._images[self._sorted_times[0]].get_xmp_attribute('Exposure')
 

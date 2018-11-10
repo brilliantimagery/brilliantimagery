@@ -31,4 +31,11 @@ def test_ramp_and_stabilize():
 
 # test_stabelize()
 # test_reamp()
-test_ramp_and_stabilize()
+# test_ramp_and_stabilize()
+s = Sequence('E:\\Pictures\\2016\\2016-12-19')
+# s.ramp_minus_exmpsure()
+# s.ramp_exposure([0.5, 0.65, 0.7, 0.85])
+# s.ramp([0.5, 0.65, 0.7, 0.85])
+# s.ramp_and_stabilize([0.5, 0.65, 0.7, 0.85], 8)
+s.stabilize([0.5, 0.65, 0.7, 0.85], 8)
+s.save()
