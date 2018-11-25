@@ -132,7 +132,7 @@ class DNG:
 
     def _get_fields_required_to_render(self, sub_image: str):
         """
-        Consolidate the required to render a DNG file.
+        Consolidate the info required to render a DNG file.
 
         Consolidate the fields from throughout the file into a
         single IFD like structure holding all of the fields needed
@@ -185,7 +185,6 @@ class DNG:
             value_offset_buffer = f.read(4)
             value_offset = dutils.get_value_from_type(value_offset_buffer, 4, self._byte_order)
 
-            # if tag in DNG._tags:
             length = dutils.get_num_of_bytes_in_type(field_type)
             n_bytes = length * count
             if n_bytes > 4:
@@ -499,6 +498,8 @@ class DNG:
                 wf.seek(self._write_ifd(wf, rf, self._ifds[self._thumbnail_offset], first_ifd_location))
             if wf.tell() % 2:
                 self._write_value(wf, 0, data_type=1)
+        os.remove(self.path)
+        os.rename(self.path + '.temp', self.path)
 
     def _write_ifd(self, wf, rf, ifd, write_location):
         """

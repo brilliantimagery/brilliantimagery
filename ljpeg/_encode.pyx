@@ -1,3 +1,4 @@
+# distutils: language=c++
 import numpy as np
 import cython
 
@@ -25,7 +26,7 @@ cdef int Al = 0    # Successive approx bit position low or point transform
 cdef int P = 0
 
 
-cpdef int[:] encode(int[:, :, :] image, int precision, int predictor):
+def encode(int[:, :, :] image, int precision, int predictor):
     """
     Encode a raw image into a Lossless Jpeg according to the 1992 standard 
     T.81, 10918.1.
@@ -58,8 +59,9 @@ cpdef int[:] encode(int[:, :, :] image, int precision, int predictor):
         rd_index += 1
 
     encoded_image = __int_into_array(encoded_image, EOI, 16)
+    encoded_image = encoded_image[:rd_index // 8]
 
-    return encoded_image[:rd_index // 8]
+    return encoded_image.base
 
 
 cdef __write_frame_info(int P):

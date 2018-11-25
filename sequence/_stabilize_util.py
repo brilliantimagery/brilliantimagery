@@ -2,12 +2,21 @@ import collections
 
 import numpy as np
 
-_Point = collections.namedtuple('Point', 'x y')
+_Point = collections.namedtuple('_Point', 'x y')
 
 
-def find_offset(image0, image1, max_misalignment):
-    img0 = _get_brightness_deltas(image0)
-    img1 = _get_brightness_deltas(image1)
+def find_misalignment(reference_rgb_image, probe_image, rectangle, max_pix_of_misalignment, keep_brightness, time_index):
+    probe_rgb_image = probe_image.get_image(rectangle)
+    probe_image.misalignment = find_offset(reference_rgb_image, probe_rgb_image, max_pix_of_misalignment)
+    if keep_brightness:
+        probe_image.set_median_green_value(probe_rgb_image)
+
+    return time_index, probe_image
+
+
+def find_offset(reference_rgb_image, probe_rgb_image, max_misalignment):
+    img0 = _get_brightness_deltas(reference_rgb_image)
+    img1 = _get_brightness_deltas(probe_rgb_image)
 
     deltas = dict()
 
@@ -36,8 +45,8 @@ def find_offset(image0, image1, max_misalignment):
             return k
 
 
-def _get_brightness_deltas(image):
-    avg_pix_brightness = np.add(image[0, :, :], np.add(image[1, :, :], image[2, :, :]))
+def _get_brightness_deltas(rgb_image):
+    avg_pix_brightness = np.add(rgb_image[0, :, :], np.add(rgb_image[1, :, :], rgb_image[2, :, :]))
     shifted_left = avg_pix_brightness[:-2, 1:-1]
     shifted_up = avg_pix_brightness[1:-1, :-2]
     middle = avg_pix_brightness[1:-1, 1:-1]

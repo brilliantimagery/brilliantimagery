@@ -1,8 +1,10 @@
 import os
 import sys
+import time
 
 import numpy as np
-import pytest
+
+# import pytest
 
 path = os.path.dirname(os.path.abspath(__file__))
 path, _ = os.path.split(path)
@@ -18,10 +20,12 @@ def test_stabelize():
     s.stabilize([0.5, 0.65, 0.7, 0.85], 7, True)
     s.save()
 
+
 def test_reamp():
     s = Sequence('E:\\Pictures\\2016\\2016-12-19')
     s.ramp([0.5, 0.65, 0.7, 0.85])
     s.save()
+
 
 def test_ramp_and_stabilize():
     s = Sequence('E:\\Pictures\\2016\\2016-12-19')
@@ -29,13 +33,26 @@ def test_ramp_and_stabilize():
     s.save()
 
 
-# test_stabelize()
-# test_reamp()
-# test_ramp_and_stabilize()
-s = Sequence('E:\\Pictures\\2016\\2016-12-19')
-# s.ramp_minus_exmpsure()
-# s.ramp_exposure([0.5, 0.65, 0.7, 0.85])
-# s.ramp([0.5, 0.65, 0.7, 0.85])
-# s.ramp_and_stabilize([0.5, 0.65, 0.7, 0.85], 8)
-s.stabilize([0.5, 0.65, 0.7, 0.85], 8)
-s.save()
+def main():
+    # test_stabelize()
+    # test_reamp()
+    # test_ramp_and_stabilize()
+    s = Sequence('G:\\Pictures\\Timelapse\\20161220_test_sequence')
+    # s = Sequence('G:\\Pictures\\2018\\2018-10-26')
+    # s.ramp_minus_exmpsure()
+    # s.ramp_exposure([0.5, 0.65, 0.7, 0.85])
+    # s.ramp([0.5, 0.65, 0.7, 0.85])
+    t1 = time.time()
+    print('one', t1)
+    # s.ramp_and_stabilize([0.5, 0.65, 0.7, 0.85], 8)
+    s.ramp_and_stabilize([0.9, 0.4, 1.0, 0.6], 8)
+    print('two', time.time() - t1)
+    # s.stabilize([0.5, 0.65, 0.7, 0.85], 8)
+    s.save()
+
+
+if __name__ == '__main__':
+    main()
+
+# 16.7
+

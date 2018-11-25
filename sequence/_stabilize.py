@@ -1,5 +1,11 @@
+# from concurrent.futures import Future
+# from concurrent.futures.process import ProcessPoolExecutor as PoolExecutor
+import multiprocessing
+import numpy as np
+
 from . import _stabilize_util as sutil
 from ._stabilize_util import _Point
+from meta_image import MetaImage
 
 
 class Stabilizer:
@@ -17,12 +23,18 @@ class Stabilizer:
             images[ordered_times[0]].set_median_green_value(image0)
 
         images[ordered_times[0]].misalignment = _Point(0, 0)
+        pool = multiprocessing.Pool()
+        tasks = []
         for time_index in range(1, len(ordered_times)):
-            image1 = images[ordered_times[time_index]].get_image(self._rectangle)
-            images[ordered_times[time_index]].misalignment = \
-                sutil.find_offset(image0, image1, self._max_pix_of_misalignment)
-            if keep_brightness:
-                images[ordered_times[time_index]].set_median_green_value(image1)
+            task = pool.apply_async(sutil.find_misalignment, (image0, images[ordered_times[time_index]],
+                                    self._rectangle, self._max_pix_of_misalignment, keep_brightness,
+                                    ordered_times[time_index]))
+            tasks.append(task)
+        pool.close()
+        pool.join()
+        for task in tasks:
+            t, i = task.get()
+            images[t] = i
 
     def update_xmp_attributes(self):
         example_image = next(iter(self._images.values()))

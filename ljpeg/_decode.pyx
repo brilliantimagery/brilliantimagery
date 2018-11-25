@@ -1,3 +1,6 @@
+# distutils: language=c++
+#cython: auto_pickle=True
+
 from libcpp cimport bool
 from libcpp.map cimport map as cpp_map
 from libcpp.vector cimport vector as cpp_vector
@@ -7,6 +10,7 @@ from cython.operator cimport dereference, postincrement
 
 import numpy as np
 import cython
+import subprocess
 
 cdef int SOF0 = 0xFFC0  # not implimented
 cdef int SOF3 = 0xFFC3
@@ -31,7 +35,7 @@ cdef int rd_index
 cdef int bit_rd_index
 cdef int[:,:,:] raw_image
 
-cpdef int[:, :, :] decode(int[:] encoded_image):
+def decode(int[:] encoded_image):
     """
     Decode a Lossless Jpeg according to the 1992 standard T.81, 10918.1, 
     into its raw components.
@@ -61,7 +65,7 @@ cpdef int[:, :, :] decode(int[:] encoded_image):
         else:
             rd_index += 1
 
-    return raw_image
+    return raw_image.base
 
 
 cdef int __parse_marker(int[:] encoded_image, int marker):

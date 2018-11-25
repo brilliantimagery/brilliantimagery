@@ -1,9 +1,10 @@
+# distutils: language=c++
 import numpy as np
 
 import ljpeg
 
 
-cpdef render(ifd, rectangle): # sif = sub_image_fields
+def render(ifd, rectangle): # sif = sub_image_fields
     assert 'linearization_table' not in ifd
     assert 'black_level_delta_H' not in ifd
     assert 'black_level_delta_V' not in ifd
@@ -17,7 +18,7 @@ cpdef render(ifd, rectangle): # sif = sub_image_fields
     raw_image = _clip_to_rendered_rectangle(ifd, raw_image)
     raw_scaled = _set_blacks_whites_scale_and_clip(ifd, raw_image)
     raw_scaled = _raw_to_rgb(ifd, raw_scaled)
-    return raw_scaled
+    return raw_scaled.base
 
 
 cdef float[:,:,:] _raw_to_rgb(ifd, float[:,:] raw_scaled):
@@ -128,19 +129,19 @@ cdef float[:,:] _set_blacks_whites_scale_and_clip(ifd, raw_image):
 
     for iy in range(0, raw_scaled.shape[1], 2):
         for ix in range(0, raw_scaled.shape[0], 2):
-            raw_scaled[ix, iy] = __rescale_and_clip(raw_image[ix, iy],
+            raw_scaled[ix, iy] = _rescale_and_clip(raw_image[ix, iy],
                                                     black_level[0], white_level[0])
-            raw_scaled[ix + 1, iy] = __rescale_and_clip(raw_image[ix + 1, iy],
+            raw_scaled[ix + 1, iy] = _rescale_and_clip(raw_image[ix + 1, iy],
                                                         black_level[1], white_level[0])
-            raw_scaled[ix, iy + 1] = __rescale_and_clip(raw_image[ix, iy + 1],
+            raw_scaled[ix, iy + 1] = _rescale_and_clip(raw_image[ix, iy + 1],
                                                         black_level[2], white_level[0])
-            raw_scaled[ix + 1, iy + 1] = __rescale_and_clip(raw_image[ix + 1, iy + 1],
+            raw_scaled[ix + 1, iy + 1] = _rescale_and_clip(raw_image[ix + 1, iy + 1],
                                                             black_level[3], white_level[0])
 
     return raw_scaled
 
 
-cdef float __rescale_and_clip(float color_value, int black_level, int white_level):
+cdef float _rescale_and_clip(float color_value, int black_level, int white_level):
     color_value = (color_value - black_level) / (white_level - black_level)
     if color_value < 0:
         color_value = 0
