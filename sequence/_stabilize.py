@@ -25,10 +25,9 @@ class Stabilizer:
         images[ordered_times[0]].misalignment = _Point(0, 0)
         pool = multiprocessing.Pool()
         tasks = []
-        for time_index in range(1, len(ordered_times)):
-            task = pool.apply_async(sutil.find_misalignment, (image0, images[ordered_times[time_index]],
-                                    self._rectangle, self._max_pix_of_misalignment, keep_brightness,
-                                    ordered_times[time_index]))
+        for time in ordered_times[1:]:
+            task = pool.apply_async(sutil.find_misalignment, (image0, images[time], self._rectangle,
+                                                              self._max_pix_of_misalignment, keep_brightness, time))
             tasks.append(task)
         pool.close()
         pool.join()

@@ -25,12 +25,12 @@ class Ramper:
 
     def ramp_minus_exposure(self):
         ramps = {}
-        for index in range(len(self._ref_frames) - 1):
+        for index, ref_frame in enumerate(self._ref_frames[:-1]):
             for attr in self._xmp_attributes:
                 if attr not in ramps:
                     ramps[attr] = []
                 ramps[attr].append((self._images[self._ref_frames[index + 1]].get_xmp_attribute(attr)
-                                    - self._images[self._ref_frames[index]].get_xmp_attribute(attr))
+                                    - self._images[ref_frame].get_xmp_attribute(attr))
                                    / self._ref_frame_gaps[index])
         for attr in self._xmp_attributes:
             ramps[attr].append(0)
@@ -54,11 +54,11 @@ class Ramper:
                 image.set_median_green_value(image.get_image(rectangle))
 
         ramp = []
-        for index in range(len(self._ref_frames) - 1):
+        for index, ref_frame in enumerate(self._ref_frames[:-1]):
             next_brightness = self._images[self._ref_frames[index + 1]].median_green_value * \
                               2 ** self._images[self._ref_frames[index + 1]].get_xmp_attribute('Exposure')
-            this_brightness = self._images[self._ref_frames[index]].median_green_value * \
-                              2 ** self._images[self._ref_frames[index]].get_xmp_attribute('Exposure')
+            this_brightness = self._images[ref_frame].median_green_value * \
+                              2 ** self._images[ref_frame].get_xmp_attribute('Exposure')
             ramp.append((next_brightness - this_brightness) / self._ref_frame_gaps[index])
 
         ramp.append(0)
