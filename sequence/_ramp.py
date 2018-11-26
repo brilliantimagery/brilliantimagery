@@ -1,4 +1,5 @@
 import math
+import multiprocessing
 
 
 class Ramper:
@@ -50,8 +51,16 @@ class Ramper:
 
     def ramp_exposure(self, rectangle):
         if self._images[self._sorted_times[0]].median_green_value == 0:
-            for image in self._images.values():
-                image.set_median_green_value(image.get_image(rectangle))
+            pool = multiprocessing.Pool()
+            tasks = []
+            for time, image in self._images.items():
+                task = pool.apply_async(self._get_median_green, (time, image, rectangle))
+                tasks.append(task)
+            pool.close()
+            pool.join()
+            for task in tasks:
+                t, i = task.get()
+                self._images[t].median_green_value = i
 
         ramp = []
         for index, ref_frame in enumerate(self._ref_frames[:-1]):
@@ -75,3 +84,8 @@ class Ramper:
 
     def _calc_image_brightness(self, time):
         return self._images[time].median_green_value * 2 ** self._images[time].get_xmp_attribute('Exposure')
+
+    @staticmethod
+    def _get_median_green(time, image, rectangle):
+        image.get_median_green_value(rectangle)
+        return time, image.median_green_value

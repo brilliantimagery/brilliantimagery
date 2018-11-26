@@ -660,6 +660,12 @@ class DNG:
 
         return int(self._xmp[b'xmp:Rating'].get('val', 0)) == DNG._REFERENCE_FRAME_STARS
 
+    def get_median_green_value(self, rectangle=None, image=None):
+        if image:
+            return np.median(image[1, :, :])
+        else:
+            return np.median(self.get_image(rectangle)[1, :, :])
+
     @staticmethod
     def get_possible_xmp_attributes():
         return dcnst.XMP_TAGS
