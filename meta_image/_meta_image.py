@@ -13,8 +13,8 @@ class MetaImage:
     def get_capture_datetime(self):
         return self.image.get_capture_datetime()
 
-    def get_image(self, rectangle=[0.0, 0.0, 1.0, 1.0], sub_image='RAW'):
-        return self.image.get_image(list.copy(rectangle), sub_image)
+    def get_image(self, rectangle=[0.0, 0.0, 1.0, 1.0], sub_image_type='RAW'):
+        return self.image.get_image(list.copy(rectangle), sub_image_type)
 
     def set_median_green_value(self, image):
         self.median_green_value = np.median(image[1, :, :])

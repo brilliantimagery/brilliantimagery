@@ -63,14 +63,10 @@ class Ramper:
 
         ramp.append(0)
 
-        target = self._images[self._sorted_times[0]].median_green_value * \
-                 2 ** self._images[self._sorted_times[0]].get_xmp_attribute('Exposure')
-
         reference_frame_index = -1
         for time in self._sorted_times:
             if time in self._ref_frames:
-                target = self._images[self._sorted_times[0]].median_green_value * \
-                         2 ** self._images[self._sorted_times[0]].get_xmp_attribute('Exposure')
+                target = self._images[time].median_green_value * 2 ** self._images[time].get_xmp_attribute('Exposure')
                 reference_frame_index += 1
             else:
                 exposure = math.log(target / self._images[time].median_green_value, 2)

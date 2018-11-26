@@ -219,7 +219,7 @@ class DNG:
 
         self._ifds[ifd_offset] = ifd
 
-    def get_image(self, rectangle=[0.0, 0.0, 1.0, 1.0], sub_image='RAW') -> MemoryView:
+    def get_image(self, rectangle=[0.0, 0.0, 1.0, 1.0], sub_image_type='RAW') -> MemoryView:
         """
         Get the desired image, thumbnail or raw.
 
@@ -234,7 +234,7 @@ class DNG:
         The top left corner of the cropped area is assumed to be the
         origin. If no crop is applied by the user than the
         DefaultCropOrigin tag data is used as the origin.
-        :param sub_image: selects which sub-image to return from the file
+        :param sub_image_type: selects which sub-image to return from the file
         'RAW' to get the original raw image,
         'Thumbnail' to get the thumbnail if present.
         :return: A 3D numpy array holding the rendered image.
@@ -242,7 +242,7 @@ class DNG:
         The second covers the width.
         The third covers the height.
         """
-        self._get_fields_required_to_render(sub_image)
+        self._get_fields_required_to_render(sub_image_type)
         if not self._xmp:
             self.get_xmp()
         rectangle = dutils.convert_rectangle_percent_to_pixels(self._used_fields, rectangle,

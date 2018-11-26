@@ -1,6 +1,6 @@
 import os
 import sys
-import time
+import datetime
 
 import numpy as np
 
@@ -34,21 +34,25 @@ def test_ramp_and_stabilize():
 
 
 def main():
-    # test_stabelize()
+    # test_stabelize() G:\Pictures\2017\2017-05-03\tl
     # test_reamp()
     # test_ramp_and_stabilize()
-    s = Sequence('G:\\Pictures\\Timelapse\\20161220_test_sequence')
+    t1 = datetime.datetime.now()
+    print('zero', t1)
+    # s = Sequence('G:\\Pictures\\Timelapse\\20161220_test_sequence')
+    s = Sequence('G:\\Pictures\\2017\\2017-05-03\\tl')
     # s = Sequence('G:\\Pictures\\2018\\2018-10-26')
     # s.ramp_minus_exmpsure()
     # s.ramp_exposure([0.5, 0.65, 0.7, 0.85])
     # s.ramp([0.5, 0.65, 0.7, 0.85])
-    t1 = time.time()
-    print('one', t1)
+    print('one', datetime.datetime.now(), datetime.datetime.now() - t1)
     # s.ramp_and_stabilize([0.5, 0.65, 0.7, 0.85], 8)
-    s.ramp_and_stabilize([0.9, 0.4, 1.0, 0.6], 8)
-    print('two', time.time() - t1)
+    # s.ramp_and_stabilize([0.05, 0.2, 0.35, 0.5], 12)
+    s.ramp([0.05, 0.2, 0.35, 0.5])
+    print('two', datetime.datetime.now(), datetime.datetime.now() - t1)
     # s.stabilize([0.5, 0.65, 0.7, 0.85], 8)
     s.save()
+    print('three', datetime.datetime.now(), datetime.datetime.now() - t1)
 
 
 if __name__ == '__main__':
