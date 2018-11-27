@@ -20,7 +20,7 @@ class Stabilizer:
         image0 = images[ordered_times[0]].get_image(self._rectangle)
 
         if keep_brightness:
-            images[ordered_times[0]].get_median_green_value(image0)
+            images[ordered_times[0]].get_median_green_value(image=image0)
 
         images[ordered_times[0]].misalignment = _Point(0, 0)
         pool = multiprocessing.Pool()

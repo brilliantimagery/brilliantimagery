@@ -9,10 +9,18 @@ def render(ifd, rectangle): # sif = sub_image_fields
     assert 'black_level_delta_H' not in ifd
     assert 'black_level_delta_V' not in ifd
     assert 'white_level' in ifd
-    assert ifd['black_level_repeat_dim'] == [2, 2]      # otherwise _render_utils.black_white_rescale breaks
-    assert len(ifd['white_level']) is 1
+    assert len(ifd['white_level']) == 1
+    # assert ifd['black_level_repeat_dim'] == [2, 2]      # otherwise _render_utils.black_white_rescale breaks
+    # assert len(ifd['white_level']) is 1
     assert ifd['photometric_interpretation'] == 32803
     assert ifd['bits_per_sample'][0] is 16
+    if 'black_level' not in ifd:
+        ifd['black_level'] = [0, 0, 0, 0]
+        ifd['black_level_repeat_dim'] == [2, 2]
+    if len(ifd['black_level']) == 1:
+        black_level = ifd['black_level'][0]
+        while len(ifd['black_level']) < 4:
+            ifd['black_level'].append(black_level)
 
     raw_image = _unpack_jpeg_data(ifd)
     raw_image = _clip_to_rendered_rectangle(ifd, raw_image)
@@ -119,8 +127,6 @@ cdef int[:,:] _clip_to_rendered_rectangle(ifd, int[:,:] raw_image):
 
 
 cdef float[:,:] _set_blacks_whites_scale_and_clip(ifd, raw_image):
-    assert len(ifd['white_level']) == 1
-
     cdef int ix
     cdef int iy
     cdef float[:,:] raw_scaled = np.zeros_like(raw_image, dtype=np.float32)
