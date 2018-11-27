@@ -9,7 +9,7 @@ def find_misalignment(reference_rgb_image, probe_image, rectangle, max_pix_of_mi
     probe_rgb_image = probe_image.get_image(rectangle)
     probe_image.misalignment = find_offset(reference_rgb_image, probe_rgb_image, max_pix_of_misalignment)
     if keep_brightness:
-        probe_image.set_median_green_value(probe_rgb_image)
+        probe_image.get_median_green_value(image=probe_rgb_image)
 
     return time_index, probe_image
 

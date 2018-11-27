@@ -51,7 +51,7 @@ def main():
     # s.ramp([0.05, 0.2, 0.35, 0.5])
     print('two', datetime.datetime.now(), datetime.datetime.now() - t1)
     # s.stabilize([0.5, 0.65, 0.7, 0.85], 8)
-    s.save()
+    # s.save()
     print('three', datetime.datetime.now(), datetime.datetime.now() - t1)
 
 
