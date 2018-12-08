@@ -311,9 +311,17 @@ class DNG:
                 n_tiles_long = math.ceil(image_length / section_length)
                 # rendered_x_offset =
             elif 'strip_byte_counts' in self._used_fields:
-                raise Exception('This feature needs work, strip_byte_counts')
-                section_byte_counts = self._used_fields['tile_byte_counts']
-                section_offsets = sub_image_fields['tile_offsets']
+                section_byte_counts = self._used_fields['strip_byte_counts']
+                section_offsets = self._used_fields['strip_offsets']
+                section_width = self._used_fields['image_width']
+                if 'tile_length' in self._used_fields:
+                    section_length = self._used_fields['tile_length']
+                else:
+                    section_length = self._used_fields['image_length']
+                image_width = self._used_fields['image_width']
+                image_length = self._used_fields['image_length']
+                n_tiles_wide = 1
+                n_tiles_long = math.ceil(image_length / section_length)
             for index, (byte_counts, offsets) in enumerate(zip(section_byte_counts, section_offsets)):
                 x1 = index % n_tiles_wide * section_width
                 y1 = index // n_tiles_wide * section_length
@@ -666,9 +674,8 @@ class DNG:
 
     def get_median_green_value(self, rectangle=None, image=None):
         if image is None:
-            return np.median(self.get_image(rectangle)[1, :, :])
-        else:
-            return np.median(image[1, :, :])
+            image = self.get_image(rectangle)
+        return np.median(image[1, :, :])
 
     @staticmethod
     def get_possible_xmp_attributes():

@@ -5,28 +5,35 @@ import ljpeg
 
 
 def render(ifd, rectangle): # sif = sub_image_fields
-    assert 'linearization_table' not in ifd
-    assert 'black_level_delta_H' not in ifd
-    assert 'black_level_delta_V' not in ifd
-    assert 'white_level' in ifd
-    assert len(ifd['white_level']) == 1
-    # assert ifd['black_level_repeat_dim'] == [2, 2]      # otherwise _render_utils.black_white_rescale breaks
-    # assert len(ifd['white_level']) is 1
-    assert ifd['photometric_interpretation'] == 32803
-    assert ifd['bits_per_sample'][0] is 16
-    if 'black_level' not in ifd:
-        ifd['black_level'] = [0, 0, 0, 0]
-        ifd['black_level_repeat_dim'] == [2, 2]
-    if len(ifd['black_level']) == 1:
-        black_level = ifd['black_level'][0]
-        while len(ifd['black_level']) < 4:
-            ifd['black_level'].append(black_level)
+    if ifd['photometric_interpretation'] == 2:
+        if ifd['compression'] == 1:
+            assert len(ifd['section_bytes']) == 1
+            raw_image = _unpack_strip_data(ifd)
+            return raw_image[:, ifd['rendered_rectangle'][0]: ifd['rendered_rectangle'][2],
+                             ifd['rendered_rectangle'][1]: ifd['rendered_rectangle'][3]].base
 
-    raw_image = _unpack_jpeg_data(ifd)
-    raw_image = _clip_to_rendered_rectangle(ifd, raw_image)
-    raw_scaled = _set_blacks_whites_scale_and_clip(ifd, raw_image)
-    raw_scaled = _raw_to_rgb(ifd, raw_scaled)
-    return raw_scaled.base
+    elif ifd['photometric_interpretation'] == 32803:
+        assert 'linearization_table' not in ifd
+        assert 'black_level_delta_H' not in ifd
+        assert 'black_level_delta_V' not in ifd
+        assert 'white_level' in ifd
+        assert len(ifd['white_level']) == 1
+        # assert ifd['black_level_repeat_dim'] == [2, 2]      # otherwise _render_utils.black_white_rescale breaks
+        # assert len(ifd['white_level']) is 1
+        assert ifd['bits_per_sample'][0] is 16
+        if 'black_level' not in ifd:
+            ifd['black_level'] = [0, 0, 0, 0]
+            ifd['black_level_repeat_dim'] == [2, 2]
+        if len(ifd['black_level']) == 1:
+            black_level = ifd['black_level'][0]
+            while len(ifd['black_level']) < 4:
+                ifd['black_level'].append(black_level)
+
+        raw_image = _unpack_jpeg_data(ifd)
+        raw_image = _clip_to_rendered_rectangle(ifd, raw_image)
+        raw_scaled = _set_blacks_whites_scale_and_clip(ifd, raw_image)
+        raw_scaled = _raw_to_rgb(ifd, raw_scaled)
+        return raw_scaled.base
 
 
 cdef float[:,:,:] _raw_to_rgb(ifd, float[:,:] raw_scaled):
@@ -191,6 +198,31 @@ cdef int[:,:] _unpack_jpeg_data(ifd):
             jpeg_data2[:tile_width, :tile_length]
 
     return raw_scaled
+
+
+# TODO: consolidate with _unpack_jpeg_data
+cdef int[:, :, :] _unpack_strip_data(ifd):
+    cdef int[:,:,:] raw_scaled = np.empty((3, ifd['rendered_section_bounding_box'][2]
+                                         - ifd['rendered_section_bounding_box'][0],
+                                         ifd['rendered_section_bounding_box'][3]
+                                         - ifd['rendered_section_bounding_box'][1]),
+                                        dtype=np.intc)
+
+    cdef int n_tiles_wide = max([n[0] for n in ifd['section_bytes'].keys()]) + 1
+    cdef int n_tiles_long = max([n[1] for n in ifd['section_bytes'].keys()]) + 1
+    cdef tuple section_number
+    cdef int[:] section_bytes
+    cdef int[:, :, :] section_bytes_reshaped
+    cdef int section_width = ifd['image_width']
+    cdef int nominal_section_length = ifd['image_length']
+    cdef int section_length = nominal_section_length
+
+    for section_number, section_bytes in ifd['section_bytes'].items():
+        #     section_bytes_reshaped = np.reshape(section_bytes, (3, section_width, nominal_section_length), order='F')
+        #     raw_scaled[:, :, section_number[1] * nominal_section_length: (section_number[1]+1) * nominal_section_length] = \
+        #         section_bytes_reshaped[:, :, section_length]
+        # return raw_scaled
+        return np.reshape(section_bytes, (3, section_width, nominal_section_length), order='F')
 
 #cython: profile=True
 #cython: linetrace=True
