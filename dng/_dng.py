@@ -137,11 +137,11 @@ class DNG:
         Consolidate the fields from throughout the file into a
         single IFD like structure holding all of the fields needed
         to render the desired image.
-        :param sub_image: 'Thumbnail' or 'RAW' depending on which
+        :param sub_image: 'thumbnail' or 'RAW' depending on which
         is to be rendered.
         :return: None
         """
-        if sub_image is 'Thumbnail':
+        if sub_image is 'thumbnail':
             offset = self._thumbnail_offset
         if sub_image is 'RAW':
             offset = self._orig_img_offset
@@ -236,7 +236,7 @@ class DNG:
         DefaultCropOrigin tag data is used as the origin.
         :param sub_image_type: selects which sub-image to return from the file
         'RAW' to get the original raw image,
-        'Thumbnail' to get the thumbnail if present.
+        'thumbnail' to get the thumbnail if present.
         :return: A 3D numpy array holding the rendered image.
         The first dimension covers the color channels, Red, Green, Blue.
         The second covers the width.
@@ -245,11 +245,15 @@ class DNG:
         self._get_fields_required_to_render(sub_image_type)
         if not self._xmp:
             self.get_xmp()
-        rectangle = dutils.convert_rectangle_percent_to_pixels(self._used_fields, rectangle,
-                                                               self._xmp[b'crs:CropLeft'].get('val', 0),
-                                                               self._xmp[b'crs:CropTop'].get('val', 0),
-                                                               self._xmp[b'crs:CropRight'].get('val', 1),
-                                                               self._xmp[b'crs:CropBottom'].get('val', 1))
+        if sub_image_type == 'RAW':
+            rectangle = dutils.convert_rectangle_percent_to_pixels(self._used_fields, rectangle,
+                                                                   self._xmp[b'crs:CropLeft'].get('val', 0),
+                                                                   self._xmp[b'crs:CropTop'].get('val', 0),
+                                                                   self._xmp[b'crs:CropRight'].get('val', 1),
+                                                                   self._xmp[b'crs:CropBottom'].get('val', 1))
+        elif sub_image_type == 'thumbnail':
+            rectangle = dutils.convert_rectangle_percent_to_pixels(self._used_fields, rectangle,
+                                                                   0, 0, 1, 1, sub_image_type)
         self._get_tile_or_strip_bytes(rectangle)
         image = _renderer.render(self._used_fields, rectangle)
         self._clear_section_data()
