@@ -27,8 +27,8 @@ class Sequence:
 
     def ramp(self, rectangle):
         ramper = Ramper(self._images)
-        ramper.ramp_minus_exposure()
         ramper.ramp_exposure(rectangle)
+        ramper.ramp_minus_exposure()
 
     def ramp_and_stabilize(self, rectangle, max_pix_of_misalignment=5):
         self.stabilize(rectangle, max_pix_of_misalignment, keep_brightness=True)

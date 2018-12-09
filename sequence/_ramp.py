@@ -49,6 +49,31 @@ class Ramper:
             for attr in self._xmp_attributes:
                 targets[attr] += ramps[attr][reference_frame_index]
 
+    def ramp_blacks(self):
+        ramps = {}
+        for index, ref_frame in enumerate(self._ref_frames[:-1]):
+            for attr in self._xmp_attributes:
+                if attr not in ramps:
+                    ramps[attr] = []
+                ramps[attr].append((self._images[self._ref_frames[index + 1]].get_xmp_attribute(attr)
+                                    - self._images[ref_frame].get_xmp_attribute(attr))
+                                   / self._ref_frame_gaps[index])
+        for attr in self._xmp_attributes:
+            ramps[attr].append(0)
+
+        targets = {}
+        for attr in self._xmp_attributes:
+            targets[attr] = self._images[self._sorted_times[0]].get_xmp_attribute(attr)
+
+        reference_frame_index = -1
+        for time in self._sorted_times:
+            for attr in self._xmp_attributes:
+                self._images[time].set_xmp_attribute(attr, targets[attr])
+            if time in self._ref_frames:
+                reference_frame_index += 1
+            for attr in self._xmp_attributes:
+                targets[attr] += ramps[attr][reference_frame_index]
+
     def ramp_exposure(self, rectangle):
         if self._images[self._sorted_times[0]].median_green_value == 0:
             pool = multiprocessing.Pool()
