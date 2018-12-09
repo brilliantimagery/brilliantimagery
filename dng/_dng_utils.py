@@ -72,11 +72,13 @@ def convert_rectangle_percent_to_pixels(ifd, rectangle, left_crop, top_crop, rig
         cropped_width = ifd['default_crop_size'][0] * (right_crop - left_crop)
         cropped_length = ifd['default_crop_size'][1] * (bottom_crop - top_crop)
 
-        left_edge = ifd['default_crop_origin'][0] + rectangle[0]*cropped_width + left_crop*ifd['default_crop_size'][0]
+        left_edge = ifd['active_area'][1] + ifd['default_crop_origin'][0] \
+                    + rectangle[0]*cropped_width + left_crop*ifd['default_crop_size'][0]
         left_edge = _round_to_cfa_pattern(left_edge, ifd['cfa_repeat_pattern_dim'][0])
         right_edge = left_edge + (rectangle[2]-rectangle[0])*cropped_width
         right_edge = _round_to_cfa_pattern(right_edge, ifd['cfa_repeat_pattern_dim'][0])
-        top_edge = ifd['default_crop_origin'][1] + rectangle[1]*cropped_length + top_crop*ifd['default_crop_size'][1]
+        top_edge = ifd['active_area'][0] + ifd['default_crop_origin'][1] \
+                   + rectangle[1]*cropped_length + top_crop*ifd['default_crop_size'][1]
         top_edge = _round_to_cfa_pattern(top_edge, ifd['cfa_repeat_pattern_dim'][1])
         bottom_edge = top_edge + (rectangle[3] - rectangle[1]) * cropped_length
         bottom_edge = _round_to_cfa_pattern(bottom_edge, ifd['cfa_repeat_pattern_dim'][1])

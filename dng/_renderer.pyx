@@ -127,10 +127,10 @@ cdef float[:,:,:] _raw_to_rgb(ifd, float[:,:] raw_scaled):
 
 
 cdef int[:,:] _clip_to_rendered_rectangle(ifd, int[:,:] raw_image):
-    return raw_image[ifd['active_area'][1] + ifd['rendered_rectangle'][0] - ifd['rendered_section_bounding_box'][0]:
-                     ifd['active_area'][1] + ifd['rendered_rectangle'][2] - ifd['rendered_section_bounding_box'][0],
-                     ifd['active_area'][1] + ifd['rendered_rectangle'][1] - ifd['rendered_section_bounding_box'][1]:
-                     ifd['active_area'][1] + ifd['rendered_rectangle'][3] - ifd['rendered_section_bounding_box'][1]]
+    return raw_image[ifd['rendered_rectangle'][0] - ifd['rendered_section_bounding_box'][0]:
+                     ifd['rendered_rectangle'][2] - ifd['rendered_section_bounding_box'][0],
+                     ifd['rendered_rectangle'][1] - ifd['rendered_section_bounding_box'][1]:
+                     ifd['rendered_rectangle'][3] - ifd['rendered_section_bounding_box'][1]]
 
 
 cdef float[:,:] _set_blacks_whites_scale_and_clip(ifd, raw_image):
