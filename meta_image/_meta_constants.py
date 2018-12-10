@@ -3,4 +3,5 @@ META_TO_DNG = {'CropLeft': b'crs:CropLeft',
                'CropRight': b'crs:CropRight',
                'CropTop': b'crs:CropTop',
                'Exposure': b'crs:Exposure2012',
+               'Blacks': b'crs:Blacks2012',
                }

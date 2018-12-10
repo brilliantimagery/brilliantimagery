@@ -3,6 +3,15 @@ import multiprocessing
 
 
 class Ramper:
+
+    # _BLACKS_EXPOSURE_COMPENSATION = 15 #higher number makes brighter images (higher iso) darker
+    _EARLY_BLACKS_EXPOSURE_COMPENSATION = -15
+    _MID_BLACKS_EXPOSURE_COMPENSATION = 0
+    _LATE_BLACKS_EXPOSURE_COMPENSATION = 20
+
+    _EARLY_MID_TRANSITION = 221
+    _MID_LATE_TRANSITION = 326
+
     def __init__(self, images):
         self._images = images
         self._ref_frames = []
@@ -34,7 +43,7 @@ class Ramper:
                                     - self._images[ref_frame].get_xmp_attribute(attr))
                                    / self._ref_frame_gaps[index])
         for attr in self._xmp_attributes:
-            ramps[attr].append(0)
+            ramps[attr].append(0.0)
 
         targets = {}
         for attr in self._xmp_attributes:
@@ -48,31 +57,50 @@ class Ramper:
                 reference_frame_index += 1
             for attr in self._xmp_attributes:
                 targets[attr] += ramps[attr][reference_frame_index]
+        self._ramp_blacks()
 
-    def ramp_blacks(self):
+    def _ramp_blacks(self):
+
         ramps = {}
+        _xmp_attributes = ['Blacks', 'Exposure']
         for index, ref_frame in enumerate(self._ref_frames[:-1]):
-            for attr in self._xmp_attributes:
+            for attr in _xmp_attributes:
                 if attr not in ramps:
                     ramps[attr] = []
                 ramps[attr].append((self._images[self._ref_frames[index + 1]].get_xmp_attribute(attr)
                                     - self._images[ref_frame].get_xmp_attribute(attr))
                                    / self._ref_frame_gaps[index])
-        for attr in self._xmp_attributes:
-            ramps[attr].append(0)
+        for attr in _xmp_attributes:
+            ramps[attr].append(0.0)
 
         targets = {}
-        for attr in self._xmp_attributes:
+        for attr in _xmp_attributes[:-1]:
             targets[attr] = self._images[self._sorted_times[0]].get_xmp_attribute(attr)
 
-        reference_frame_index = -1
-        for time in self._sorted_times:
-            for attr in self._xmp_attributes:
+        reference_frame_index = 0
+        last_exposure = self._images[self._sorted_times[0]].get_xmp_attribute('Exposure')
+        for index, time in enumerate(self._sorted_times[1:]):
+            this_exposure = self._images[time].get_xmp_attribute('Exposure')
+
+            if index < Ramper._EARLY_MID_TRANSITION:
+                exposure_compensation = Ramper._EARLY_BLACKS_EXPOSURE_COMPENSATION
+            if Ramper._EARLY_MID_TRANSITION <= index < Ramper._MID_LATE_TRANSITION:
+                exposure_compensation = Ramper._MID_BLACKS_EXPOSURE_COMPENSATION
+            if Ramper._MID_LATE_TRANSITION <= index:
+                exposure_compensation = Ramper._LATE_BLACKS_EXPOSURE_COMPENSATION
+
+            for attr in _xmp_attributes[:-1]:
+                targets[attr] += ramps[attr][reference_frame_index] \
+                                 + (this_exposure - last_exposure - ramps['Exposure'][reference_frame_index]) \
+                                 * exposure_compensation
+
+            for attr in _xmp_attributes[:-1]:
                 self._images[time].set_xmp_attribute(attr, targets[attr])
+
             if time in self._ref_frames:
                 reference_frame_index += 1
-            for attr in self._xmp_attributes:
-                targets[attr] += ramps[attr][reference_frame_index]
+
+            last_exposure = this_exposure
 
     def ramp_exposure(self, rectangle):
         if self._images[self._sorted_times[0]].median_green_value == 0:
