@@ -1,7 +1,9 @@
-# from concurrent.futures import Future
-# from concurrent.futures.process import ProcessPoolExecutor as PoolExecutor
+import concurrent.futures
+import itertools
 import multiprocessing
-import numpy as np
+# import numpy as np
+
+from tqdm import tqdm
 
 from . import _stabilize_util as sutil
 from ._stabilize_util import _Point
@@ -14,6 +16,9 @@ class Stabilizer:
         self._rectangle = rectangle
         self._max_pix_of_misalignment = max_pix_of_misalignment
 
+    def _update_pbar(self, *a):
+        self._pbar.update()
+
     def find_misalignments(self, keep_brightness=False):
         images = self._images
         ordered_times = sorted(images.keys())
@@ -23,17 +28,32 @@ class Stabilizer:
             images[ordered_times[0]].get_median_green_value(image=image0)
 
         images[ordered_times[0]].misalignment = _Point(0, 0)
-        pool = multiprocessing.Pool()
+
         tasks = []
+        pool = multiprocessing.Pool()
+        self._pbar = tqdm(total=len(images) - 1, desc='Finding misalignments: ')
         for time in ordered_times[1:]:
             task = pool.apply_async(sutil.find_misalignment, (image0, images[time], self._rectangle,
-                                                              self._max_pix_of_misalignment, keep_brightness, time))
+                                                              self._max_pix_of_misalignment, keep_brightness, time),
+                                    callback=self._update_pbar)
             tasks.append(task)
         pool.close()
         pool.join()
         for task in tasks:
             t, i = task.get()
             images[t] = i
+
+        # TODO: this seems cleaner but is generating an error 'Process finished with exit code -1073741819 (0xC0000005)'
+        # ordered_images = [images[time] for time in ordered_times[1:]]
+        # with concurrent.futures.ThreadPoolExecutor() as executor:
+        #     tasks = list(tqdm(executor.map(sutil.find_misalignment, itertools.repeat(image0, len(ordered_images)),
+        #                                    ordered_images, itertools.repeat(self._rectangle, len(ordered_images)),
+        #                                    itertools.repeat(self._max_pix_of_misalignment, len(ordered_images)),
+        #                                    itertools.repeat(keep_brightness, len(ordered_images)), ordered_times[1:]),
+        #                  total=len(ordered_times[1:]),
+        #                  desc='Find misalignments: '))
+        # for time, image in tasks:
+        #     self._images[time] = image
 
     def update_xmp_attributes(self):
         example_image = next(iter(self._images.values()))

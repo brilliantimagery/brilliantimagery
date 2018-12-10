@@ -5,7 +5,8 @@ import numpy as np
 _Point = collections.namedtuple('_Point', 'x y')
 
 
-def find_misalignment(reference_rgb_image, probe_image, rectangle, max_pix_of_misalignment, keep_brightness, time_index):
+def find_misalignment(reference_rgb_image, probe_image, rectangle, max_pix_of_misalignment,
+                      keep_brightness, time_index):
     probe_rgb_image = probe_image.get_image(rectangle)
     probe_image.misalignment = find_offset(reference_rgb_image, probe_rgb_image, max_pix_of_misalignment)
     if keep_brightness:

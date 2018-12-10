@@ -13,9 +13,11 @@ class Sequence:
         self._images = dict()
         files = [join(self._path, f) for f in listdir(self._path) if
                  isfile(join(self._path, f)) and f[-3:].lower() == 'dng']
-        for path in files:
-            file = MetaImage(path)
-            self._images[file.get_capture_datetime()] = file
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            images = list(tqdm(executor.map(MetaImage, files), total=len(files), desc='Parsing files: '))
+        for image in images:
+            self._images[image.get_capture_datetime()] = image
+
 
     def ramp_minus_exmpsure(self):
         ramper = Ramper(self._images)
