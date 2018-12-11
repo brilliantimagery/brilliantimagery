@@ -79,13 +79,13 @@ class DNG:
         beginning of the file so that it can be parsed.
         :param path: File name of the DNG file
         """
-        self.path = path
+        self._path = path
         self._ifds = dict()
         self._used_fields = dict()
         self._xmp = defaultdict(dict)
         self._updated = False
         self._xmp_length_changed = False
-        with open(self.path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
+        with open(self._path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
             self._byte_order = f.read(2)
             if self._byte_order == b'II':
                 self._byte_order = '<'
@@ -120,9 +120,9 @@ class DNG:
                 See http://stackoverflow.com/a/39501288/1709587 for explanation.
                 """
             if platform.system() == 'Windows':
-                return os.path.getctime(self.path)
+                return os.path.getctime(self._path)
             else:
-                stat = os.stat(self.path)
+                stat = os.stat(self._path)
                 try:
                     return stat.st_birthtime
                 except AttributeError:
@@ -282,7 +282,7 @@ class DNG:
 
         :return: None
         """
-        with open(self.path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
+        with open(self._path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
             f.seek(self._zeroth_ifd)
             self._get_ifd_fields(f)
 
@@ -299,7 +299,7 @@ class DNG:
         self._used_fields['section_bytes'] = {}
         self._used_fields['rendered_section_bounding_box'] = []
         self._used_fields['rendered_rectangle'] = rectangle
-        with open(self.path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
+        with open(self._path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
             if 'tile_byte_counts' in self._used_fields:
                 section_byte_counts = self._used_fields['tile_byte_counts']
                 section_offsets = self._used_fields['tile_offsets']
@@ -477,7 +477,7 @@ class DNG:
                             last_item = field.value_offset
 
                 if last_item == self._ifds[self._xmp_ifd_offset][700].value_offset:
-                    with open(self.path, 'r+b', DNG._BUFFER_SIZE) as f:
+                    with open(self._path, 'r+b', DNG._BUFFER_SIZE) as f:
                         f.seek(self._ifds[self._xmp_ifd_offset][700].value_offset)
                         f.write(self._ifds[self._xmp_ifd_offset][700].values[0])
                         if f.tell() % 1:
@@ -485,7 +485,7 @@ class DNG:
                 else:
                     self._write_dng()
             else:
-                with open(self.path, 'r+b', DNG._BUFFER_SIZE) as f:
+                with open(self._path, 'r+b', DNG._BUFFER_SIZE) as f:
                     f.seek(self._ifds[self._xmp_ifd_offset][700].value_offset)
                     f.write(self._ifds[self._xmp_ifd_offset][700].values[0])
 
@@ -496,10 +496,10 @@ class DNG:
         :return: None
         """
         first_ifd_location = 8
-        with open(self.path + '.temp', 'w+b') as wf:
+        with open(self._path + '.temp', 'w+b') as wf:
             pass
-        with open(self.path + '.temp', 'r+b', DNG._BUFFER_SIZE) as wf:
-            with open(self.path, 'rb', DNG._BUFFER_SIZE) as rf:
+        with open(self._path + '.temp', 'r+b', DNG._BUFFER_SIZE) as wf:
+            with open(self._path, 'rb', DNG._BUFFER_SIZE) as rf:
                 if self._byte_order == '>':
                     wf.write(bytes('MM', 'utf-8'))
                 else:
@@ -510,8 +510,8 @@ class DNG:
                 wf.seek(self._write_ifd(wf, rf, self._ifds[self._thumbnail_offset], first_ifd_location))
             if wf.tell() % 2:
                 self._write_value(wf, 0, data_type=1)
-        os.remove(self.path)
-        os.rename(self.path + '.temp', self.path)
+        os.remove(self._path)
+        os.rename(self._path + '.temp', self._path)
 
     def _write_ifd(self, wf, rf, ifd, write_location):
         """

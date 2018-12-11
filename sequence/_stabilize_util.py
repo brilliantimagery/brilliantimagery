@@ -8,14 +8,14 @@ _Point = collections.namedtuple('_Point', 'x y')
 def find_misalignment(reference_rgb_image, probe_image, rectangle, max_pix_of_misalignment,
                       keep_brightness, time_index):
     probe_rgb_image = probe_image.get_image(rectangle)
-    probe_image.misalignment = find_offset(reference_rgb_image, probe_rgb_image, max_pix_of_misalignment)
+    probe_image.misalignment = _find_offset(reference_rgb_image, probe_rgb_image, max_pix_of_misalignment)
     if keep_brightness:
         probe_image.get_median_green_value(image=probe_rgb_image)
 
     return time_index, probe_image
 
 
-def find_offset(reference_rgb_image, probe_rgb_image, max_misalignment):
+def _find_offset(reference_rgb_image, probe_rgb_image, max_misalignment):
     img0 = _get_brightness_deltas(reference_rgb_image)
     img1 = _get_brightness_deltas(probe_rgb_image)
 
