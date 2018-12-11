@@ -1,5 +1,9 @@
+# from concurrent.futures.process import ProcessPoolExecutor as PoolExecutor
+import concurrent.futures
 from os import listdir
 from os.path import isfile, join
+
+from tqdm import tqdm
 
 from ._stabilize import Stabilizer
 from ._ramp import Ramper
