@@ -1,6 +1,8 @@
 import math
 import multiprocessing
 
+from tqdm import tqdm
+
 
 class Ramper:
 
@@ -102,12 +104,16 @@ class Ramper:
 
             last_exposure = this_exposure
 
+    def _update_pbar(self, *a):
+        self._pbar.update()
+
     def ramp_exposure(self, rectangle):
         if self._images[self._sorted_times[0]].median_green_value == 0:
-            pool = multiprocessing.Pool()
             tasks = []
+            pool = multiprocessing.Pool()
+            self._pbar = tqdm(total=len(self._images) - 1, desc='Exposure Ramping: ')
             for time, image in self._images.items():
-                task = pool.apply_async(self._get_median_green, (time, image, rectangle))
+                task = pool.apply_async(self._get_median_green, (time, image, rectangle), callback=self._update_pbar)
                 tasks.append(task)
             pool.close()
             pool.join()
