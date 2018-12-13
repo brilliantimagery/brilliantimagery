@@ -23,21 +23,10 @@ def _find_offset(reference_rgb_image, probe_rgb_image, max_misalignment):
 
     for dx in range(-max_misalignment, max_misalignment):
         for dy in range(-max_misalignment, max_misalignment):
-            # delta = 0
-            # for ix in range(max_misalignment, img0.shape[0] - max_misalignment):
-            #     for iy in range(max_misalignment, img0.shape[1] - max_misalignment):
-            #         delta += abs(img0[ix, iy] - img1[ix + dx, iy + dy])
             d = np.subtract(img0[max_misalignment:-max_misalignment, max_misalignment:-max_misalignment],
                             img1[max_misalignment + dx:-(max_misalignment - dx),
                                  max_misalignment + dy:-(max_misalignment - dy)])
-            # a = np.abs(d)
-            # s = np.sum(np.abs(d))
             deltas[_Point(dx, dy)] = np.sum(np.abs(d))
-            # deltas[_Point(dx, dy)] = np.sum(np.abs(np.subtract(image0[max_misalignment:
-            #                                                           -max_misalignment],
-            #                                                    image1[max_misalignment + dx:
-            #                                                           -(max_misalignment + dx)])))
-            # deltas[_Point(dx, dy)] = delta
 
     min_delta = min(deltas.values())
 
