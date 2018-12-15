@@ -46,6 +46,6 @@ class Sequence:
         stabilizer.update_xmp_attributes()
 
     def save(self):
-        for image in tqdm(self._images.values(), desc='Updating files: '):
+        for image in tqdm(self._images.values(), desc='Updating files: ', total=len(self._images)):
             image.store_xmp_field()
             image.save()
