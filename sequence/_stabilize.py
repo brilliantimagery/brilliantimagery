@@ -11,10 +11,10 @@ from meta_image import MetaImage
 
 
 class Stabilizer:
-    def __init__(self, images, rectangle, max_pix_of_misalignment):
+    def __init__(self, images, rectangle, max_misalignment_to_check):
         self._images = images
         self._rectangle = rectangle
-        self._max_pix_of_misalignment = max_pix_of_misalignment
+        self._max_misalignment_to_check = max_misalignment_to_check
 
     def _update_pbar(self, *a):
         self._pbar.update()
@@ -34,7 +34,7 @@ class Stabilizer:
         self._pbar = tqdm(total=len(images) - 1, desc='Finding misalignments: ')
         for time in ordered_times[1:]:
             task = pool.apply_async(sutil.find_misalignment, (image0, images[time], self._rectangle,
-                                                              self._max_pix_of_misalignment, keep_brightness, time),
+                                                              self._max_misalignment_to_check, keep_brightness, time),
                                     callback=self._update_pbar)
             tasks.append(task)
         pool.close()
