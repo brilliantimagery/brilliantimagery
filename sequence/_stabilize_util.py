@@ -7,52 +7,33 @@ import numpy as np
 _Point = collections.namedtuple('_Point', 'x y')
 
 
-def find_misalignment(reference_rgb_image, probe_image, rectangle, max_misalignment_to_check,
-                      keep_brightness, time_index):
-    probe_rgb_image = probe_image.get_image(rectangle)
-    # probe_image.misalignment = _find_offset(reference_rgb_image, probe_rgb_image, max_misalignment_to_check)
-    probe_image.misalignment = opencv_stuff(reference_rgb_image, probe_rgb_image)
+def find_misalignment(image0, image1, rectangle, keep_brightness, time_index):
+    rgb_image0 = image0.get_image(rectangle)
+    rgb_image1 = image1.get_image(rectangle)
+    image1.misalignment = _find_offset(rgb_image0, rgb_image1)
     if keep_brightness:
-        probe_image.get_median_green_value(image=probe_rgb_image)
+        image1.get_median_green_value(image=rgb_image1)
 
-    return time_index, probe_image
+    return time_index, image1
 
 
-def opencv_stuff(im1, im2):
+def _find_offset(im1, im2):
+    image_1_gray = (im1[0, :, :] + im1[0, :, :] + im1[0, :, :]) / 3
+    image_2_gray = (im2[0, :, :] + im2[0, :, :] + im2[0, :, :]) / 3
 
-    im1_gray = (im1[0, :, :] + im1[0, :, :] + im1[0, :, :]) / 3
-    im2_gray = (im2[0, :, :] + im2[0, :, :] + im2[0, :, :]) / 3
+    image_1_median = np.median(image_1_gray)
+    image_2_median = np.median(image_2_gray)
+
+    image_1_gray /= image_1_median / image_2_median
 
     mapper = cv2.reg_MapperGradShift()
     mappPyr = cv2.reg_MapperPyramid(mapper)
 
-    resMap = mappPyr.calculate(im1_gray, im2_gray)
+    resMap = mappPyr.calculate(image_1_gray, image_2_gray)
     mapShift = cv2.reg_MapTypeCaster().toShift(resMap)
 
-    a = mapShift.getShift()
-    c = a[0][0], a[1][0]
-    return _Point(round(a[0][0]), round(a[1][0]))
-
-
-def _find_offset(reference_rgb_image, probe_rgb_image, max_misalignment_to_check):
-    img0 = _get_brightness_deltas(reference_rgb_image)
-    img1 = _get_brightness_deltas(probe_rgb_image)
-
-    deltas = dict()
-
-    for dx in range(-max_misalignment_to_check, max_misalignment_to_check):
-        for dy in range(-max_misalignment_to_check, max_misalignment_to_check):
-            d = np.subtract(img0[max_misalignment_to_check:-max_misalignment_to_check,
-                            max_misalignment_to_check:-max_misalignment_to_check],
-                            img1[max_misalignment_to_check + dx:-(max_misalignment_to_check - dx),
-                            max_misalignment_to_check + dy:-(max_misalignment_to_check - dy)])
-            deltas[_Point(dx, dy)] = np.sum(np.abs(d))
-
-    min_delta = min(deltas.values())
-
-    for k, v in deltas.items():
-        if v == min_delta:
-            return k
+    shift = mapShift.getShift()
+    return [shift[1][0], shift[0][0]]
 
 
 def _get_brightness_deltas(rgb_image):
@@ -72,14 +53,14 @@ def misalignment_bounding_box(images):
     max_y = -500
 
     for image in images:
-        if image.misalignment.x < min_x:
-            min_x = image.misalignment.x
-        if image.misalignment.x > max_x:
-            max_x = image.misalignment.x
-        if image.misalignment.y < min_y:
-            min_y = image.misalignment.y
-        if image.misalignment.y > max_y:
-            max_y = image.misalignment.y
+        if image.misalignment[0] < min_x:
+            min_x = image.misalignment[0]
+        if image.misalignment[0] > max_x:
+            max_x = image.misalignment[0]
+        if image.misalignment[1] < min_y:
+            min_y = image.misalignment[1]
+        if image.misalignment[1] > max_y:
+            max_y = image.misalignment[1]
 
     return min_x, min_y, max_x, max_y
 

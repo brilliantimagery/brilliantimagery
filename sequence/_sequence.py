@@ -12,6 +12,7 @@ from meta_image import MetaImage
 
 class Sequence:
     def __init__(self, path):
+        tqdm.monitor_interval = 0
         self._path = path
         self._ordered_capture_times = []
         self._images = dict()
@@ -21,7 +22,6 @@ class Sequence:
             images = list(tqdm(executor.map(MetaImage, files), total=len(files), desc='Parsing files: '))
         for image in images:
             self._images[image.get_capture_datetime()] = image
-
 
     def ramp_minus_exmpsure(self):
         ramper = Ramper(self._images)
@@ -40,8 +40,8 @@ class Sequence:
         self.stabilize(rectangle, max_pix_of_misalignment, keep_brightness=True)
         self.ramp(rectangle)
 
-    def stabilize(self, rectangle, max_pix_of_misalignment=5, keep_brightness=False):
-        stabilizer = Stabilizer(self._images, rectangle, max_pix_of_misalignment)
+    def stabilize(self, rectangle, keep_brightness=False):
+        stabilizer = Stabilizer(self._images, rectangle)
         stabilizer.find_misalignments(keep_brightness)
         stabilizer.update_xmp_attributes()
 
