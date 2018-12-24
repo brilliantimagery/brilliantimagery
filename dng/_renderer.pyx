@@ -1,10 +1,14 @@
 # distutils: language=c++
 import numpy as np
 
+import cv2
+
 import ljpeg
 
 
-def render(ifd, rectangle): # sif = sub_image_fields
+def render(ifd, rectangle, active_area_offset): # sif = sub_image_fields
+    cdef int _
+
     if ifd['photometric_interpretation'] == 2:
         if ifd['compression'] == 1:
             assert len(ifd['section_bytes']) == 1
@@ -13,30 +17,34 @@ def render(ifd, rectangle): # sif = sub_image_fields
                              ifd['rendered_rectangle'][1]: ifd['rendered_rectangle'][3]].base
 
     elif ifd['photometric_interpretation'] == 32803:
-        assert 'linearization_table' not in ifd
+        print(ifd)
         assert 'black_level_delta_H' not in ifd
-        assert 'black_level_delta_V' not in ifd
         assert 'white_level' in ifd
         assert len(ifd['white_level']) == 1
-        # assert ifd['black_level_repeat_dim'] == [2, 2]      # otherwise _render_utils.black_white_rescale breaks
-        # assert len(ifd['white_level']) is 1
+        assert ifd['samples_per_pix'] == 1
+        assert ifd['black_level_repeat_dim'] == [2, 2] or ifd['black_level_repeat_dim'] == [1, 1]      # otherwise _render_utils.black_white_rescale breaks
+        assert len(ifd['white_level']) is 1
         assert ifd['bits_per_sample'][0] is 16
-        if 'black_level' not in ifd:
+        if 'black_level' not in ifd and ifd['cfa_pattern'] == [2, 2]:
             ifd['black_level'] = [0, 0, 0, 0]
             ifd['black_level_repeat_dim'] == [2, 2]
         if len(ifd['black_level']) == 1:
-            black_level = ifd['black_level'][0]
-            while len(ifd['black_level']) < 4:
-                ifd['black_level'].append(black_level)
+            ifd['black_level'] = ifd['black_level'] * len(ifd['cfa_pattern'])
+        if 'black_level_delta_V' not in ifd:
+            ifd['black_level_delta_V'] = [0] * ifd['image_length']
+
 
         raw_image = _unpack_jpeg_data(ifd)
         raw_image = _clip_to_rendered_rectangle(ifd, raw_image)
-        raw_scaled = _set_blacks_whites_scale_and_clip(ifd, raw_image)
-        raw_scaled = _raw_to_rgb(ifd, raw_scaled)
+        raw_scaled = _set_blacks_whites_scale_and_clip(ifd, raw_image, active_area_offset)
+        raw_scaled = _raw_to_rgb(ifd, raw_scaled, active_area_offset)
         return raw_scaled.base
 
+    elif ifd['photometric_interpretation'] == 34892:
+        assert False
 
-cdef float[:,:,:] _raw_to_rgb(ifd, float[:,:] raw_scaled):
+
+cdef float[:,:,:] _raw_to_rgb(ifd, float[:,:] raw_scaled, active_area_offset):
     cdef int width = raw_scaled.shape[0] - 1
     cdef int height = raw_scaled.shape[1] - 1
 
@@ -51,8 +59,8 @@ cdef float[:,:,:] _raw_to_rgb(ifd, float[:,:] raw_scaled):
     cdef list cfa_repeat_pattern_dim = ifd['cfa_repeat_pattern_dim']
     for ix in range(width + 1):
         for iy in range(height + 1):
-            ic = cfa_pattern[(iy % cfa_repeat_pattern_dim[1] * cfa_repeat_pattern_dim[0]
-                              + ix % cfa_repeat_pattern_dim[0])]
+            ic = cfa_pattern[((iy + active_area_offset[1]) % cfa_repeat_pattern_dim[1] * cfa_repeat_pattern_dim[0]
+                              + (ix + active_area_offset[0]) % cfa_repeat_pattern_dim[0])]
             rgb_image_middle_pixel_value[ic, ix, iy] = raw_scaled[ix, iy]
 
     cdef float sample = 0
@@ -133,23 +141,37 @@ cdef int[:,:] _clip_to_rendered_rectangle(ifd, int[:,:] raw_image):
                      ifd['rendered_rectangle'][3] - ifd['rendered_section_bounding_box'][1]]
 
 
-cdef float[:,:] _set_blacks_whites_scale_and_clip(ifd, raw_image):
+cdef float[:,:] _set_blacks_whites_scale_and_clip(ifd, int[:, :] raw_image, tuple active_area_offset):
     cdef int ix
     cdef int iy
     cdef float[:,:] raw_scaled = np.zeros_like(raw_image, dtype=np.float32)
     cdef list black_level = ifd['black_level']
+    cdef list black_level_delta_v = ifd['black_level_delta_V']
     cdef list white_level = ifd['white_level']
+    cdef list linearization_table = []
 
-    for iy in range(0, raw_scaled.shape[1], 2):
-        for ix in range(0, raw_scaled.shape[0], 2):
+    if 'linearization_table' in ifd:
+        linearization_table = ifd['linearization_table']
+        for iy in range(raw_image.shape[1]):
+            for ix in range(raw_image.shape[0]):
+                if raw_image[ix, iy] > len(linearization_table):
+                    raw_image[ix, iy] = linearization_table[-1]
+                else:
+                    raw_image[ix, iy] = linearization_table[raw_image[ix, iy]]
+
+    # TODO Bug assumes ifd['black_level_repeat_dim'] == [2, 2]
+    if active_area_offset[0] % ifd['cfa_repeat_pattern_dim'][0] == 1:
+        black_level = [black_level[1], black_level[0], black_level[3], black_level[2]]
+    if active_area_offset[1] % ifd['cfa_repeat_pattern_dim'][1] == 1:
+        black_level = [black_level[2], black_level[3], black_level[0], black_level[1]]
+    for iy in range(raw_scaled.shape[1]):
+        for ix in range(raw_scaled.shape[0]):
             raw_scaled[ix, iy] = _rescale_and_clip(raw_image[ix, iy],
-                                                    black_level[0], white_level[0])
-            raw_scaled[ix + 1, iy] = _rescale_and_clip(raw_image[ix + 1, iy],
-                                                        black_level[1], white_level[0])
-            raw_scaled[ix, iy + 1] = _rescale_and_clip(raw_image[ix, iy + 1],
-                                                        black_level[2], white_level[0])
-            raw_scaled[ix + 1, iy + 1] = _rescale_and_clip(raw_image[ix + 1, iy + 1],
-                                                            black_level[3], white_level[0])
+                                                   black_level[iy % ifd['black_level_repeat_dim'][0]
+                                                                * ifd['black_level_repeat_dim'][1]]
+                                                                + ix % ifd['black_level_repeat_dim'][1]
+                                                   + black_level_delta_v[active_area_offset[1] + iy],
+                                                   white_level[0])
 
     return raw_scaled
 

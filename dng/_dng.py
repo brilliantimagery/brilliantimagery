@@ -246,16 +246,16 @@ class DNG:
         if not self._xmp:
             self.get_xmp()
         if sub_image_type == 'RAW':
-            rectangle = dutils.convert_rectangle_percent_to_pixels(self._used_fields, rectangle,
+            rectangle, active_area_offset = dutils.convert_rectangle_percent_to_pixels(self._used_fields, rectangle,
                                                                    self._xmp[b'crs:CropLeft'].get('val', 0),
                                                                    self._xmp[b'crs:CropTop'].get('val', 0),
                                                                    self._xmp[b'crs:CropRight'].get('val', 1),
                                                                    self._xmp[b'crs:CropBottom'].get('val', 1))
         elif sub_image_type == 'thumbnail':
-            rectangle = dutils.convert_rectangle_percent_to_pixels(self._used_fields, rectangle,
+            rectangle, active_area_offset = dutils.convert_rectangle_percent_to_pixels(self._used_fields, rectangle,
                                                                    0, 0, 1, 1, sub_image_type)
         self._get_tile_or_strip_bytes(rectangle)
-        image = _renderer.render(self._used_fields, rectangle)
+        image = _renderer.render(self._used_fields, rectangle, active_area_offset)
         self._clear_section_data()
         return image
 

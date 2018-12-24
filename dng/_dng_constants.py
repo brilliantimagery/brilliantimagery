@@ -130,7 +130,7 @@ DNG_TAGS = {256: __Rendering_Tag(False, False, 'image_width', True),  # IMAGE_WI
             # 34665: {'Name': 'exif_ifd', 'Used To Render': False},
             50710: __Rendering_Tag(False, False, 'cfa_plane_color', True),
             50711: __Rendering_Tag(False, False, 'cfa_layout', True),
-            50712: __Rendering_Tag(False, False, 'linearization_table', True),
+            50712: __Rendering_Tag(True, False, 'linearization_table', True),
             50713: __Rendering_Tag(True, False, 'black_level_repeat_dim', True),
             50714: __Rendering_Tag(True, False, 'black_level', True),
             50715: __Rendering_Tag(True, False, 'black_level_delta_H', True),
