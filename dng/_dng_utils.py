@@ -1,5 +1,5 @@
 import struct
-from typing import Optional, List
+from typing import Any, List, Optional, Tuple, Union
 
 
 def get_xmp_attribute_value(xmp_buffer: bytes, xmp_attribute: bytes) -> Optional[str]:
@@ -43,7 +43,8 @@ def renderd_area_bounding_box(bounding_box: List, x0, y0, x1, y1) -> List:
 
 
 def convert_rectangle_percent_to_pixels(ifd, rectangle, left_crop, top_crop, right_crop, bottom_crop,
-                                        sub_image_type='RAW') -> List[int]:
+                                        sub_image_type='RAW') -> \
+        Tuple[List[int], Tuple[Union[int, Any], Union[int, Any]]]:
     """
     Reformats the rectangle into absolute pixel terms.
 
