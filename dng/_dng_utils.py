@@ -62,25 +62,15 @@ def convert_rectangle_percent_to_pixels(ifd, rectangle, left_crop, top_crop, rig
     :return: The reformatted rectangle as a list
     """
     if sub_image_type == 'RAW':
-        # assert ifd['default_crop_origin'][0] == ifd['default_crop_origin'][1]
-        # assert ifd['active_area'][0] % ifd['cfa_repeat_pattern_dim'][0] == 0
-        # assert ifd['active_area'][1] % ifd['cfa_repeat_pattern_dim'][1] == 0
-
-        # assert ifd['cfa_repeat_pattern_dim'] == [2, 2]
-
         cropped_width = ifd['default_crop_size'][0] * (right_crop - left_crop)
         cropped_length = ifd['default_crop_size'][1] * (bottom_crop - top_crop)
 
         left_edge = int(ifd['active_area'][1] + ifd['default_crop_origin'][0]
                         + rectangle[0]*cropped_width + left_crop*ifd['default_crop_size'][0])
-        # left_edge = _round_to_cfa_pattern(left_edge, ifd['cfa_repeat_pattern_dim'][0])
         right_edge = int(left_edge + (rectangle[2]-rectangle[0])*cropped_width)
-        # right_edge = _round_to_cfa_pattern(right_edge, ifd['cfa_repeat_pattern_dim'][0])
         top_edge = int(ifd['active_area'][0] + ifd['default_crop_origin'][1]
                        + rectangle[1]*cropped_length + top_crop*ifd['default_crop_size'][1])
-        # top_edge = _round_to_cfa_pattern(top_edge, ifd['cfa_repeat_pattern_dim'][1])
         bottom_edge = int(top_edge + (rectangle[3] - rectangle[1]) * cropped_length)
-        # bottom_edge = _round_to_cfa_pattern(bottom_edge, ifd['cfa_repeat_pattern_dim'][1])
     elif sub_image_type == 'thumbnail':
         left_edge = int(ifd['image_width'] * rectangle[0])
         top_edge = int(ifd['image_length'] * rectangle[1])
@@ -91,10 +81,6 @@ def convert_rectangle_percent_to_pixels(ifd, rectangle, left_crop, top_crop, rig
     rectangle[1] = top_edge
     rectangle[2] = right_edge
     rectangle[3] = bottom_edge
-
-    # will break render._set_blacks_whites_scale_and_clip and _render.
-    # assert left_edge % -ifd['cfa_repeat_pattern_dim'][0] == 0
-    # assert top_edge % -ifd['cfa_repeat_pattern_dim'][1] == 0
 
     return rectangle, (left_edge - ifd['active_area'][1], top_edge - ifd['active_area'][0])
 
