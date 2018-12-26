@@ -13,9 +13,9 @@ def render(ifd, rectangle, active_area_offset):
                              ifd['rendered_rectangle'][1]: ifd['rendered_rectangle'][3]].base
 
     elif ifd['photometric_interpretation'] in [32803, 34892]:
-        assert 'tile_offsets' in ifd
+        # assert 'tile_offsets' in ifd
         assert 'white_level' in ifd
-        assert ifd['black_level_repeat_dim'] == [2, 2] or ifd['black_level_repeat_dim'] == [1, 1]      # otherwise _render_utils.black_white_rescale breaks
+        assert len(ifd['black_level']) in [1, 4]      # otherwise _render_utils.black_white_rescale breaks
         assert ifd['bits_per_sample'][0] is 16
         if 'black_level' not in ifd and ifd['cfa_repeat_pattern_dim'] == [2, 2]:
             ifd['black_level'] = [0, 0, 0, 0]
@@ -28,7 +28,10 @@ def render(ifd, rectangle, active_area_offset):
         if 'black_level_delta_V' not in ifd:
             ifd['black_level_delta_V'] = [0] * ifd['image_length']
 
-        raw_image = _unpack_tile_data(ifd)
+        if 'tile_offsets' in ifd:
+            raw_image = _unpack_tile_data(ifd)
+        elif 'strip_offsets' in ifd:
+            raw_image = _unpack_strip_data(ifd)
         raw_image = _clip_to_rendered_rectangle(ifd, raw_image)
         raw_scaled = _set_blacks_whites_scale_and_clip(ifd, raw_image, active_area_offset)
         if ifd['photometric_interpretation'] == 32803:
@@ -198,6 +201,7 @@ cdef float _rescale_and_clip(float color_value, int black_level, int white_level
 
 
 cdef int[:,:,:] _unpack_tile_data(ifd):
+    # print(ifd)
     cdef int samples_per_pix = ifd['samples_per_pix']
     cdef int n_tiles_wide = max([n[0] for n in ifd['section_bytes'].keys()]) + 1
     cdef int n_tiles_long = max([n[1] for n in ifd['section_bytes'].keys()]) + 1
@@ -226,7 +230,7 @@ cdef int[:,:,:] _unpack_tile_data(ifd):
         if section_number[1] < n_tiles_long - 1:
             tile_length = nominal_tile_length
         else:
-            tile_length = raw_scaled.shape[1] - nominal_tile_length * (n_tiles_long - 1)
+            tile_length = raw_scaled.shape[2] - nominal_tile_length * (n_tiles_long - 1)
 
         if compression == 7:
             image_data = ljpeg.decode(section_bytes)
@@ -246,27 +250,23 @@ cdef int[:,:,:] _unpack_tile_data(ifd):
 
 # TODO: consolidate with _unpack_jpeg_data
 cdef int[:, :, :] _unpack_strip_data(ifd):
-    cdef int[:,:,:] raw_scaled = np.empty((3, ifd['rendered_section_bounding_box'][2]
+    cdef int samples_per_pix = ifd['samples_per_pix']
+    cdef int[:,:,:] raw_scaled = np.empty((3,
+                                           ifd['rendered_section_bounding_box'][2]
                                          - ifd['rendered_section_bounding_box'][0],
                                          ifd['rendered_section_bounding_box'][3]
                                          - ifd['rendered_section_bounding_box'][1]),
                                         dtype=np.intc)
-
-    cdef int n_tiles_wide = max([n[0] for n in ifd['section_bytes'].keys()]) + 1
-    cdef int n_tiles_long = max([n[1] for n in ifd['section_bytes'].keys()]) + 1
+    cdef int n_strips_wide = 1
+    cdef int n_strips_long = max([n[1] for n in ifd['section_bytes'].keys()]) + 1
     cdef tuple section_number
     cdef int[:] section_bytes
     cdef int[:, :, :] section_bytes_reshaped
     cdef int section_width = ifd['image_width']
-    cdef int nominal_section_length = ifd['image_length']
-    cdef int section_length = nominal_section_length
+    cdef int section_length = ifd['image_length']
 
     for section_number, section_bytes in ifd['section_bytes'].items():
-        #     section_bytes_reshaped = np.reshape(section_bytes, (3, section_width, nominal_section_length), order='F')
-        #     raw_scaled[:, :, section_number[1] * nominal_section_length: (section_number[1]+1) * nominal_section_length] = \
-        #         section_bytes_reshaped[:, :, section_length]
-        # return raw_scaled
-        return np.reshape(section_bytes, (3, section_width, nominal_section_length), order='F')
+        return np.reshape(section_bytes, (3, section_width, section_length), order='F')
 
 #cython: profile=True
 #cython: linetrace=True

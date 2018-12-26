@@ -309,7 +309,6 @@ class DNG:
                 image_length = self._used_fields['image_length']
                 n_tiles_wide = math.ceil(image_width / section_width)
                 n_tiles_long = math.ceil(image_length / section_length)
-                # rendered_x_offset =
             elif 'strip_byte_counts' in self._used_fields:
                 section_byte_counts = self._used_fields['strip_byte_counts']
                 section_offsets = self._used_fields['strip_offsets']
@@ -405,8 +404,17 @@ class DNG:
                 self._updated = True
                 xmp_attribute = dcnst.XMP_TAGS[field]
 
-                start_offset = xmp_data.find(field) + len(field) + 2
-                end_offset = xmp_data.find(b'"', start_offset)
+                # start_offset = xmp_data.find(field) + len(field) + 2
+                # end_offset = xmp_data.find(b'"', start_offset)
+                start_offset = xmp_data.find(field)
+                uses_equals_sign = xmp_data[start_offset] == ord('=')
+
+                if uses_equals_sign:
+                    start_offset += 2
+                    end_offset = xmp_data.find(b'"', start_offset)
+                else:
+                    start_offset += 1
+                    end_offset = xmp_data.find(b'<', start_offset)
 
                 start = xmp_data[:start_offset]
                 mid = str(round(float(value['val']), xmp_attribute.n_decimal_places))
@@ -431,7 +439,6 @@ class DNG:
         second is the height or length.
         """
         shape = self.default_shape()
-        # crops = self.get_crops()
         if not self._xmp:
             self.get_xmp()
 

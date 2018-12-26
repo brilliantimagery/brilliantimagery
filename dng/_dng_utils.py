@@ -3,10 +3,24 @@ from typing import Any, List, Optional, Tuple, Union
 
 
 def get_xmp_attribute_value(xmp_buffer: bytes, xmp_attribute: bytes) -> Optional[str]:
-    value_start = xmp_buffer.find(xmp_attribute) + len(xmp_attribute) + 2
-    if value_start < len(xmp_attribute) + 2:
+    value_start = xmp_buffer.find(xmp_attribute)
+    if value_start < 0:
         return None
-    value_end = xmp_buffer.find(b'"', value_start)
+
+    value_start += len(xmp_attribute)
+    uses_equals_sign = xmp_buffer[value_start] == ord('=')
+
+    if uses_equals_sign:
+        value_start += 2
+        value_end = xmp_buffer.find(b'"', value_start)
+    else:
+        value_start += 1
+        value_end = xmp_buffer.find(b'<', value_start)
+
+    # value_start = xmp_buffer.find(xmp_attribute) + len(xmp_attribute) + 2
+    # if value_start < len(xmp_attribute) + 2:
+    #     return None
+    # value_end = xmp_buffer.find(b'"', value_start)
     return xmp_buffer[value_start:value_end].decode('utf-8')
 
 
@@ -72,34 +86,38 @@ def convert_rectangle_percent_to_pixels(ifd, rectangle, left_crop, top_crop, rig
         top_edge = int(ifd['active_area'][0] + ifd['default_crop_origin'][1]
                        + rectangle[1]*cropped_length + top_crop*ifd['default_crop_size'][1])
         bottom_edge = int(top_edge + (rectangle[3] - rectangle[1]) * cropped_length)
+
+        active_area_offset = (left_edge - ifd['active_area'][1], top_edge - ifd['active_area'][0])
     elif sub_image_type == 'thumbnail':
         left_edge = int(ifd['image_width'] * rectangle[0])
         top_edge = int(ifd['image_length'] * rectangle[1])
         right_edge = int(ifd['image_width'] * rectangle[2])
         bottom_edge = int(ifd['image_length'] * rectangle[3])
 
+        active_area_offset = (0, 0)
+
     rectangle[0] = left_edge
     rectangle[1] = top_edge
     rectangle[2] = right_edge
     rectangle[3] = bottom_edge
 
-    return rectangle, (left_edge - ifd['active_area'][1], top_edge - ifd['active_area'][0])
+    return rectangle, active_area_offset
 
 
-def _round_to_cfa_pattern(number, pattern_dim) -> int:
-    """
-    Rounds up to the nearest multiple.
-
-    Finds the next larger number that's a multiple of the second
-    input number so that splitting the CFAPattern can be avoided.
-    :param number: Number to be started from
-    :param pattern_dim: Number to be a multiple of
-    :return: The multiple
-    """
-    number = int(number)
-    while number % pattern_dim != 0:
-        number += 1
-    return number
+# def _round_to_cfa_pattern(number, pattern_dim) -> int:
+#     """
+#     Rounds up to the nearest multiple.
+#
+#     Finds the next larger number that's a multiple of the second
+#     input number so that splitting the CFAPattern can be avoided.
+#     :param number: Number to be started from
+#     :param pattern_dim: Number to be a multiple of
+#     :return: The multiple
+#     """
+#     number = int(number)
+#     while number % pattern_dim != 0:
+#         number += 1
+#     return number
 
 
 def get_value_from_type(buffer, field_type, _byte_order, is_string=False):
