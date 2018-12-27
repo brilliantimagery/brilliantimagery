@@ -146,5 +146,6 @@ class Ramper:
 
     @staticmethod
     def _get_median_green(time, image, rectangle):
-        image.get_median_green_value(rectangle=rectangle)
-        return time, image.median_green_value
+        # image.get_brightness(rectangle=rectangle)
+        # return time, image.brightness
+        return time, image.get_brightness(rectangle=rectangle)

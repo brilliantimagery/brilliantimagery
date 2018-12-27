@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import numpy as np
 
 from dng import DNG
@@ -63,7 +65,6 @@ def test_get_capture_datetime():
 
 def test_get_image_cropped_raw():
     img = DNG('test_image_canon_6d.dng')
-
     test_image = img.get_image([1500/5030, 1450/3350, (1500+700)/5030, (1450+760)/3350])
     reference_image = np.load('test_image_canon_6d_cropped.npy')
     assert np.array_equal(test_image, reference_image)
@@ -71,45 +72,48 @@ def test_get_image_cropped_raw():
 
 def test_get_image_full_thumbnail():
     img = DNG('test_image_canon_6d.dng')
-
     test_image = img.get_image(sub_image_type='thumbnail')
     reference_image = np.load('test_image_canon_6d_thumb.npy')
     assert np.array_equal(test_image, reference_image)
 
 
+def test_get_xmp():
+    img = DNG('test_image_canon_6d.dng')
+    assert img.get_xmp() == default_xmp
 
 
-# def test_get_xmp():
-#     img = DNG('test_image_canon_6d.dng')
-#     assert img.get_xmp() == default_xmp
+def test_set_xmp_attribute():
+    img = DNG('test_image_canon_6d.dng')
+    img.set_xmp_attribute(b'crs:Temperature', 700.0)
+    img.set_xmp_attribute(b'crs:Sharpness', 30.0)
+    assert img.get_xmp() == updated_xmp
 
 
-# def test_update_xmp_attribute_and_store_xmp_field():
-#     img = DNG('test_image_canon_6d.dng')
-#     img.set_xmp_attribute(b'crs:Temperature', 700.0)
-#     img.set_xmp_attribute(b'crs:Sharpness', 30.0)
-#     img.store_xmp_field()
-#     assert img.get_xmp() == updated_xmp
-#
-#
-# def test_rendered_shape():
-#     img = DNG('test_image_canon_6d.dng')
-#     assert img.rendered_shape() == [5472, 2736]
-#
+def test_store_xmp_field():
+    img = DNG('test_image_canon_6d.dng')
+    img.set_xmp_attribute(b'crs:Temperature', 700.0)
+    img.set_xmp_attribute(b'crs:Sharpness', 30.0)
+    img.store_xmp_field()
+    img._xmp = defaultdict(dict)
+    assert img.get_xmp() == updated_xmp
 
-# def test_default_shape():
-#     img = DNG('test_image_canon_6d.dng')
-#     assert img.default_shape() == [5472, 3648]
-#
-#
-# def test_get_xmp_attribute():
-#     img = DNG('test_image_canon_6d.dng')
-#     assert img.get_xmp_attribute(b'crs:Exposure2012') == 1
-#
-#
-# def test_is_reference_frame():
-#     img = DNG('test_image_canon_6d.dng')
-#     assert not img.is_reference_frame()
-#     img.set_xmp_attribute(b'xmp:Rating', 3)
-#     assert img.is_reference_frame()
-#
+
+def test_rendered_shape():
+    img = DNG('test_image_canon_6d.dng')
+    assert img.rendered_shape() == [5027, 3351]
+
+
+def test_default_shape():
+    img = DNG('test_image_canon_6d.dng')
+    assert img.default_shape() == [5472, 3648]
+
+
+def test_get_xmp_attribute():
+    img = DNG('test_image_canon_6d.dng')
+    assert img.get_xmp_attribute(b'crs:Exposure2012') == 0.2
+
+
+def test_get_brightness():
+    img = DNG('test_image_canon_6d.dng')
+    assert img.get_brightness(rectangle=[0.3, 0.3, 0.4, 0.4]) == np.float32(0.067557134)
+

@@ -404,9 +404,7 @@ class DNG:
                 self._updated = True
                 xmp_attribute = dcnst.XMP_TAGS[field]
 
-                # start_offset = xmp_data.find(field) + len(field) + 2
-                # end_offset = xmp_data.find(b'"', start_offset)
-                start_offset = xmp_data.find(field)
+                start_offset = xmp_data.find(field) + len(field)
                 uses_equals_sign = xmp_data[start_offset] == ord('=')
 
                 if uses_equals_sign:
@@ -679,7 +677,7 @@ class DNG:
 
         return int(self._xmp[b'xmp:Rating'].get('val', 0)) == DNG._REFERENCE_FRAME_STARS
 
-    def get_median_green_value(self, rectangle=None, image=None):
+    def get_brightness(self, rectangle=None, image=None):
         if image is None:
             image = self.get_image(rectangle)
         return np.median(image[1, :, :])

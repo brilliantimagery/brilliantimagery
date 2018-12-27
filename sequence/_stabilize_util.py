@@ -12,7 +12,7 @@ def find_misalignment(image0, image1, rectangle, keep_brightness, time_index):
     rgb_image1 = image1.get_image(rectangle)
     image1.misalignment = _find_offset(rgb_image0, rgb_image1)
     if keep_brightness:
-        image1.get_median_green_value(image=rgb_image1)
+        image1.get_brightness(image=rgb_image1)
 
     return time_index, image1
 

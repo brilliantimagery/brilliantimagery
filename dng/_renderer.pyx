@@ -13,10 +13,10 @@ def render(ifd, rectangle, active_area_offset):
                              ifd['rendered_rectangle'][1]: ifd['rendered_rectangle'][3]].base
 
     elif ifd['photometric_interpretation'] in [32803, 34892]:
-        # assert 'tile_offsets' in ifd
+        # print(ifd)
         assert 'white_level' in ifd
-        assert len(ifd['black_level']) in [1, 4]      # otherwise _render_utils.black_white_rescale breaks
-        assert ifd['bits_per_sample'][0] is 16
+        assert len(ifd['black_level']) in [1, 3, 4]      # otherwise _render_utils.black_white_rescale breaks
+        assert ifd['bits_per_sample'][0] in [8, 16]
         if 'black_level' not in ifd and ifd['cfa_repeat_pattern_dim'] == [2, 2]:
             ifd['black_level'] = [0, 0, 0, 0]
             ifd['black_level_repeat_dim'] = [2, 2]

@@ -8,7 +8,7 @@ from ._meta_constants import META_TO_DNG
 class MetaImage:
     def __init__(self, path):
         self.image = DNG(path)
-        self.median_green_value = 0
+        self.brightness = 0
 
     def get_capture_datetime(self):
         return self.image.get_capture_datetime()
@@ -18,8 +18,9 @@ class MetaImage:
 
     # def set_median_green_value(self, image):
     #     self.median_green_value = np.median(image[1, :, :])
-    def get_median_green_value(self, rectangle=None, image=None):
-        self.median_green_value = self.image.get_median_green_value(rectangle, image)
+    def get_brightness(self, rectangle=None, image=None):
+        self.brightness = self.image.get_brightness(rectangle, image)
+        return self.brightness
 
     def rendered_shape(self):
         return self.image.rendered_shape()
