@@ -32,21 +32,13 @@ cpdef save(raw_img, file_name, white_value):
     if len(raw_img.shape) is 3:
         if raw_img.shape[0] > 1:
             img.append(ord('6'))
-
             img.append(0x0A)
-
             [img.append(ord(c)) for c in str(raw_img.shape[1])]
-
             img.append(0x20)
-
             [img.append(ord(c)) for c in str(raw_img.shape[2])]
-
             img.append(0x0A)
-
             [img.append(ord(c)) for c in str(white_value)]
-
             img.append(0x0A)
-
             for y in range(raw_img.shape[2]):
                 for x in range(raw_img.shape[1]):
                     for c in range(raw_img.shape[0]):
