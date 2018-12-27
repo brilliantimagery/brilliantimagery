@@ -5,7 +5,7 @@ Helper module for working with PPM files.
 import numpy as np
 
 
-def save(raw_img, file_name, white_value):
+cpdef save(raw_img, file_name, white_value):
     """
     Save raw image data to a ppm file.
 
@@ -21,6 +21,11 @@ def save(raw_img, file_name, white_value):
     :param white_value: The max color value, the value of white
     :return: None
     """
+
+    cdef x
+    cdef y
+    cdef c
+
     img = list()
     img.append(ord('P'))
 
