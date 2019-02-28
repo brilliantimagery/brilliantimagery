@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 
-import ppm
+from src.BrilliantImagery import ppm
 
 
 def test_save():

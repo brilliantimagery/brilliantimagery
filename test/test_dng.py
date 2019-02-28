@@ -2,7 +2,7 @@ from collections import defaultdict
 
 import numpy as np
 
-from dng import DNG
+from src.BrilliantImagery.dng import DNG
 
 
 default_xmp = {b'crs:Temperature': 6500.0, b'crs:Tint': 10.0, b'crs:Saturation': 9.0, b'crs:Vibrance': 29.0,

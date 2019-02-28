@@ -2,8 +2,6 @@ import os
 import sys
 import datetime
 
-import numpy as np
-
 # import pytest
 
 path = os.path.dirname(os.path.abspath(__file__))
@@ -12,7 +10,7 @@ path = os.path.join(path, 'src')
 
 sys.path.insert(len(sys.path), path)
 
-from sequence import Sequence
+from src.BrilliantImagery.sequence import Sequence
 
 
 def test_stabelize():

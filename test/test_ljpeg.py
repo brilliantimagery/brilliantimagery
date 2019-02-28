@@ -1,6 +1,6 @@
 import numpy as np
 
-import ljpeg
+from src.BrilliantImagery import ljpeg
 
 
 def test_decode():

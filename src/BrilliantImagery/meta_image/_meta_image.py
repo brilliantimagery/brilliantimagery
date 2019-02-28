@@ -1,6 +1,4 @@
-import numpy as np
-
-from dng import DNG
+from src.BrilliantImagery.dng import DNG
 
 from ._meta_constants import META_TO_DNG
 
