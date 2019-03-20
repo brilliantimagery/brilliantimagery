@@ -1,7 +1,7 @@
 # distutils: language=c++
 import numpy as np
 
-from src.BrilliantImagery import ljpeg
+from BrilliantImagery import ljpeg
 
 def render(ifd, rectangle, active_area_offset):
     if ifd['photometric_interpretation'] == 2:

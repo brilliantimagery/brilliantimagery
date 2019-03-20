@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from ._stabilize import Stabilizer
 from ._ramp import Ramper
-from src.BrilliantImagery.meta_image import MetaImage
+from BrilliantImagery.meta_image import MetaImage
 
 
 class Sequence:

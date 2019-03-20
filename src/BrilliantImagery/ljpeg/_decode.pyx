@@ -1,5 +1,6 @@
 # distutils: language=c++
 #cython: auto_pickle=True
+import warnings
 
 from libcpp cimport bool
 from libcpp.map cimport map as cpp_map
@@ -12,7 +13,7 @@ import numpy as np
 import cython
 import subprocess
 
-cdef int SOF0 = 0xFFC0  # not implimented
+# cdef int SOF0 = 0xFFC0  # not implimented
 cdef int SOF3 = 0xFFC3
 
 cdef int SOI = 0xFFD8    # Start of image
@@ -35,6 +36,7 @@ cdef int rd_index
 cdef int bit_rd_index
 cdef int[:,:,:] raw_image
 
+
 def decode(int[:] encoded_image):
     """
     Decode a Lossless Jpeg according to the 1992 standard T.81, 10918.1, 
@@ -52,8 +54,6 @@ def decode(int[:] encoded_image):
     cdef int marker
     rd_index = 0
     bit_rd_index = 0
-    # cdef cpp_map[int, cpp_map[cpp_string, int]] huffman_tables_reset
-    # huffman_tables = huffman_tables_reset
 
     cdef Py_ssize_t rd_index_length = encoded_image.shape[0]
 
@@ -68,22 +68,22 @@ def decode(int[:] encoded_image):
     return raw_image.base
 
 
-cdef int __parse_marker(int[:] encoded_image, int marker):
+cdef int __parse_marker(int[:] encoded_image, int marker) except *:
     if marker == SOI:
         pass
-    elif marker == SOF0:
-        pass
-        # throw new UnknownUnsupportedFieldOrMarkerException(
-        # "Unsupport Jpeg compression in " + Jpeg.class.getName());
     elif marker == SOF3:
         __get_frame_header_info(encoded_image)
     elif marker == DHT:
         __get_huffman_table_info(encoded_image)
     elif marker == SOS:
         __get_scan_header_info(encoded_image)
+    elif marker == EOI:
+        pass
+    else:
+        raise NotImplementedError(f'Marker "{hex(marker)[2:].upper()}" not implemented in {__name__}.')
 
 
-cdef void __get_frame_header_info(int[:] encoded_image):
+cdef void __get_frame_header_info(int[:] encoded_image) except *:
     # see 10918-1 T.81 section B.2.2 Page 35
     global raw_image, rd_index, precision, X, Y, n_components#, Hi, Vi, Tqi#, HiViTqi
 
@@ -99,20 +99,19 @@ cdef void __get_frame_header_info(int[:] encoded_image):
     rd_index += 1
 
     for i in range(rd_index, rd_index + n_components * 3, 3):
-        # _ci = encoded_image[i]
         if (encoded_image[i + 1] >> 4) is not 1:
-            raise Exception('Pixels are the wrong shape, Hi')
+            raise NotImplementedError('Pixels are an unsupported shape, Hi')
         if (encoded_image[i + 1] & 0xF) is not 1:
-            raise Exception('Pixels are the wrong shape, Vi')
+            raise NotImplementedError('Pixels are an unsupported shape, Vi')
         if (encoded_image[i + 2]) is not 0:
-            raise Exception('Tqi should be 0')
+            raise ValueError('Tqi should be 0')
 
     raw_image = np.zeros((n_components, X, Y), dtype=np.int32)
 
     rd_index += n_components * 3
 
 
-cdef void __get_huffman_table_info(int[:] encoded_image):
+cdef void __get_huffman_table_info(int[:] encoded_image) except *:
     # see 10918-1 T.81 section B.2.4.2 Page 40
     global rd_index, huffman_tables, max_huffman_code_lengths, max_huffman_code_lengths
 
@@ -155,7 +154,7 @@ cdef void __get_huffman_table_info(int[:] encoded_image):
     rd_index = vij_index
 
 
-cdef void __get_scan_header_info(int[:] encoded_image):
+cdef void __get_scan_header_info(int[:] encoded_image) except *:
     # see 10918-1 T.81 section B.2.3 Page 37
     # global rd_index, n_components, Tdj, Taj, Ss, Se, Ah, Al
     global rd_index, n_components
@@ -169,26 +168,24 @@ cdef void __get_scan_header_info(int[:] encoded_image):
     cdef int Tdj
     cdef int predictor          # Ss
     cdef int point_transform    # Al
-    for index in range(rd_index, rd_index + n_components * 2, 2):
+    for index in range(rd_index, rd_index + n_components, 2):
         _ci = encoded_image[index]
         Tdj = encoded_image[index + 1] >> 4
-        if _ci is not Tdj:
-            raise Exception('Tdj does not equal Ci')
-        # Taj[_ci] = encoded_image[index + 1] & 0xF
+        if _ci != Tdj:
+            raise Exception(f'Tdj does not equal Ci {_ci} {Tdj}')
     rd_index += n_components * 2
     predictor = encoded_image[rd_index]
     rd_index += 1
     # Se = encoded_image[rd_index]
     rd_index += 1
     # Ah = encoded_image[i + 1] >> 4
-    # point_transform = encoded_image[index + 1] & 0xF
     point_transform = encoded_image[rd_index] & 0xF
     rd_index += 1
 
     __decode_scan(encoded_image, predictor, point_transform)
 
 
-cdef void __decode_scan(int[:] encoded_image, int predictor, int point_transform):
+cdef void __decode_scan(int[:] encoded_image, int predictor, int point_transform) except *:
     global raw_image
 
     cdef int width = X
@@ -224,7 +221,7 @@ cdef void __decode_scan(int[:] encoded_image, int predictor, int point_transform
         write_index += 1
 
 
-cdef inline int __get_huffmaned_value(int component, int actual_vs_predicted_pixel_diff, int[:] img_bits):
+cdef inline int __get_huffmaned_value(int component, int actual_vs_predicted_pixel_diff, int[:] img_bits) except *:
     # global actual_vs_predicted_pixel_diff
     global bit_rd_index
 
@@ -240,8 +237,6 @@ cdef inline int __get_huffmaned_value(int component, int actual_vs_predicted_pix
     cdef int end_j
     cdef cpp_string guess = ''
 
-    # TODO: should if break or be error resistant? also goes for down below
-
     # TODO: don't know if it should be start_j + max_huffman_code_length + 1 or start_j + max_huffman_code_length
     for jj in range(jj, jj + min_huffman_code_lengths[component] - 1):
         guess.push_back(img_bits[jj])
@@ -255,12 +250,10 @@ cdef inline int __get_huffmaned_value(int component, int actual_vs_predicted_pix
 
     # if no code is matched return a zero, this was said to be the safest somewhere
     if ssss == -1:
-        # print('No matching Huffman code was found')
-        # print('guess', guess, jj)
-        # print(huff_table_table)
-        # exit(10)
-        pass
-        # throw Error
+        # TODO: should if break or be error resistant? also goes for down below
+        raise ValueError('No matching Huffman code was found for a lossless tile jpeg')
+        # warnings.warn('A Huffman coding error was found in a lossless jpeg in a dng; it may'
+        #               + ' have been resolved, there may be corrupted data')
     elif ssss == 16:
         # ssss 16 doesn't read extra bits, it just returns 32768
         actual_vs_predicted_pixel_diff = 32768
@@ -279,7 +272,8 @@ cdef inline int __get_huffmaned_value(int component, int actual_vs_predicted_pix
     return actual_vs_predicted_pixel_diff
 
 
-cdef int[:] __get_context(int component, int x, int y, int[:] context, int point_transform, int P, int[:,:,:] img):
+cdef int[:] __get_context(int component, int x, int y, int[:] context,
+                          int point_transform, int P, int[:,:,:] img) except *:
 
     cdef int a = 0
     cdef int b = 0
@@ -306,7 +300,7 @@ cdef int[:] __get_context(int component, int x, int y, int[:] context, int point
     return context
 
 
-cdef int __get_predicted_value(int x, int[:] context, int predictor, int width):
+cdef int __get_predicted_value(int x, int[:] context, int predictor, int width) except *:
     # see 10918-1 T.81 section H.1.2.1 Page 132
 
     cdef int used_predictor = 0
@@ -335,7 +329,7 @@ cdef int __get_predicted_value(int x, int[:] context, int predictor, int width):
         return (context[1] + context[2]) // 2
 
 
-cdef int[:] __get_image_bits(int[:] encoded_image):
+cdef int[:] __get_image_bits(int[:] encoded_image) except *:
     global rd_index
 
     # TODO: use instead of rd_index
@@ -375,7 +369,7 @@ cdef int[:] __get_image_bits(int[:] encoded_image):
     return bits
 
 
-cdef cpp_map[cpp_string, int] __make_ssss_table(int[:, :] code_lengths):
+cdef cpp_map[cpp_string, int] __make_ssss_table(int[:, :] code_lengths) except *:
 
     cdef cpp_string code = ''
     cdef int valuesWNBits = 0
@@ -413,7 +407,7 @@ cdef cpp_map[cpp_string, int] __make_ssss_table(int[:, :] code_lengths):
     return table
 
 
-cdef int __bytes_to_int(int[:] bytes):
+cdef int __bytes_to_int(int[:] bytes) except *:
     cdef int result = 0
     cdef int i
 

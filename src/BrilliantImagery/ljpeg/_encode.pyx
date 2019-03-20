@@ -30,6 +30,8 @@ def encode(int[:, :, :] image, int precision, int predictor):
     """
     Encode a raw image into a Lossless Jpeg according to the 1992 standard 
     T.81, 10918.1.
+
+    This is neither highly optimized nor heavily tested.
     
     :param image: A 3 dimensional Numpy array with index 1 being the color 
     channel, index 2 being the X coordinate, and index 3 being the Y 

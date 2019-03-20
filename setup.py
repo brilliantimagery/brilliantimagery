@@ -12,19 +12,20 @@ setup(
     author_email='chad.derosier@gmail.com',
     url='http://www.brilliantimagery.net',
 
+    install_requires=['Cython', 'numpy', 'Pillow', 'tqdm', 'pytest'],
+
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
 
-    ext_modules=cythonize(
-    ['src/BrilliantImagery/ljpeg/_decode.pyx',
-     'src/BrilliantImagery/ljpeg/_encode.pyx',
-     'src/BrilliantImagery/dng/_renderer.pyx',
-     'src/BrilliantImagery/ppm/_save.pyx'],
-    compiler_directives={'cdivision': True,
-                         'boundscheck': False,
-                         },
-    # annotate=True
-    ),
+    ext_modules=cythonize(['src/BrilliantImagery/ljpeg/_decode.pyx',
+                           'src/BrilliantImagery/ljpeg/_encode.pyx',
+                           'src/BrilliantImagery/dng/_renderer.pyx',
+                           'src/BrilliantImagery/ppm/_save.pyx'],
+                          compiler_directives={'cdivision': True,
+                                               'boundscheck': False,
+                                               },
+                          # annotate=True,
+    )
 )
 
 # python setup.py build_ext --inplace

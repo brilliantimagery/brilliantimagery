@@ -10,8 +10,8 @@ from typing import List
 from Cython.Compiler import MemoryView
 import numpy as np
 
-from . import _dng_constants as dcnst
-from . import _dng_utils as dutils
+from . import _dng_constants as d_cnst
+from . import _dng_utils as d_utils
 from . import _renderer
 
 
@@ -85,20 +85,28 @@ class DNG:
         self._xmp = defaultdict(dict)
         self._updated = False
         self._xmp_length_changed = False
+
+        self._byte_order = ''
+        self._zeroth_ifd = 0
+
+    def parse(self):
         with open(self._path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
-            self._byte_order = f.read(2)
-            if self._byte_order == b'II':
-                self._byte_order = '<'
-            elif self._byte_order == b'MM':
-                self._byte_order = '>'
-            else:
-                pass
-                # TODO throw an error
+            f = self._get_byte_order(f)
             assert (struct.unpack(f'{self._byte_order}H', f.read(2))[0] == 42)
             self._zeroth_ifd = struct.unpack(f'{self._byte_order}H', f.read(2))[0]
 
             self._parse_ifds()
             self._get_idf_offsets()
+
+    def _get_byte_order(self, f):
+        self._byte_order = f.read(2)
+        if self._byte_order == b'II':
+            self._byte_order = '<'
+        elif self._byte_order == b'MM':
+            self._byte_order = '>'
+        else:
+            raise ValueError(f"Byte order should be b'II' or b'MM' but is {self._byte_order}")
+        return f
 
     def get_capture_datetime(self) -> str:
         """
@@ -110,7 +118,7 @@ class DNG:
         :return: A creation time formatted as a string.
         """
         xmp = self._ifds[self._xmp_ifd_offset][700].values[0]
-        capture_datetime = dutils.get_xmp_attribute_value(xmp, b'xmp:CreateDate')
+        capture_datetime = d_utils.get_xmp_attribute_value(xmp, b'xmp:CreateDate')
         if capture_datetime:
             return capture_datetime
         else:
@@ -147,18 +155,18 @@ class DNG:
             offset = self._orig_img_offset
 
         ifd = self._ifds[offset]
-        plural_value_fields = {dcnst.DNG_TAGS[tag].name: ifd[tag].values
-                               for tag, field in dcnst.DNG_TAGS.items()
+        plural_value_fields = {d_cnst.DNG_TAGS[tag].name: ifd[tag].values
+                               for tag, field in d_cnst.DNG_TAGS.items()
                                if tag in ifd and field.is_multi_valued}
-        single_value_fields = {dcnst.DNG_TAGS[tag].name: ifd[tag].values[0]
-                               for tag, field in dcnst.DNG_TAGS.items()
+        single_value_fields = {d_cnst.DNG_TAGS[tag].name: ifd[tag].values[0]
+                               for tag, field in d_cnst.DNG_TAGS.items()
                                if tag in ifd and not field.is_multi_valued}
         self._used_fields = {**plural_value_fields, **single_value_fields,
                              **{'orientation': self._ifds[self._thumbnail_offset][274].values[0]},
                              }
         #
         # if compression == 7:
-        #     # print('compression test', bits_per_sample, [8, 8, 8], bits_per_sample == [8, 8, 8])
+        #     # print('compression tests', bits_per_sample, [8, 8, 8], bits_per_sample == [8, 8, 8])
         #     if ((photometric_interpretation == 6 and bits_per_sample == [8, 8, 8]) or
         #             (photometric_interpretation == 1 and bits_per_sample == 8)):
         #         compression = 'DCT JPEG'
@@ -174,39 +182,39 @@ class DNG:
         :return: None
         """
         ifd_offset = f.tell()
-        n_ifd_fields = dutils.get_value_from_type(f.read(2), 3, self._byte_order, False)
+        n_ifd_fields = d_utils.get_value_from_type(f.read(2), 3, self._byte_order, False)
         ifd = dict()
         for _ in range(n_ifd_fields):
             field_values = []
             field_offset = f.tell()
-            tag = dutils.get_value_from_type(f.read(2), 3, self._byte_order)
-            field_type = dutils.get_value_from_type(f.read(2), 3, self._byte_order)
-            count = dutils.get_value_from_type(f.read(4), 4, self._byte_order)
+            tag = d_utils.get_value_from_type(f.read(2), 3, self._byte_order)
+            field_type = d_utils.get_value_from_type(f.read(2), 3, self._byte_order)
+            count = d_utils.get_value_from_type(f.read(4), 4, self._byte_order)
             value_offset_buffer = f.read(4)
-            value_offset = dutils.get_value_from_type(value_offset_buffer, 4, self._byte_order)
+            value_offset = d_utils.get_value_from_type(value_offset_buffer, 4, self._byte_order)
 
-            length = dutils.get_num_of_bytes_in_type(field_type)
+            length = d_utils.get_num_of_bytes_in_type(field_type)
             n_bytes = length * count
             if n_bytes > 4:
                 position = f.tell()
                 f.seek(value_offset)
                 if length == 1:
-                    if dcnst.DNG_TAGS.get(tag, dcnst.DEF_REND_TAG).is_string:
-                        field_values.append(dutils.get_value_from_type(f.read(count), field_type,
-                                                                       self._byte_order, True))
+                    if d_cnst.DNG_TAGS.get(tag, d_cnst.DEF_REND_TAG).is_string:
+                        field_values.append(d_utils.get_value_from_type(f.read(count), field_type,
+                                                                        self._byte_order, True))
                     else:
                         field_values.append(f.read(count))
                 else:
                     buffer = f.read(n_bytes)
-                    field_values = dutils.get_values_from_type(buffer, field_type, self._byte_order,
-                                                               dcnst.DNG_TAGS.get(tag, dcnst.DEF_REND_TAG).is_string)
+                    field_values = d_utils.get_values_from_type(buffer, field_type, self._byte_order,
+                                                                d_cnst.DNG_TAGS.get(tag, d_cnst.DEF_REND_TAG).is_string)
                     if tag == 330 or tag == 34665:
                         for offset in field_values:
                             f.seek(offset)
                             self._get_ifd_fields(f)
                 f.seek(position)
             else:
-                field_values = dutils.get_values_from_type(value_offset_buffer, field_type, self._byte_order)[:count]
+                field_values = d_utils.get_values_from_type(value_offset_buffer, field_type, self._byte_order)[:count]
                 if tag == 330 or tag == 34665:
                     position = f.tell()
                     f.seek(value_offset)
@@ -214,7 +222,7 @@ class DNG:
                     f.seek(position)
 
             ifd[tag] = DNG.Field(tag, field_type, count, value_offset, field_values)
-            if dutils.get_num_of_bytes_in_type(field_type) in (1, 2) and n_bytes < 5:
+            if d_utils.get_num_of_bytes_in_type(field_type) in (1, 2) and n_bytes < 5:
                 ifd[tag].value_offset_buffer = value_offset_buffer
 
         self._ifds[ifd_offset] = ifd
@@ -246,14 +254,15 @@ class DNG:
         if not self._xmp:
             self.get_xmp()
         if sub_image_type == 'RAW':
-            rectangle, active_area_offset = dutils.convert_rectangle_percent_to_pixels(self._used_fields, rectangle,
-                                                                   self._xmp[b'crs:CropLeft'].get('val', 0),
-                                                                   self._xmp[b'crs:CropTop'].get('val', 0),
-                                                                   self._xmp[b'crs:CropRight'].get('val', 1),
-                                                                   self._xmp[b'crs:CropBottom'].get('val', 1))
+            rectangle, active_area_offset = d_utils. \
+                convert_rectangle_percent_to_pixels(self._used_fields, rectangle,
+                                                    self._xmp[b'crs:CropLeft'].get('val', 0),
+                                                    self._xmp[b'crs:CropTop'].get('val', 0),
+                                                    self._xmp[b'crs:CropRight'].get('val', 1),
+                                                    self._xmp[b'crs:CropBottom'].get('val', 1))
         elif sub_image_type == 'thumbnail':
-            rectangle, active_area_offset = dutils.convert_rectangle_percent_to_pixels(self._used_fields, rectangle,
-                                                                   0, 0, 1, 1, sub_image_type)
+            rectangle, active_area_offset = d_utils. \
+                convert_rectangle_percent_to_pixels(self._used_fields, rectangle, 0, 0, 1, 1, sub_image_type)
         self._get_tile_or_strip_bytes(rectangle)
         image = _renderer.render(self._used_fields, rectangle, active_area_offset)
         self._clear_section_data()
@@ -268,9 +277,9 @@ class DNG:
         """
         if not self._xmp:
             xmp_field = self._ifds[self._xmp_ifd_offset][700].values[0]
-            for xmp_attribute in dcnst.XMP_TAGS.keys():
+            for xmp_attribute in d_cnst.XMP_TAGS.keys():
                 # name_offset = xmp_field.find(xmp_attribute)
-                value = dutils.get_xmp_attribute_value(xmp_field, xmp_attribute)
+                value = d_utils.get_xmp_attribute_value(xmp_field, xmp_attribute)
                 if value:
                     self._xmp[xmp_attribute] = {'val': float(value), 'updated': False}
 
@@ -327,7 +336,7 @@ class DNG:
                 x2 = x1 + section_width
                 y2 = y1 + section_length
                 if x2 > rectangle[0] and x1 < rectangle[2] and y2 > rectangle[1] and y1 < rectangle[3]:
-                    self._used_fields['rendered_section_bounding_box'] = dutils \
+                    self._used_fields['rendered_section_bounding_box'] = d_utils \
                         .renderd_area_bounding_box(self._used_fields['rendered_section_bounding_box'], x1, y1, x2, y2)
                     if 'x_tile_offset' not in locals():
                         x_tile_offset = x1 // section_width
@@ -402,7 +411,7 @@ class DNG:
         for field, value in self._xmp.items():
             if value.get('updated', False):
                 self._updated = True
-                xmp_attribute = dcnst.XMP_TAGS[field]
+                xmp_attribute = d_cnst.XMP_TAGS[field]
 
                 start_offset = xmp_data.find(field) + len(field)
                 uses_equals_sign = xmp_data[start_offset] == ord('=')
@@ -477,7 +486,7 @@ class DNG:
                 last_item = 0
                 for ifd in self._ifds.values():
                     for field in ifd.values():
-                        length = dutils.get_num_of_bytes_in_type(field.type) * field.count
+                        length = d_utils.get_num_of_bytes_in_type(field.type) * field.count
                         if field.value_offset > last_item and length > 4:
                             last_item = field.value_offset
 
@@ -562,7 +571,7 @@ class DNG:
                     # Theres a potential bug here if there were two shorts as the offsets
                 else:
                     wf = self._write_value(wf, end_write_index)
-                    section_write_offset = dutils.get_num_of_bytes_in_type(field.type) * field.count + end_write_index
+                    section_write_offset = d_utils.get_num_of_bytes_in_type(field.type) * field.count + end_write_index
 
                     for sec_len, sec_off in zip(section_byte_counts, section_offsets):
                         wf.seek(end_write_index)
@@ -576,7 +585,7 @@ class DNG:
 
                 wf.seek(resume_index)
             elif field.tag in (330, 34665):
-                n_bytes = dutils.get_num_of_bytes_in_type(field.type) * field.count
+                n_bytes = d_utils.get_num_of_bytes_in_type(field.type) * field.count
                 wf = self._write_value(wf, end_write_index)
                 resume_index = wf.tell()
                 if n_bytes > 4:
@@ -600,11 +609,11 @@ class DNG:
                 end_write_index += wf.write(field.values[0])
                 wf.seek(resume_index)
             else:
-                n_bytes = dutils.get_num_of_bytes_in_type(field.type) * field.count
+                n_bytes = d_utils.get_num_of_bytes_in_type(field.type) * field.count
                 if n_bytes > 4 or field.count > 1:
                     rf.seek(field.value_offset)
                     if n_bytes > 4:
-                        # TODO: change to end_write_index += wf.write(... and test
+                        # TODO: change to end_write_index += wf.write(... and tests
                         wf = self._write_value(wf, end_write_index)
                         left_off_at = wf.tell()
                         wf.seek(end_write_index)
@@ -684,4 +693,4 @@ class DNG:
 
     @staticmethod
     def get_possible_xmp_attributes():
-        return dcnst.XMP_TAGS
+        return d_cnst.XMP_TAGS

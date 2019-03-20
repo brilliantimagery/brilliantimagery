@@ -3,6 +3,20 @@ from typing import Any, List, Optional, Tuple, Union
 
 
 def get_xmp_attribute_value(xmp_buffer: bytes, xmp_attribute: bytes) -> Optional[str]:
+    """
+    Get the value of an xmp attribute
+
+    Searches the given xmp buffer for the given attribute.
+    Assumes the buffer to be of format:
+    b'crs:Tint="+10".   crs:Saturation="+9"' or
+    b'crs:Tint<+10>.   crs:Saturation<+9>'
+
+    Does not test to ensure inputs are of the correct datatype.
+    :param xmp_buffer: The xmp data as bytes
+    :param xmp_attribute: The attribute as bytes
+    :return: the value, with sign if present, as a string or None if
+    not found.
+    """
     value_start = xmp_buffer.find(xmp_attribute)
     if value_start < 0:
         return None
@@ -17,10 +31,6 @@ def get_xmp_attribute_value(xmp_buffer: bytes, xmp_attribute: bytes) -> Optional
         value_start += 1
         value_end = xmp_buffer.find(b'<', value_start)
 
-    # value_start = xmp_buffer.find(xmp_attribute) + len(xmp_attribute) + 2
-    # if value_start < len(xmp_attribute) + 2:
-    #     return None
-    # value_end = xmp_buffer.find(b'"', value_start)
     return xmp_buffer[value_start:value_end].decode('utf-8')
 
 
@@ -76,7 +86,7 @@ def convert_rectangle_percent_to_pixels(ifd, rectangle, left_crop, top_crop, rig
     :param sub_image_type: Type of image: RAW or thumbnail
     :return: The reformatted rectangle as a list
     """
-    if sub_image_type == 'RAW':
+    if sub_image_type.lower() == 'raw':
         cropped_width = ifd['default_crop_size'][0] * (right_crop - left_crop)
         cropped_length = ifd['default_crop_size'][1] * (bottom_crop - top_crop)
 
@@ -88,7 +98,7 @@ def convert_rectangle_percent_to_pixels(ifd, rectangle, left_crop, top_crop, rig
         bottom_edge = int(top_edge + (rectangle[3] - rectangle[1]) * cropped_length)
 
         active_area_offset = (left_edge - ifd['active_area'][1], top_edge - ifd['active_area'][0])
-    elif sub_image_type == 'thumbnail':
+    elif sub_image_type.lower() == 'thumbnail':
         left_edge = int(ifd['image_width'] * rectangle[0])
         top_edge = int(ifd['image_length'] * rectangle[1])
         right_edge = int(ifd['image_width'] * rectangle[2])
@@ -102,22 +112,6 @@ def convert_rectangle_percent_to_pixels(ifd, rectangle, left_crop, top_crop, rig
     rectangle[3] = bottom_edge
 
     return rectangle, active_area_offset
-
-
-# def _round_to_cfa_pattern(number, pattern_dim) -> int:
-#     """
-#     Rounds up to the nearest multiple.
-#
-#     Finds the next larger number that's a multiple of the second
-#     input number so that splitting the CFAPattern can be avoided.
-#     :param number: Number to be started from
-#     :param pattern_dim: Number to be a multiple of
-#     :return: The multiple
-#     """
-#     number = int(number)
-#     while number % pattern_dim != 0:
-#         number += 1
-#     return number
 
 
 def get_value_from_type(buffer, field_type, _byte_order, is_string=False):

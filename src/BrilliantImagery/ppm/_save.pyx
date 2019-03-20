@@ -1,5 +1,5 @@
 """
-Helper module for working with PPM files.
+Helper unit for working with PPM files.
 """
 
 import numpy as np

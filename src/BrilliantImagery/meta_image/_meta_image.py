@@ -1,4 +1,4 @@
-from src.BrilliantImagery.dng import DNG
+from BrilliantImagery.dng import DNG
 
 from ._meta_constants import META_TO_DNG
 
