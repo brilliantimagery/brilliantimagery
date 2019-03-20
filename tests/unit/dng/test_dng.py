@@ -102,12 +102,12 @@ def test__byte_order_bad_raises():
 
 
 def test_get_capture_datetime(dng_canon_6d):
-    # GIVEN an initialized DNG file
+    # GIVEN an initialized DNG file and it's capture datetime
+    expected = '2017-09-07T16:01:38.03'
 
     # WHEN parsed
     dng_canon_6d.parse()
     actual = dng_canon_6d.get_capture_datetime()
-    expected = '2017-09-07T16:01:38.03'
 
     # THEN the capture datetime is as expected
     assert expected == actual
