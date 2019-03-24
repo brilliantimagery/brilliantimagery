@@ -278,7 +278,6 @@ class DNG:
         if not self._xmp:
             xmp_field = self._ifds[self._xmp_ifd_offset][700].values[0]
             for xmp_attribute in d_cnst.XMP_TAGS.keys():
-                # name_offset = xmp_field.find(xmp_attribute)
                 value = d_utils.get_xmp_attribute_value(xmp_field, xmp_attribute)
                 if value:
                     self._xmp[xmp_attribute] = {'val': float(value), 'updated': False}
@@ -470,6 +469,13 @@ class DNG:
         return [int(a) for a in self._used_fields['default_crop_size']]
 
     def get_xmp_attribute(self, xmp_attribute):
+        """
+
+
+        Known Bug: this only works for properties with numeric values, or maybe for what's said to be needed to render
+        :param xmp_attribute:
+        :return:
+        """
         if not self._xmp:
             self.get_xmp()
 
