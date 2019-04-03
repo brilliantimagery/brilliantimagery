@@ -574,7 +574,7 @@ class DNG:
                     end_write_index += wf.write(rf.read(section_byte_counts[0]))
                 elif field.count == 2:
                     assert False
-                    # Theres a potential bug here if there were two shorts as the offsets
+                    # TODO: theres a potential bug here if there were two shorts as the offsets
                 else:
                     wf = self._write_value(wf, end_write_index)
                     section_write_offset = d_utils.get_num_of_bytes_in_type(field.type) * field.count + end_write_index

@@ -111,6 +111,52 @@ def test_get_ifd_fields(dng_file_io_ifd, canon_6d_idfs):
     assert actual_ifds == canon_6d_idfs
 
 
+def test_get_image_cropped_raw(dng_canon_6d, numpy_cropped_canon_6d):
+    # GIVEN an initialized dng and a rendered image with its rendered area
+    expected_image, rendered_area = numpy_cropped_canon_6d
+
+    # WHEN it's parsed and then rendered
+    dng_canon_6d.parse()
+    actual_image = dng_canon_6d.get_image(rendered_area)
+
+    # THEN the rendered image is as expected
+    assert np.array_equal(actual_image, expected_image)
+
+
+def test_get_image_full_thumbnail(dng_canon_6d, numpy_thumbnail_canon_6d):
+    # GIVEN an initialized dng and a rendered image with its rendered area
+
+    # WHEN it's parsed and then the thumbnail's rendered
+    dng_canon_6d.parse()
+    actual_image = dng_canon_6d.get_image(sub_image_type='thumbnail')
+
+    # THEN the rendered image is as expected
+    assert np.array_equal(actual_image, numpy_thumbnail_canon_6d)
+
+
+def test_get_xmp_success(dng_canon_6d, dng_xmp):
+    # GIVEN an initialized dng and a dict of the included xmp data
+
+    # WHEN it's parsed and then the xmp data's retrieved
+    dng_canon_6d.parse()
+    xmp = dng_canon_6d.get_xmp()
+
+    # THEN the xmp data read from the file matches what's expected
+    assert xmp == dng_xmp
+
+
+def test_parse_ifds_success(dng_canon_6d, canon_6d_idfs):
+    # GIVEN an initialized dng and the expected ifds as a string
+    dng_canon_6d._zeroth_ifd = 8
+
+    # WHEN the IDF fiels are parsed
+    dng_canon_6d._parse_ifds()
+    actual_ifds = str(dng_canon_6d._ifds)
+
+    # THEN the ifd is as expected
+    assert actual_ifds == canon_6d_idfs
+
+
 def test_get_tile_or_strip_bytes_compressed_tiles_success(dng_canon_6d, canon_6d_compressed_tiles):
     # GIVEN an initialized dng, and a rectangle to be rendered and the accompanying compressed raw data
     rectangle, tiles = canon_6d_compressed_tiles
@@ -155,52 +201,6 @@ def test_get_ifd_offsets_success(dng_file_io_ifd):
     assert dng_canon_6d._thumbnail_offset == 8
     assert dng_canon_6d._orig_img_offset == 202942
     assert dng_canon_6d._xmp_ifd_offset == 8
-
-
-def test_get_image_cropped_raw(dng_canon_6d, numpy_cropped_canon_6d):
-    # GIVEN an initialized dng and a rendered image with its rendered area
-    expected_image, rendered_area = numpy_cropped_canon_6d
-
-    # WHEN it's parsed and then rendered
-    dng_canon_6d.parse()
-    actual_image = dng_canon_6d.get_image(rendered_area)
-
-    # THEN the rendered image is as expected
-    assert np.array_equal(actual_image, expected_image)
-
-
-def test_get_image_full_thumbnail(dng_canon_6d, numpy_thumbnail_canon_6d):
-    # GIVEN an initialized dng and a rendered image with its rendered area
-
-    # WHEN it's parsed and then the thumbnail's rendered
-    dng_canon_6d.parse()
-    actual_image = dng_canon_6d.get_image(sub_image_type='thumbnail')
-
-    # THEN the rendered image is as expected
-    assert np.array_equal(actual_image, numpy_thumbnail_canon_6d)
-
-
-def test_get_xmp(dng_canon_6d, dng_xmp):
-    # GIVEN an initialized dng and a dict of the included xmp data
-
-    # WHEN it's parsed and then the xmp data's retrieved
-    dng_canon_6d.parse()
-    xmp = dng_canon_6d.get_xmp()
-
-    # THEN the xmp data read from the file matches what's expected
-    assert xmp == dng_xmp
-
-
-def test_parse_ifds(dng_canon_6d, canon_6d_idfs):
-    # GIVEN an initialized dng and the expected ifds as a string
-    dng_canon_6d._zeroth_ifd = 8
-
-    # WHEN the IDF fiels are parsed
-    dng_canon_6d._parse_ifds()
-    actual_ifds = str(dng_canon_6d._ifds)
-
-    # THEN the ifd is as expected
-    assert actual_ifds == canon_6d_idfs
 
 
 def test_set_xmp_attribute(dng_canon_6d, updated_dng_xmp):
@@ -272,19 +272,6 @@ def test_get_xmp_attribute(dng_canon_6d, xmp_params):
     assert actual_value == expected_value
 
 
-def test_get_brightness(dng_canon_6d):
-    # GIVEN an initialized dng and a rectangle and a brightness
-    rectangle = [0.3, 0.3, 0.4, 0.4]
-    expected_brightness = np.float32(0.067557134)
-
-    # WHEN the the image is parsed and the brightness of the rectangle is calculated
-    dng_canon_6d.parse()
-    actual_brightness = dng_canon_6d.get_brightness(rectangle=rectangle)
-
-    # THEN the expected and actual brightnesses will match
-    assert expected_brightness == actual_brightness
-
-
 def test_save_xmp_length_unchanged_success(copied_dng_canon_6d, dng_canon_6d):
     # GIVEN two copies of the same dng
 
@@ -339,3 +326,40 @@ def test_save_xmp_length_changed_success(copied_dng_canon_6d, saved_dng_canon_6d
     # THEN the xmp shows up as changed and the images have the same ifds
     assert xmp_buffer[3] == ord('q')
     assert copied_dng_canon_6d._ifds == saved_dng_canon_6d._ifds
+
+
+def test_not_is_reference_frame_success(dng_canon_6d):
+    # GIVEN a initialized dng that isn't a reference frame (it's 2 stars)
+
+    # WHEN it's parsed
+    dng_canon_6d.parse()
+
+    # THEN it's found to not be a ref frame
+    assert not dng_canon_6d.is_reference_frame()
+
+
+def test_is_reference_frame_success(dng_canon_6d):
+    # GIVEN a initialized dng that isn't a reference frame (it's 2 stars)
+    from BrilliantImagery.dng import DNG
+
+    # WHEN it's parsed and has it's rating set to that of the ref frame rating
+    dng_canon_6d.parse()
+    dng_canon_6d.get_xmp()
+    dng_canon_6d.set_xmp_attribute(b'xmp:Rating', DNG._REFERENCE_FRAME_STARS)
+    dng_canon_6d.store_xmp_field()
+
+    # THEN it's found to be a ref frame
+    assert dng_canon_6d.is_reference_frame()
+
+
+def test_get_brightness(dng_canon_6d):
+    # GIVEN an initialized dng and a rectangle and a brightness
+    rectangle = [0.3, 0.3, 0.4, 0.4]
+    expected_brightness = np.float32(0.067557134)
+
+    # WHEN the the image is parsed and the brightness of the rectangle is calculated
+    dng_canon_6d.parse()
+    actual_brightness = dng_canon_6d.get_brightness(rectangle=rectangle)
+
+    # THEN the expected and actual brightnesses will match
+    assert expected_brightness == actual_brightness
