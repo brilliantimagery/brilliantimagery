@@ -68,6 +68,10 @@ class DNG:
         def __repr__(self):
             return f'{self.tag}, {self.type}, {self.count}, {self.value_offset}'
 
+        def __eq__(self, other):
+            return (self.tag == other.tag and self.type == other.type and
+                    self.count == other.count and self.value_offset == other.value_offset)
+
     _BUFFER_SIZE = 50000000
     _REFERENCE_FRAME_STARS = 3
 
@@ -96,7 +100,7 @@ class DNG:
             self._zeroth_ifd = struct.unpack(f'{self._byte_order}H', f.read(2))[0]
 
             self._parse_ifds()
-            self._get_idf_offsets()
+            self._get_ifd_offsets()
 
     def _get_byte_order(self, f):
         self._byte_order = f.read(2)
@@ -149,10 +153,12 @@ class DNG:
         is to be rendered.
         :return: None
         """
-        if sub_image is 'thumbnail':
+        if sub_image.lower() == 'thumbnail':
             offset = self._thumbnail_offset
-        if sub_image is 'RAW':
+        elif sub_image.lower() == 'raw':
             offset = self._orig_img_offset
+        else:
+            raise ValueError(f'Retrieved image type must be "RAW" or "thumbnail" but "{sub_image}" was given.')
 
         ifd = self._ifds[offset]
         plural_value_fields = {d_cnst.DNG_TAGS[tag].name: ifd[tag].values
@@ -164,14 +170,6 @@ class DNG:
         self._used_fields = {**plural_value_fields, **single_value_fields,
                              **{'orientation': self._ifds[self._thumbnail_offset][274].values[0]},
                              }
-        #
-        # if compression == 7:
-        #     # print('compression tests', bits_per_sample, [8, 8, 8], bits_per_sample == [8, 8, 8])
-        #     if ((photometric_interpretation == 6 and bits_per_sample == [8, 8, 8]) or
-        #             (photometric_interpretation == 1 and bits_per_sample == 8)):
-        #         compression = 'DCT JPEG'
-        #     else:
-        #         compression = 'lossless Huffman JPEG'
 
     def _get_ifd_fields(self, f: IO):
         """
@@ -345,7 +343,7 @@ class DNG:
                                                               index // n_tiles_wide - y_tile_offset])] = \
                         np.fromfile(f, np.uint8, byte_counts).astype(np.intc)
 
-    def _get_idf_offsets(self) -> None:
+    def _get_ifd_offsets(self) -> None:
         """
         Get the byte indexes of the thumbnail and main uncompressed/raw image in the file
 
@@ -516,7 +514,9 @@ class DNG:
         :return: None
         """
         first_ifd_location = 8
+        # TODO: https://www.tutorialspoint.com/How-to-create-an-empty-file-using-Python
         with open(self._path + '.temp', 'w+b') as wf:
+            # this is done to ensure that the file exists
             pass
         with open(self._path + '.temp', 'r+b', DNG._BUFFER_SIZE) as wf:
             with open(self._path, 'rb', DNG._BUFFER_SIZE) as rf:

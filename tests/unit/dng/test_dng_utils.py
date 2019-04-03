@@ -1,25 +1,25 @@
 from BrilliantImagery.dng import _dng_utils
 
 
-def test_get_xmp_attribute_value_success(xmp_params):
+def test_get_xmp_attribute_value_success(xmp_buffer, xmp_params):
     # GIVEN xmp data
     from BrilliantImagery.dng import _dng_utils
-    expected = xmp_params.attr_value_pairs.value
+    property, expected = xmp_params
 
     # WHEN it's searched for known attribute, value pairs
-    actual = _dng_utils.get_xmp_attribute_value(xmp_params.xmp_data, xmp_params.attr_value_pairs.attr)
+    actual = _dng_utils.get_xmp_attribute_value(xmp_buffer, property)
 
     # THEN the given and actual are equal
     assert actual == expected
 
 
-def test_get_xmp_attribute_value_bad_value_none(xmp_params):
+def test_get_xmp_attribute_value_bad_value_none(xmp_buffer):
     # GIVEN xmp data
     from BrilliantImagery.dng import _dng_utils
     expected = None
 
     # WHEN it's searched for known attribute, value pairs
-    actual = _dng_utils.get_xmp_attribute_value(xmp_params.xmp_data, b'bad')
+    actual = _dng_utils.get_xmp_attribute_value(xmp_buffer, b'bad')
 
     # THEN the given and actual are equal
     assert actual == expected
@@ -37,12 +37,12 @@ def test_renderd_area_bounding_box_success(bounding_box_params):
     assert actual == bbx.output
 
 
-def test_convert_rectangle_percent_to_pixels_default(used_ifd_fields):
+def test_convert_rectangle_percent_to_pixels_default(used_ifd_fields_raw):
     # GIVEN the _used_field data
     from BrilliantImagery.dng import _dng_utils
 
     # WHEN
-    actual = _dng_utils.convert_rectangle_percent_to_pixels(used_ifd_fields,
+    actual = _dng_utils.convert_rectangle_percent_to_pixels(used_ifd_fields_raw,
                                                             [.25, .35, .65, .75],
                                                             0.05, 0.06, 0.92, 0.97)
     expected = ([1547, 1430, 3451, 2757], (1475, 1392))
@@ -51,12 +51,12 @@ def test_convert_rectangle_percent_to_pixels_default(used_ifd_fields):
     assert actual == expected
 
 
-def test_convert_rectangle_percent_to_pixels_raw(used_ifd_fields):
+def test_convert_rectangle_percent_to_pixels_raw(used_ifd_fields_raw):
     # GIVEN the _used_field data
     from BrilliantImagery.dng import _dng_utils
 
     # WHEN
-    actual = _dng_utils.convert_rectangle_percent_to_pixels(used_ifd_fields,
+    actual = _dng_utils.convert_rectangle_percent_to_pixels(used_ifd_fields_raw,
                                                             [.25, .35, .65, .75],
                                                             0.05, 0.06, 0.92, 0.97, 'RAW')
     expected = ([1547, 1430, 3451, 2757], (1475, 1392))
@@ -65,15 +65,15 @@ def test_convert_rectangle_percent_to_pixels_raw(used_ifd_fields):
     assert actual == expected
 
 
-def test_convert_rectangle_percent_to_pixels_thumbnail(used_ifd_fields):
+def test_convert_rectangle_percent_to_pixels_thumbnail(used_ifd_fields_thumbnail):
     # GIVEN the _used_field data
     from BrilliantImagery.dng import _dng_utils
 
     # WHEN
-    actual = _dng_utils.convert_rectangle_percent_to_pixels(used_ifd_fields,
+    actual = _dng_utils.convert_rectangle_percent_to_pixels(used_ifd_fields_thumbnail,
                                                             [.25, .35, .65, .75],
                                                             0.05, 0.06, 0.92, 0.97, 'thumbnail')
-    expected = ([1392, 1297, 3619, 2781], (0, 0))
+    expected = ([64, 64, 166, 137], (0, 0))
 
     # THEN
     assert actual == expected

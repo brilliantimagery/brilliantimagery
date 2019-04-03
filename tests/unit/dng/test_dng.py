@@ -10,7 +10,11 @@ from BrilliantImagery.dng import DNG
 #     assert img._byte_order == b'II'
 
 
-def test__byte_order_bII_success():
+def test_parse(dng_canon_6d):
+    pass
+
+
+def test_get_byte_order_bII_success():
     # GIVEN an initialized DNG
     from BrilliantImagery.dng import DNG
     dng = DNG('fake.file')
@@ -22,7 +26,7 @@ def test__byte_order_bII_success():
     assert dng._byte_order == '<'
 
 
-def test__byte_order_bMM_success():
+def test_get_byte_order_bMM_success():
     # GIVEN an initialized DNG
     dng = DNG('fake.file')
 
@@ -33,7 +37,7 @@ def test__byte_order_bMM_success():
     assert dng._byte_order == '>'
 
 
-def test__byte_order_bad_raises():
+def test_get_byte_order_bad_raises():
     # GIVEN an initialized DNG
     dng = DNG('fake.file')
     expected = "Byte order should be b'II' or b'MM' but is"
@@ -56,6 +60,101 @@ def test_get_capture_datetime(dng_canon_6d):
 
     # THEN the capture datetime is as expected
     assert expected == actual
+
+
+def test_get_fields_required_to_render_raw(dng_canon_6d, used_ifd_fields_raw):
+    # GIVEN an initialized DNG and the expected used IFD fields
+
+    # WHEN it's parsed and the used ifd fields are retrieved
+    dng_canon_6d.parse()
+    dng_canon_6d._get_fields_required_to_render('raw')
+    actual_fields = dng_canon_6d._used_fields
+
+    # THEN the retreived fields should match the expected fields
+    assert actual_fields == used_ifd_fields_raw
+
+
+def test_get_fields_required_to_render_thumbnail(dng_canon_6d, used_ifd_fields_thumbnail):
+    # GIVEN an initialized DNG and the expected used IFD fields
+
+    # WHEN it's parsed and the used ifd fields are retrieved
+    dng_canon_6d.parse()
+    dng_canon_6d._get_fields_required_to_render('thumbnail')
+    actual_fields = dng_canon_6d._used_fields
+
+    # THEN the retrieved fields should match the expected fields
+    assert actual_fields == used_ifd_fields_thumbnail
+
+
+def test_get_fields_required_to_render_error(dng_canon_6d, used_ifd_fields_thumbnail):
+    # GIVEN an initialized DNG and the expected error message
+    expected = 'Retrieved image type must be "RAW" or "thumbnail" but "bad_value" was given.'
+
+    # WHEN it's parsed and the used ifd fields are retrieved
+    # THEN an exception should be raised with a particular message
+    dng_canon_6d.parse()
+    with pytest.raises(ValueError) as e:
+        dng_canon_6d._get_fields_required_to_render('bad_value')
+        err_msg = e.value.args[0]
+        assert expected in err_msg
+
+
+def test_get_ifd_fields(dng_file_io_ifd, canon_6d_idfs):
+    # GIVEN an initialized dng and the expected ifds as a string
+    dng, f = dng_file_io_ifd
+
+    # WHEN the IDF fiels are read
+    dng._get_ifd_fields(f)
+    actual_ifds = str(dng._ifds)
+
+    # THEN the ifd is as expected
+    assert actual_ifds == canon_6d_idfs
+
+
+def test_get_tile_or_strip_bytes_compressed_tiles_success(dng_canon_6d, canon_6d_compressed_tiles):
+    # GIVEN an initialized dng, and a rectangle to be rendered and the accompanying compressed raw data
+    rectangle, tiles = canon_6d_compressed_tiles
+    expected_key = list(tiles.keys())[0]
+
+    # WHEN the dng's parsed and then the compressed tile data's retreaved
+    dng_canon_6d.parse()
+    dng_canon_6d._get_fields_required_to_render('raw')
+    dng_canon_6d._get_tile_or_strip_bytes(rectangle)
+
+    # THEN the resulting dicts have the same keys and the key's values are the same
+    actual = dng_canon_6d._used_fields['section_bytes']
+    assert tiles.keys() == actual.keys()
+    assert np.array_equal(tiles[expected_key], actual[expected_key])
+
+
+@pytest.mark.skip(reason="Don't have anything to test this against/might not be implemented")
+def test_get_tile_or_strip_bytes_uncompressed_tile_success():
+    pass
+
+
+@pytest.mark.skip(reason="Don't have anything to test this against/might not be implemented")
+def test_get_tile_or_strip_bytes_compressed_strip_success():
+    pass
+
+
+@pytest.mark.skip(reason="Don't have anything to test this against/might not be implemented")
+def test_get_tile_or_strip_bytes_uncompressed_strip_success():
+    pass
+
+
+def test_get_ifd_offsets_success(dng_file_io_ifd):
+    # GIVEN an initialized dng and an open file object
+    dng_canon_6d, f = dng_file_io_ifd
+
+    # WHEN the zeroth ifd offset's set and the ifds are parsed, and then the ifd offsets are gotten
+    dng_canon_6d._zeroth_ifd = 8
+    dng_canon_6d._parse_ifds()
+    dng_canon_6d._get_ifd_offsets()
+
+    # THEN the retreived offsets should be as expected
+    assert dng_canon_6d._thumbnail_offset == 8
+    assert dng_canon_6d._orig_img_offset == 202942
+    assert dng_canon_6d._xmp_ifd_offset == 8
 
 
 def test_get_image_cropped_raw(dng_canon_6d, numpy_cropped_canon_6d):
@@ -92,6 +191,18 @@ def test_get_xmp(dng_canon_6d, dng_xmp):
     assert xmp == dng_xmp
 
 
+def test_parse_ifds(dng_canon_6d, canon_6d_idfs):
+    # GIVEN an initialized dng and the expected ifds as a string
+    dng_canon_6d._zeroth_ifd = 8
+
+    # WHEN the IDF fiels are parsed
+    dng_canon_6d._parse_ifds()
+    actual_ifds = str(dng_canon_6d._ifds)
+
+    # THEN the ifd is as expected
+    assert actual_ifds == canon_6d_idfs
+
+
 def test_set_xmp_attribute(dng_canon_6d, updated_dng_xmp):
     # GIVEN an initialized dng, xmp properties to change, and the resulting xmp data
     updated_xmp, new_xmp_values = updated_dng_xmp
@@ -118,6 +229,8 @@ def test_store_xmp_field(dng_canon_6d, storable_dng_xmp):
     # THEN the xmp data is the updated data
     xmp = dng_canon_6d._xmp
     assert xmp == stored_xmp
+    assert dng_canon_6d._updated == True
+    assert dng_canon_6d._xmp_length_changed == True
 
 
 def test_rendered_shape(dng_canon_6d):
@@ -170,3 +283,59 @@ def test_get_brightness(dng_canon_6d):
 
     # THEN the expected and actual brightnesses will match
     assert expected_brightness == actual_brightness
+
+
+def test_save_xmp_length_unchanged_success(copied_dng_canon_6d, dng_canon_6d):
+    # GIVEN two copies of the same dng
+
+    # WHEN one has the xmp data changed and then saved, and then reprocessed
+    # and the other has equivalent operations other than the xmp change
+    copied_dng_canon_6d.parse()
+    copied_dng_canon_6d._updated = True
+    copied_dng_canon_6d._xmp_length_changed = False
+    xmp_buffer = copied_dng_canon_6d._ifds[copied_dng_canon_6d._xmp_ifd_offset][700].values[0]
+    xmp_buffer = xmp_buffer[:3] + b'q' + xmp_buffer[4:]
+    copied_dng_canon_6d._ifds[copied_dng_canon_6d._xmp_ifd_offset][700].values[0] = xmp_buffer
+    copied_dng_canon_6d.save()
+    copied_dng_canon_6d.parse()
+    copied_dng_canon_6d._updated = True
+    copied_dng_canon_6d._xmp_length_changed = False
+
+    dng_canon_6d.parse()
+    dng_canon_6d._updated = False
+    dng_canon_6d._xmp_length_changed = False
+    dng_canon_6d.get_xmp()
+
+    # THEN the xmp shows up as changed and the images have the same ifds
+    assert xmp_buffer[3] == ord('q')
+    assert copied_dng_canon_6d._ifds == dng_canon_6d._ifds
+
+
+def test_save_xmp_length_changed_success(copied_dng_canon_6d, saved_dng_canon_6d):
+    # GIVEN two copies of the same dng
+    from BrilliantImagery.dng import DNG
+
+    # WHEN one has the xmp data changed and then saved, and then reprocessed
+    # and the other has equivalent operations other than the xmp change
+    copied_dng_canon_6d.parse()
+    copied_dng_canon_6d._updated = True
+    copied_dng_canon_6d._xmp_length_changed = True
+    xmp_buffer = copied_dng_canon_6d._ifds[copied_dng_canon_6d._xmp_ifd_offset][700].values[0]
+    xmp_buffer = xmp_buffer[:3] + b'qq' + xmp_buffer[4:]
+    copied_dng_canon_6d._ifds[copied_dng_canon_6d._xmp_ifd_offset][700].values[0] = xmp_buffer
+    copied_dng_canon_6d.save()
+
+    path = copied_dng_canon_6d._path
+    copied_dng_canon_6d = DNG(path)
+    copied_dng_canon_6d.parse()
+    copied_dng_canon_6d._updated = False
+    copied_dng_canon_6d._xmp_length_changed = False
+
+    saved_dng_canon_6d.parse()
+    saved_dng_canon_6d._updated = False
+    saved_dng_canon_6d._xmp_length_changed = False
+    saved_dng_canon_6d.get_xmp()
+
+    # THEN the xmp shows up as changed and the images have the same ifds
+    assert xmp_buffer[3] == ord('q')
+    assert copied_dng_canon_6d._ifds == saved_dng_canon_6d._ifds
