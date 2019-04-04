@@ -3,6 +3,7 @@ import multiprocessing
 from tqdm import tqdm
 
 from . import _stabilize_util as sutil
+# from BrilliantImagery.meta_image import MetaImage
 
 
 class Stabilizer:
@@ -24,6 +25,7 @@ class Stabilizer:
         images[ordered_times[0]].misalignment = [0, 0]
 
         tasks = []
+        # pool = multiprocessing.Pool(processes=1)
         pool = multiprocessing.Pool()
         self._pbar = tqdm(total=len(images) - 1, desc='Finding misalignments: ')
         for time0, time1 in zip(ordered_times[:-1], ordered_times[1:]):

@@ -12,7 +12,7 @@ setup(
     author_email='chad.derosier@gmail.com',
     url='http://www.brilliantimagery.net',
 
-    install_requires=['Cython', 'numpy', 'Pillow', 'tqdm', 'pytest'],
+    install_requires=['Cython', 'numpy', 'tqdm', 'pytest'],
 
     packages=find_packages(where='src'),
     package_dir={'': 'src'},

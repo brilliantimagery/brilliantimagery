@@ -6,6 +6,7 @@ from ._meta_constants import META_TO_DNG
 class MetaImage:
     def __init__(self, path):
         self.image = DNG(path)
+        self.image.parse()
         self.brightness = 0
 
     def get_capture_datetime(self):

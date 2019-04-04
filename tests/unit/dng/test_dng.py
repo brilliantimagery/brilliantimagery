@@ -5,14 +5,6 @@ import numpy as np
 
 from BrilliantImagery.dng import DNG
 
-# with mock.patch('builtins.open', mocker.mock_open(read_data=b'II')) as f:
-#     img.parse()
-#     assert img._byte_order == b'II'
-
-
-def test_parse(dng_canon_6d):
-    pass
-
 
 def test_get_byte_order_bII_success():
     # GIVEN an initialized DNG
@@ -298,7 +290,8 @@ def test_save_xmp_length_unchanged_success(copied_dng_canon_6d, dng_canon_6d):
     assert copied_dng_canon_6d._ifds == dng_canon_6d._ifds
 
 
-def test_save_xmp_length_changed_success(copied_dng_canon_6d, saved_dng_canon_6d):
+# def test_save_xmp_length_changed_success(copied_dng_canon_6d, saved_dng_canon_6d):
+def test_save_xmp_length_changed_success(copied_dng_canon_6d, post_save_ifds):
     # GIVEN two copies of the same dng
     from BrilliantImagery.dng import DNG
 
@@ -318,14 +311,10 @@ def test_save_xmp_length_changed_success(copied_dng_canon_6d, saved_dng_canon_6d
     copied_dng_canon_6d._updated = False
     copied_dng_canon_6d._xmp_length_changed = False
 
-    saved_dng_canon_6d.parse()
-    saved_dng_canon_6d._updated = False
-    saved_dng_canon_6d._xmp_length_changed = False
-    saved_dng_canon_6d.get_xmp()
-
     # THEN the xmp shows up as changed and the images have the same ifds
+    actual = str(copied_dng_canon_6d._ifds)
     assert xmp_buffer[3] == ord('q')
-    assert copied_dng_canon_6d._ifds == saved_dng_canon_6d._ifds
+    assert actual == post_save_ifds
 
 
 def test_not_is_reference_frame_success(dng_canon_6d):
