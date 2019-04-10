@@ -25,7 +25,6 @@ class Stabilizer:
         images[ordered_times[0]].misalignment = [0, 0]
 
         tasks = []
-        # pool = multiprocessing.Pool(processes=1)
         pool = multiprocessing.Pool()
         self._pbar = tqdm(total=len(images) - 1, desc='Finding misalignments: ')
         for time0, time1 in zip(ordered_times[:-1], ordered_times[1:]):
@@ -59,7 +58,7 @@ class Stabilizer:
         # for time, image in tasks:
         #     self._images[time] = image
 
-    def update_xmp_attributes(self):
+    def update_crop_xmp_attributes(self):
         example_image = next(iter(self._images.values()))
         min_x, min_y, max_x, max_y = sutil.misalignment_bounding_box(self._images.values())
         shape = example_image.rendered_shape()

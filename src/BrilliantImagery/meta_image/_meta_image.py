@@ -15,8 +15,6 @@ class MetaImage:
     def get_image(self, rectangle=[0.0, 0.0, 1.0, 1.0], sub_image_type='RAW'):
         return self.image.get_image(list.copy(rectangle), sub_image_type)
 
-    # def set_median_green_value(self, image):
-    #     self.median_green_value = np.median(image[1, :, :])
     def get_brightness(self, rectangle=None, image=None):
         self.brightness = self.image.get_brightness(rectangle, image)
         return self.brightness

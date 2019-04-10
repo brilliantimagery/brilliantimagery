@@ -43,7 +43,7 @@ class Sequence:
     def stabilize(self, rectangle, keep_brightness=False):
         stabilizer = Stabilizer(self._images, rectangle)
         stabilizer.find_misalignments(keep_brightness)
-        stabilizer.update_xmp_attributes()
+        stabilizer.update_crop_xmp_attributes()
 
     def save(self):
         for image in tqdm(self._images.values(), desc='Updating files: ', total=len(self._images)):
