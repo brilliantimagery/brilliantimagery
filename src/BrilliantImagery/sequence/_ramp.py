@@ -7,12 +7,13 @@ from tqdm import tqdm
 class Ramper:
 
     # _BLACKS_EXPOSURE_COMPENSATION = 15 #higher number makes brighter images (higher iso) darker
-    _EARLY_BLACKS_EXPOSURE_COMPENSATION = -15
-    _MID_BLACKS_EXPOSURE_COMPENSATION = 0
-    _LATE_BLACKS_EXPOSURE_COMPENSATION = 20
-
     _EARLY_MID_TRANSITION = 221
+    _EARLY_BLACKS_EXPOSURE_COMPENSATION = -15
+
     _MID_LATE_TRANSITION = 326
+    _MID_BLACKS_EXPOSURE_COMPENSATION = 0
+
+    _LATE_BLACKS_EXPOSURE_COMPENSATION = 20
 
     def __init__(self, images):
         self._images = images
@@ -35,7 +36,7 @@ class Ramper:
             else:
                 self._ref_frame_gaps[index] += 1
 
-    def ramp_minus_exposure(self):
+    def ramp_minus_exposure(self, ramp_blacks=False):
         ramps = {}
         for index, ref_frame in enumerate(self._ref_frames[:-1]):
             for attr in self._xmp_attributes:
@@ -59,10 +60,11 @@ class Ramper:
                 reference_frame_index += 1
             for attr in self._xmp_attributes:
                 targets[attr] += ramps[attr][reference_frame_index]
-        self._ramp_blacks()
+        if ramp_blacks:
+            self._ramp_blacks()
 
+    # TODO this needs better implementation and testing
     def _ramp_blacks(self):
-
         ramps = {}
         _xmp_attributes = ['Blacks', 'Exposure']
         for index, ref_frame in enumerate(self._ref_frames[:-1]):
@@ -86,9 +88,9 @@ class Ramper:
 
             if index < Ramper._EARLY_MID_TRANSITION:
                 exposure_compensation = Ramper._EARLY_BLACKS_EXPOSURE_COMPENSATION
-            if Ramper._EARLY_MID_TRANSITION <= index < Ramper._MID_LATE_TRANSITION:
+            elif index < Ramper._MID_LATE_TRANSITION:
                 exposure_compensation = Ramper._MID_BLACKS_EXPOSURE_COMPENSATION
-            if Ramper._MID_LATE_TRANSITION <= index:
+            else:
                 exposure_compensation = Ramper._LATE_BLACKS_EXPOSURE_COMPENSATION
 
             for attr in _xmp_attributes[:-1]:
@@ -108,24 +110,33 @@ class Ramper:
         self._pbar.update()
 
     def ramp_exposure(self, rectangle):
-        if self._images[self._sorted_times[0]].median_green_value == 0:
+        if self._images[self._sorted_times[0]].brightness == 0:
+
+
+            ###################### FASTER ##########################################
             tasks = []
             pool = multiprocessing.Pool()
             self._pbar = tqdm(total=len(self._images) - 1, desc='Exposure Ramping: ')
             for time, image in self._images.items():
-                task = pool.apply_async(self._get_median_green, (time, image, rectangle), callback=self._update_pbar)
+                task = pool.apply_async(Ramper._get_brightness, (time, image, rectangle), callback=self._update_pbar)
                 tasks.append(task)
             pool.close()
             pool.join()
+
             for task in tasks:
                 t, i = task.get()
-                self._images[t].median_green_value = i
+                self._images[t].brightness = i
+
+            ###################### Avoids apparend pytest/pycharm # bug ##############
+            # for time, image in self._images.items():
+            #     _, image.brightness = self._get_brightness(time, image, rectangle)
+            ###################### End bug section #################################
 
         ramp = []
         for index, ref_frame in enumerate(self._ref_frames[:-1]):
-            next_brightness = self._images[self._ref_frames[index + 1]].median_green_value * \
+            next_brightness = self._images[self._ref_frames[index + 1]].brightness * \
                               2 ** self._images[self._ref_frames[index + 1]].get_xmp_attribute('Exposure')
-            this_brightness = self._images[ref_frame].median_green_value * \
+            this_brightness = self._images[ref_frame].brightness * \
                               2 ** self._images[ref_frame].get_xmp_attribute('Exposure')
             ramp.append((next_brightness - this_brightness) / self._ref_frame_gaps[index])
 
@@ -134,18 +145,16 @@ class Ramper:
         reference_frame_index = -1
         for time in self._sorted_times:
             if time in self._ref_frames:
-                target = self._images[time].median_green_value * 2 ** self._images[time].get_xmp_attribute('Exposure')
+                target = self._images[time].brightness * 2 ** self._images[time].get_xmp_attribute('Exposure')
                 reference_frame_index += 1
             else:
-                exposure = math.log(target / self._images[time].median_green_value, 2)
+                exposure = math.log(target / self._images[time].brightness, 2)
                 self._images[time].set_xmp_attribute('Exposure', exposure)
             target += ramp[reference_frame_index]
 
-    def _calc_image_brightness(self, time):
-        return self._images[time].median_green_value * 2 ** self._images[time].get_xmp_attribute('Exposure')
+    # def _calc_image_brightness(self, time):
+    #     return self._images[time].brightness * 2 ** self._images[time].get_xmp_attribute('Exposure')
 
     @staticmethod
-    def _get_median_green(time, image, rectangle):
-        # image.get_brightness(rectangle=rectangle)
-        # return time, image.brightness
+    def _get_brightness(time, image, rectangle):
         return time, image.get_brightness(rectangle=rectangle)

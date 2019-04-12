@@ -1,3 +1,5 @@
+from typing import Union
+
 from BrilliantImagery.dng import DNG
 
 from ._meta_constants import META_TO_DNG
@@ -25,13 +27,13 @@ class MetaImage:
     def default_shape(self):
         return self.image.default_shape()
 
-    def get_xmp_attribute(self, xmp_attribute):
+    def get_xmp_attribute(self, xmp_attribute: Union[bytes, str]):
         if isinstance(xmp_attribute, bytes):
             return self.image.get_xmp_attribute(xmp_attribute)
         else:
             return self.image.get_xmp_attribute(META_TO_DNG[xmp_attribute])
 
-    def set_xmp_attribute(self, xmp_attribute, value):
+    def set_xmp_attribute(self, xmp_attribute: Union[bytes, str], value: Union[int, float, str]):
         if isinstance(xmp_attribute, bytes):
             self.image.set_xmp_attribute(xmp_attribute, value)
         else:

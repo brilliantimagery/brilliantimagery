@@ -86,32 +86,38 @@ def convert_rectangle_percent_to_pixels(ifd, rectangle, left_crop, top_crop, rig
     :param sub_image_type: Type of image: RAW or thumbnail
     :return: The reformatted rectangle as a list
     """
+    if rectangle[0] < 1 or rectangle[1] < 1 or rectangle[1] < 1 or rectangle[1] < 1:
+        if sub_image_type.lower() == 'raw':
+            cropped_width = ifd['default_crop_size'][0] * (right_crop - left_crop)
+            cropped_length = ifd['default_crop_size'][1] * (bottom_crop - top_crop)
+
+            left_edge = int(ifd['active_area'][1] + ifd['default_crop_origin'][0]
+                            + rectangle[0]*cropped_width + left_crop*ifd['default_crop_size'][0])
+            right_edge = int(left_edge + (rectangle[2]-rectangle[0])*cropped_width)
+            top_edge = int(ifd['active_area'][0] + ifd['default_crop_origin'][1]
+                           + rectangle[1]*cropped_length + top_crop*ifd['default_crop_size'][1])
+            bottom_edge = int(top_edge + (rectangle[3] - rectangle[1]) * cropped_length)
+        elif sub_image_type.lower() == 'thumbnail':
+            left_edge = int(ifd['image_width'] * rectangle[0])
+            top_edge = int(ifd['image_length'] * rectangle[1])
+            right_edge = int(ifd['image_width'] * rectangle[2])
+            bottom_edge = int(ifd['image_length'] * rectangle[3])
+
+        rectangle[0] = left_edge
+        rectangle[1] = top_edge
+        rectangle[2] = right_edge
+        rectangle[3] = bottom_edge
+
+    return rectangle
+
+
+def get_active_area_offset(ifd, rectangle, sub_image_type='RAW'):
     if sub_image_type.lower() == 'raw':
-        cropped_width = ifd['default_crop_size'][0] * (right_crop - left_crop)
-        cropped_length = ifd['default_crop_size'][1] * (bottom_crop - top_crop)
+        left_edge, top_edge, right_edge, bottom_edge = rectangle
 
-        left_edge = int(ifd['active_area'][1] + ifd['default_crop_origin'][0]
-                        + rectangle[0]*cropped_width + left_crop*ifd['default_crop_size'][0])
-        right_edge = int(left_edge + (rectangle[2]-rectangle[0])*cropped_width)
-        top_edge = int(ifd['active_area'][0] + ifd['default_crop_origin'][1]
-                       + rectangle[1]*cropped_length + top_crop*ifd['default_crop_size'][1])
-        bottom_edge = int(top_edge + (rectangle[3] - rectangle[1]) * cropped_length)
-
-        active_area_offset = (left_edge - ifd['active_area'][1], top_edge - ifd['active_area'][0])
+        return left_edge - ifd['active_area'][1], top_edge - ifd['active_area'][0]
     elif sub_image_type.lower() == 'thumbnail':
-        left_edge = int(ifd['image_width'] * rectangle[0])
-        top_edge = int(ifd['image_length'] * rectangle[1])
-        right_edge = int(ifd['image_width'] * rectangle[2])
-        bottom_edge = int(ifd['image_length'] * rectangle[3])
-
-        active_area_offset = (0, 0)
-
-    rectangle[0] = left_edge
-    rectangle[1] = top_edge
-    rectangle[2] = right_edge
-    rectangle[3] = bottom_edge
-
-    return rectangle, active_area_offset
+        return 0, 0
 
 
 def get_value_from_type(buffer, field_type, _byte_order, is_string=False):

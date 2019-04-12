@@ -3,7 +3,7 @@ import os
 import platform
 import struct
 from collections import defaultdict
-from typing import Dict
+from typing import Dict, Union
 from typing import IO
 from typing import List
 
@@ -251,16 +251,13 @@ class DNG:
         self._get_fields_required_to_render(sub_image_type)
         if not self._xmp:
             self.get_xmp()
-        if sub_image_type == 'RAW':
-            rectangle, active_area_offset = d_utils. \
-                convert_rectangle_percent_to_pixels(self._used_fields, rectangle,
-                                                    self._xmp[b'crs:CropLeft'].get('val', 0),
-                                                    self._xmp[b'crs:CropTop'].get('val', 0),
-                                                    self._xmp[b'crs:CropRight'].get('val', 1),
-                                                    self._xmp[b'crs:CropBottom'].get('val', 1))
-        elif sub_image_type == 'thumbnail':
-            rectangle, active_area_offset = d_utils. \
-                convert_rectangle_percent_to_pixels(self._used_fields, rectangle, 0, 0, 1, 1, sub_image_type)
+        rectangle = d_utils.convert_rectangle_percent_to_pixels(self._used_fields, rectangle,
+                                                                self._xmp[b'crs:CropLeft'].get('val', 0),
+                                                                self._xmp[b'crs:CropTop'].get('val', 0),
+                                                                self._xmp[b'crs:CropRight'].get('val', 1),
+                                                                self._xmp[b'crs:CropBottom'].get('val', 1),
+                                                                sub_image_type)
+        active_area_offset = d_utils.get_active_area_offset(self._used_fields, rectangle, sub_image_type)
         self._get_tile_or_strip_bytes(rectangle)
         image = _renderer.render(self._used_fields, rectangle, active_area_offset)
         self._clear_section_data()
@@ -366,7 +363,7 @@ class DNG:
             if self._orig_img_offset and self._xmp_ifd_offset:
                 break
 
-    def set_xmp_attribute(self, xmp_attribute: bytes, value) -> bool:
+    def set_xmp_attribute(self, xmp_attribute: bytes, value: Union[int, float, str]) -> bool:
         """
         Updates the stored value of the xmp attribute.
 
@@ -381,6 +378,7 @@ class DNG:
         :param xmp_attribute: The xmp attribute to be updated. Should be
         a key from the _dng_constants.XMP_TAGS Dict
         :param value: The number to be assigned to the attribute.
+        Can be an int, float, or str
         :return: True if it's successful, False if it isn't, presumably
         because the attribute isn't present or the value was already
         stored.
@@ -466,7 +464,7 @@ class DNG:
             self._get_fields_required_to_render('RAW')
         return [int(a) for a in self._used_fields['default_crop_size']]
 
-    def get_xmp_attribute(self, xmp_attribute):
+    def get_xmp_attribute(self, xmp_attribute: bytes):
         """
 
 

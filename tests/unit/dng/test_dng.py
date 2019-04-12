@@ -211,7 +211,7 @@ def test_set_xmp_attribute(dng_canon_6d, updated_dng_xmp):
 
 def test_store_xmp_field(dng_canon_6d, storable_dng_xmp):
     # GIVEN an initialized dng, updated but not stored xmp data, and the resulting xmp data
-    xmp_to_be_stored, stored_xmp = storable_dng_xmp
+    xmp_to_be_stored, updated_xmp_data = storable_dng_xmp
 
     # WHEN the xmp data it set to the updated data and then stored
     dng_canon_6d.parse()
@@ -219,8 +219,8 @@ def test_store_xmp_field(dng_canon_6d, storable_dng_xmp):
     dng_canon_6d.store_xmp_field()
 
     # THEN the xmp data is the updated data
-    xmp = dng_canon_6d._xmp
-    assert xmp == stored_xmp
+    xmp = dng_canon_6d._ifds[dng_canon_6d._xmp_ifd_offset][700].values[0]
+    assert xmp == updated_xmp_data
     assert dng_canon_6d._updated == True
     assert dng_canon_6d._xmp_length_changed == True
 
