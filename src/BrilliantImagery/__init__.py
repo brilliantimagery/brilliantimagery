@@ -1,0 +1,1 @@
+# from ljpeg import ._decode
