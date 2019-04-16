@@ -5,6 +5,7 @@ from BrilliantImagery import ljpeg
 
 def render(ifd, rectangle, active_area_offset):
     if ifd['photometric_interpretation'] == 2:
+    # RGB images
         if ifd['compression'] == 1:
             assert len(ifd['section_bytes']) == 1
             raw_image = _unpack_strip_data(ifd)
@@ -12,10 +13,14 @@ def render(ifd, rectangle, active_area_offset):
                              ifd['rendered_rectangle'][1]: ifd['rendered_rectangle'][3]].base
 
     elif ifd['photometric_interpretation'] in [32803, 34892]:
+    # Color Filter Array or Linear Raw images respectively
         # print(ifd)
-        assert 'white_level' in ifd
-        assert len(ifd['black_level']) in [1, 3, 4]      # otherwise _render_utils.black_white_rescale breaks
-        assert ifd['bits_per_sample'][0] in [8, 16]
+        if 'white_level' not in ifd:
+            raise NotImplementedError(f'No "whitelevel" not implemented in {__name__}.')
+        if len(ifd['black_level']) not in [1, 3, 4]:      # otherwise _render_utils.black_white_rescale breaks
+            raise NotImplementedError(f'Black level size not implemented in {__name__}.')
+        if ifd['bits_per_sample'][0] not in [8, 16]:
+            raise NotImplementedError(f'No "bitspersample" not implemented in {__name__}.')
         if 'black_level' not in ifd and ifd['cfa_repeat_pattern_dim'] == [2, 2]:
             ifd['black_level'] = [0, 0, 0, 0]
             ifd['black_level_repeat_dim'] = [2, 2]
@@ -200,7 +205,6 @@ cpdef float _rescale_and_clip(float color_value, int black_level, int white_leve
 
 
 cpdef int[:,:,:] _unpack_tile_data(ifd):
-    # print(ifd)
     cdef int samples_per_pix = ifd['samples_per_pix']
     cdef int n_tiles_wide = max([n[0] for n in ifd['section_bytes'].keys()]) + 1
     cdef int n_tiles_long = max([n[1] for n in ifd['section_bytes'].keys()]) + 1
@@ -234,7 +238,7 @@ cpdef int[:,:,:] _unpack_tile_data(ifd):
         if compression == 7:
             image_data = ljpeg.decode(section_bytes)
         else:
-            assert False
+            raise NotImplementedError(f'Compression "{compression}" not implemented in {__name__}.')
 
         image_data_reshaped = np.reshape(image_data,
                                          (samples_per_pix, nominal_tile_width, nominal_tile_length),

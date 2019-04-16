@@ -1,3 +1,4 @@
+import pickle
 from collections import namedtuple
 
 import pytest
@@ -300,6 +301,18 @@ ifds = '{202942: {254: 254, 4, 1, 0, 256: 256, 4, 1, 5568, 257: 257, 4, 1, 3708,
 
 saved_ifds = '{141384: {254: 254, 4, 1, 0, 256: 256, 4, 1, 5568, 257: 257, 4, 1, 3708, 258: 258, 3, 1, 16, 259: 259, 3, 1, 7, 262: 262, 3, 1, 32803, 277: 277, 3, 1, 1, 284: 284, 3, 1, 1, 322: 322, 4, 1, 256, 323: 323, 4, 1, 256, 324: 324, 4, 330, 141714, 325: 325, 4, 330, 17847488, 33421: 33421, 3, 2, 131074, 33422: 33422, 1, 4, 33620224, 50710: 50710, 1, 3, 131328, 50711: 50711, 3, 1, 1, 50713: 50713, 3, 2, 131074, 50714: 50714, 5, 4, 17848808, 50717: 50717, 3, 1, 15000, 50718: 50718, 5, 2, 17848840, 50719: 50719, 5, 2, 17848856, 50720: 50720, 5, 2, 17848872, 50733: 50733, 4, 1, 250, 50738: 50738, 5, 1, 17848888, 50780: 50780, 5, 1, 17848896, 50829: 50829, 4, 4, 17848904, 51041: 51041, 12, 6, 17848920}, 17848968: {254: 254, 4, 1, 1, 256: 256, 4, 1, 1024, 257: 257, 4, 1, 731, 258: 258, 3, 3, 17849214, 259: 259, 3, 1, 7, 262: 262, 3, 1, 6, 273: 273, 4, 1, 17849220, 277: 277, 3, 1, 3, 278: 278, 4, 1, 731, 279: 279, 4, 1, 64473, 284: 284, 3, 1, 1, 529: 529, 5, 3, 17913693, 530: 530, 3, 2, 131074, 531: 531, 3, 1, 2, 532: 532, 5, 6, 17913717, 50966: 50966, 2, 26, 17913765, 50967: 50967, 2, 5, 17913791, 50969: 50969, 1, 16, 17913796, 50970: 50970, 4, 1, 2, 50971: 50971, 2, 26, 17913812}, 17913838: {254: 254, 4, 1, 1, 256: 256, 4, 1, 2048, 257: 257, 4, 1, 1365, 258: 258, 3, 3, 17914036, 259: 259, 3, 1, 34892, 262: 262, 3, 1, 34892, 277: 277, 3, 1, 3, 284: 284, 3, 1, 1, 322: 322, 4, 1, 512, 323: 323, 4, 1, 464, 324: 324, 4, 12, 17914042, 325: 325, 4, 12, 18284243, 50966: 50966, 2, 26, 18284291, 50967: 50967, 2, 5, 18284317, 51009: 51009, 7, 256, 18284322, 51114: 51114, 4, 1, 256}, 18284578: {254: 254, 4, 1, 1, 256: 256, 4, 1, 512, 257: 257, 4, 1, 341, 258: 258, 3, 3, 18284776, 259: 259, 3, 1, 34892, 262: 262, 3, 1, 34892, 277: 277, 3, 1, 3, 284: 284, 3, 1, 1, 322: 322, 4, 1, 512, 323: 323, 4, 1, 352, 324: 324, 4, 1, 18284782, 325: 325, 4, 1, 35886, 50966: 50966, 2, 26, 18320668, 50967: 50967, 2, 5, 18320694, 51009: 51009, 7, 256, 18320699, 51114: 51114, 4, 1, 256}, 18320955: {254: 254, 4, 1, 1, 256: 256, 4, 1, 256, 257: 257, 4, 1, 171, 258: 258, 3, 3, 18321153, 259: 259, 3, 1, 34892, 262: 262, 3, 1, 34892, 277: 277, 3, 1, 3, 284: 284, 3, 1, 1, 322: 322, 4, 1, 256, 323: 323, 4, 1, 176, 324: 324, 4, 1, 18321159, 325: 325, 4, 1, 11761, 50966: 50966, 2, 26, 18332920, 50967: 50967, 2, 5, 18332946, 51009: 51009, 7, 256, 18332951, 51114: 51114, 4, 1, 256}, 18346112: {33434: 33434, 5, 1, 18346478, 33437: 33437, 5, 1, 18346486, 34850: 34850, 3, 1, 3, 34855: 34855, 3, 1, 400, 34864: 34864, 3, 1, 2, 34866: 34866, 4, 1, 400, 36864: 36864, 7, 4, 808661552, 36867: 36867, 2, 20, 18346494, 36868: 36868, 2, 20, 18346514, 37377: 37377, 10, 1, 18346534, 37378: 37378, 5, 1, 18346542, 37380: 37380, 10, 1, 18346550, 37381: 37381, 5, 1, 18346558, 37383: 37383, 3, 1, 5, 37385: 37385, 3, 1, 16, 37386: 37386, 5, 1, 18346566, 37521: 37521, 2, 3, 13104, 37522: 37522, 2, 3, 13104, 40961: 40961, 3, 1, 65535, 41486: 41486, 5, 1, 18346574, 41487: 41487, 5, 1, 18346582, 41488: 41488, 3, 1, 3, 41985: 41985, 3, 1, 0, 41986: 41986, 3, 1, 0, 41987: 41987, 3, 1, 1, 41990: 41990, 3, 1, 0, 42033: 42033, 2, 13, 18346590, 42034: 42034, 5, 4, 18346603, 42036: 42036, 2, 23, 18346635, 42037: 42037, 2, 11, 18346658}, 8: {254: 254, 4, 1, 1, 256: 256, 4, 1, 256, 257: 257, 4, 1, 183, 258: 258, 3, 3, 734, 259: 259, 3, 1, 1, 262: 262, 3, 1, 2, 271: 271, 2, 6, 740, 272: 272, 2, 13, 746, 273: 273, 4, 1, 759, 274: 274, 3, 1, 1, 277: 277, 3, 1, 3, 278: 278, 4, 1, 183, 279: 279, 4, 1, 140544, 284: 284, 3, 1, 1, 305: 305, 2, 41, 141303, 306: 306, 2, 20, 141344, 330: 330, 4, 5, 141364, 700: 700, 1, 12904, 18333207, 34665: 34665, 4, 1, 18346112, 37393: 37393, 4, 1, 0, 50706: 50706, 1, 4, 1025, 50707: 50707, 1, 4, 257, 50708: 50708, 2, 13, 18346669, 50721: 50721, 10, 9, 18346682, 50722: 50722, 10, 9, 18346754, 50723: 50723, 10, 9, 18346826, 50724: 50724, 10, 9, 18346898, 50727: 50727, 5, 3, 18346970, 50728: 50728, 5, 3, 18346994, 50730: 50730, 10, 1, 18347018, 50731: 50731, 5, 1, 18347026, 50732: 50732, 5, 1, 18347034, 50734: 50734, 5, 1, 18347042, 50735: 50735, 2, 13, 18347050, 50736: 50736, 5, 4, 18347063, 50739: 50739, 5, 1, 18347095, 50740: 50740, 1, 68256, 18347103, 50778: 50778, 3, 1, 17, 50779: 50779, 3, 1, 21, 50781: 50781, 1, 16, 18415359, 50827: 50827, 2, 13, 18415375, 50931: 50931, 2, 10, 18415388, 50932: 50932, 2, 10, 18415398, 50936: 50936, 2, 15, 18415408, 50937: 50937, 4, 3, 18415423, 50938: 50938, 11, 8100, 18415435, 50939: 50939, 11, 8100, 18447835, 50941: 50941, 4, 1, 0, 50942: 50942, 2, 35, 18480235, 50964: 50964, 10, 9, 18480270, 50965: 50965, 10, 9, 18480342, 50966: 50966, 2, 26, 18480414, 50967: 50967, 2, 5, 18480440, 50969: 50969, 1, 16, 18480445, 50970: 50970, 4, 1, 2, 50971: 50971, 2, 26, 18480461, 50972: 50972, 1, 16, 18480487, 50981: 50981, 4, 3, 18480503, 50982: 50982, 11, 13824, 18480515, 51041: 51041, 12, 6, 18535811}}'
 
+raw_image = [[0.891, 0.701, 0.739, 0.552, 0.604, 0.508, 0.821, 0.932, 0.04, 0.406, 0.359, 0.537, 0.196],
+             [0.826, 0.209, 0.452, 0.806, 0.54, 0.584, 0.424, 0.311, 0.954, 0.516, 0.229, 0.061, 0.433],
+             [0.624, 0.706, 0.202, 0.214, 0.535, 0.983, 0.024, 0.222, 0.561, 0.617, 0.373, 0.689, 0.469],
+             [0.827, 0.115, 0.316, 0.47, 0.401, 0.381, 0.195, 0.168, 0.465, 0.279, 0.105, 0.963, 0.932],
+             [0.199, 0.727, 0.514, 0.798, 0.467, 0.754, 0.646, 0.902, 0.284, 0.629, 0.507, 0.754, 0.602],
+             [0.062, 0.04, 0.646, 0.727, 0.816, 0.971, 0.797, 0.727, 0.77, 0.158, 0.939, 0.167, 0.168],
+             [0.715, 0.147, 0.625, 0.207, 0.552, 0.665, 0.008, 0.334, 0.951, 0.04, 0.406, 0.755, 0.563],
+             [0.56, 0.737, 0.344, 0.188, 0.717, 0.294, 0.008, 0.263, 0.106, 0.021, 0.908, 0.096, 0.48],
+             [0.517, 0.227, 0.308, 0.434, 0.614, 0.521, 0.123, 0.71, 0.724, 0.801, 0.893, 0.095, 0.949],
+             [0.791, 0.729, 0.701, 0.122, 0.999, 0.066, 0.546, 0.791, 0.362, 0.374, 0.08, 0.944, 0.544],
+             [0.507, 0.591, 0.154, 0.063, 0.342, 0.954, 0.398, 0.664, 0.502, 0.937, 0.858, 0.741, 0.03]]
+
 
 def id_xmp_data(fixture_value):
     """A function to generate fixture IDs"""
@@ -399,3 +412,170 @@ def copied_dng_canon_6d(data_folder_path, dng_canon_6d, tmpdir):
 
     shutil.copy(str(str(data_folder_path / 'test_image_canon_6d.dng')), str(tmpdir / 'test_image_canon_6d.dng'))
     return DNG(str(tmpdir / 'test_image_canon_6d.dng'))
+
+
+@pytest.fixture()
+def dng_rendered_to_rgb_even_offsets(dng_canon_6d, data_folder_path):
+    import numpy as np
+
+    active_area_offset = (28, 62)
+    rectangle = [100, 100, 500, 400]
+
+    dng_canon_6d.parse()
+    dng_canon_6d.default_shape()
+    dng_canon_6d._get_tile_or_strip_bytes(rectangle)
+    ifd = dng_canon_6d._used_fields
+
+    with open(str(data_folder_path / 'renderer_render_raw_even_even.np'), 'rb') as f:
+        expected_renderd_area = np.load(f)
+
+    return ifd, expected_renderd_area, active_area_offset, rectangle
+
+
+@pytest.fixture()
+def dng_rendered_to_rgb_odd_offsets(dng_canon_6d, data_folder_path):
+    import numpy as np
+
+    active_area_offset = (29, 63)
+    rectangle = [101, 101, 500, 400]
+
+    dng_canon_6d.parse()
+    dng_canon_6d.default_shape()
+    dng_canon_6d._get_tile_or_strip_bytes(rectangle)
+    ifd = dng_canon_6d._used_fields
+
+    with open(str(data_folder_path / 'renderer_render_raw_odd_even.np'), 'rb') as f:
+        expected_renderd_area = np.load(f)
+
+    return ifd, expected_renderd_area, active_area_offset, rectangle
+
+
+@pytest.fixture()
+def dng_rendered_to_rgb_even_odd_offsets(dng_canon_6d, data_folder_path):
+    import numpy as np
+
+    active_area_offset = (28, 62)
+    rectangle = [100, 100, 501, 401]
+
+    dng_canon_6d.parse()
+    dng_canon_6d.default_shape()
+    dng_canon_6d._get_tile_or_strip_bytes(rectangle)
+    ifd = dng_canon_6d._used_fields
+
+    with open(str(data_folder_path / 'renderer_render_raw_even_odd.np'), 'rb') as f:
+        expected_renderd_area = np.load(f)
+
+    return ifd, expected_renderd_area, active_area_offset, rectangle
+
+
+@pytest.fixture()
+def dng_thumbnail_rendered_to_rgb_even_offsets(dng_canon_6d, data_folder_path):
+    import numpy as np
+
+    active_area_offset = (28, 62)
+    rectangle = [20, 20, 200, 100]
+
+    dng_canon_6d.parse()
+    dng_canon_6d.get_image(rectangle, 'thumbnail')
+    dng_canon_6d._get_tile_or_strip_bytes(rectangle)
+    ifd = dng_canon_6d._used_fields
+
+    with open(str(data_folder_path / 'renderer_render_thumbnail_even.np'), 'rb') as f:
+        expected_renderd_area = np.load(f)
+    # expected_renderd_area = 1
+
+    return ifd, expected_renderd_area, active_area_offset, rectangle
+
+
+@pytest.fixture()
+def dng_thumbnail_rendered_to_rgb_odd_offsets(dng_canon_6d, data_folder_path):
+    import numpy as np
+
+    active_area_offset = (29, 63)
+    rectangle = [21, 2, 200, 100]
+
+    dng_canon_6d.parse()
+    dng_canon_6d.get_image(rectangle, 'thumbnail')
+    dng_canon_6d._get_tile_or_strip_bytes(rectangle)
+    ifd = dng_canon_6d._used_fields
+
+    with open(str(data_folder_path / 'renderer_render_thumbnail_odd.np'), 'rb') as f:
+        expected_renderd_area = np.load(f)
+    # expected_renderd_area = 1
+
+    return ifd, expected_renderd_area, active_area_offset, rectangle
+
+
+@pytest.fixture()
+def scaled_raw_data_w_ifd_0112_zero_offset(dng_canon_6d, data_folder_path):
+    import numpy as np
+
+    active_area_offset = (0, 0)
+
+    ifd = {}
+    ifd['cfa_pattern'] = [0, 1, 1, 2]
+    ifd['cfa_repeat_pattern_dim'] = [2, 2]
+
+    image = np.asarray(raw_image, dtype=np.float32)
+
+    with open(str(data_folder_path / 'raw_data_to_rgb_0112_zero_offset.np'), 'rb') as f:
+        expected_renderd_area = np.load(f)
+    # expected_renderd_area = 1
+
+    return ifd, image, active_area_offset, expected_renderd_area
+
+
+@pytest.fixture()
+def scaled_raw_data_w_ifd_0112_even_offset(dng_canon_6d, data_folder_path):
+    import numpy as np
+
+    active_area_offset = (2, 2)
+
+    ifd = {}
+    ifd['cfa_pattern'] = [0, 1, 1, 2]
+    ifd['cfa_repeat_pattern_dim'] = [2, 2]
+
+    image = np.asarray(raw_image, dtype=np.float32)
+
+    with open(str(data_folder_path / 'raw_data_to_rgb_0112_even_offset.np'), 'rb') as f:
+        expected_renderd_area = np.load(f)
+    # expected_renderd_area = 1
+
+    return ifd, image, active_area_offset, expected_renderd_area
+
+
+@pytest.fixture()
+def scaled_raw_data_w_ifd_0112_odd_offset(dng_canon_6d, data_folder_path):
+    import numpy as np
+
+    active_area_offset = (1, 1)
+
+    ifd = {}
+    ifd['cfa_pattern'] = [0, 1, 1, 2]
+    ifd['cfa_repeat_pattern_dim'] = [2, 2]
+
+    image = np.asarray(raw_image, dtype=np.float32)
+
+    with open(str(data_folder_path / 'raw_data_to_rgb_0112_odd_offset.np'), 'rb') as f:
+        expected_renderd_area = np.load(f)
+    # expected_renderd_area = 1
+
+    return ifd, image, active_area_offset, expected_renderd_area
+
+@pytest.fixture()
+def scaled_raw_data_w_ifd_1021_even_offset(dng_canon_6d, data_folder_path):
+    import numpy as np
+
+    active_area_offset = (2, 2)
+
+    ifd = {}
+    ifd['cfa_pattern'] = [1, 0, 2, 1]
+    ifd['cfa_repeat_pattern_dim'] = [2, 2]
+
+    image = np.asarray(raw_image, dtype=np.float32)
+
+    with open(str(data_folder_path / 'raw_data_to_rgb_1021_even_offset.np'), 'rb') as f:
+        expected_renderd_area = np.load(f)
+    # expected_renderd_area = 1
+
+    return ifd, image, active_area_offset, expected_renderd_area
