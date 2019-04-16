@@ -156,16 +156,18 @@ cpdef float[:,:,:] _set_blacks_whites_scale_and_clip(ifd, int[:,:,:] raw_image, 
     cdef int white
 
     if 'linearization_table' in ifd:
+        # print('starting')
         linearization_table = ifd['linearization_table']
         for ic in range(raw_image.shape[0]):
             for iy in range(raw_image.shape[2]):
                 for ix in range(raw_image.shape[1]):
-                    if raw_image[ic, ix, iy] > len(linearization_table):
+                    if raw_image[ic, ix, iy] >= len(linearization_table):
                         raw_image[ic, ix, iy] = linearization_table[-1]
+                        # print(ic, ix, iy, raw_image[ic, ix, iy], len(linearization_table))
                     else:
+                        # print(ic, ix, iy, linearization_table[raw_image[ic, ix, iy]])
                         raw_image[ic, ix, iy] = linearization_table[raw_image[ic, ix, iy]]
 
-    # TODO Bug assumes ifd['black_level_repeat_dim'] == [2, 2]
     if ifd['black_level_repeat_dim'] == [2, 2] and ifd['samples_per_pix'] == 1:
         assert len(ifd['white_level']) == 1
         if active_area_offset[0] % ifd['cfa_repeat_pattern_dim'][0] == 1:
@@ -189,7 +191,7 @@ cpdef float[:,:,:] _set_blacks_whites_scale_and_clip(ifd, int[:,:,:] raw_image, 
                     raw_scaled[ic, ix, iy] = _rescale_and_clip(raw_image[ic, ix, iy], black, white_level[ic])
     else:
         print(ifd)
-        assert False
+        raise NotImplementedError(f'Only Black level repeat dims of [1, 1] and [2, 2] implemented in {__name__}.')
 
     return raw_scaled
 
