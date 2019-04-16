@@ -25,6 +25,7 @@ setup(
                                                'boundscheck': False,
                                                },
                           # annotate=True,
+                          # gdb_debug=True
     )
 )
 

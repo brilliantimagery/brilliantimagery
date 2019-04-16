@@ -37,20 +37,6 @@ def test_renderd_area_bounding_box_success(bounding_box_params):
     assert actual == bbx.output
 
 
-# def test_convert_rectangle_percent_to_pixels_default(used_ifd_fields_raw):
-#     # GIVEN the _used_field data
-#     from BrilliantImagery.dng import _dng_utils
-#
-#     # WHEN
-#     actual = _dng_utils.convert_rectangle_percent_to_pixels(used_ifd_fields_raw,
-#                                                             [.25, .35, .65, .75],
-#                                                             0.05, 0.06, 0.92, 0.97)
-#     expected = ([1547, 1430, 3451, 2757], (1475, 1392))
-#
-#     # THEN
-#     assert actual == expected
-
-
 def test_convert_rectangle_percent_to_pixels_default(used_ifd_fields_raw):
     # GIVEN the _used_field data
     from BrilliantImagery.dng import _dng_utils
@@ -91,7 +77,7 @@ def test_convert_rectangle_percent_to_pixels_raw(used_ifd_fields_raw):
     assert actual == expected
 
 
-def test_get_active_area_offset_default(used_ifd_fields_raw):
+def test_get_active_area_offset_raw(used_ifd_fields_raw):
     # GIVEN the _used_field data
     from BrilliantImagery.dng import _dng_utils
 
@@ -117,7 +103,7 @@ def test_convert_rectangle_percent_to_pixels_thumbnail(used_ifd_fields_thumbnail
     assert actual == expected
 
 
-def test_get_active_area_offset_default(used_ifd_fields_thumbnail):
+def test_get_active_area_offset_thumbnail(used_ifd_fields_thumbnail):
     # GIVEN the _used_field data
     from BrilliantImagery.dng import _dng_utils
 

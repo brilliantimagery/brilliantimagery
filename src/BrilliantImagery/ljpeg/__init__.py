@@ -1,2 +1,2 @@
-from ._decode import decode
-from ._encode import encode
+from BrilliantImagery.ljpeg._decode import decode
+from BrilliantImagery.ljpeg._encode import encode

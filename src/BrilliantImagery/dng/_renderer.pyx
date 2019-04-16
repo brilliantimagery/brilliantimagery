@@ -38,7 +38,7 @@ def render(ifd, rectangle, active_area_offset):
         return raw_scaled.base
 
 
-cdef float[:,:,:] _raw_to_rgb(ifd, float[:,:] raw_scaled, active_area_offset):
+cpdef float[:,:,:] _raw_to_rgb(ifd, float[:,:] raw_scaled, active_area_offset):
     cdef int width = raw_scaled.shape[0] - 1
     cdef int height = raw_scaled.shape[1] - 1
 
@@ -128,7 +128,7 @@ cdef float[:,:,:] _raw_to_rgb(ifd, float[:,:] raw_scaled, active_area_offset):
     return rgb_image
 
 
-cdef int[:,:,:] _clip_to_rendered_rectangle(ifd, int[:,:,:] raw_image):
+cpdef int[:,:,:] _clip_to_rendered_rectangle(ifd, int[:,:,:] raw_image):
     return raw_image[:,
                      (ifd['rendered_rectangle'][0] - ifd['rendered_section_bounding_box'][0]):
                      (ifd['rendered_rectangle'][2] - ifd['rendered_section_bounding_box'][0]),
@@ -136,7 +136,7 @@ cdef int[:,:,:] _clip_to_rendered_rectangle(ifd, int[:,:,:] raw_image):
                      (ifd['rendered_rectangle'][3] - ifd['rendered_section_bounding_box'][1])]
 
 
-cdef float[:,:,:] _set_blacks_whites_scale_and_clip(ifd, int[:,:,:] raw_image, tuple active_area_offset):
+cpdef float[:,:,:] _set_blacks_whites_scale_and_clip(ifd, int[:,:,:] raw_image, tuple active_area_offset):
     cdef int ix
     cdef int iy
     cdef int ic
@@ -189,7 +189,7 @@ cdef float[:,:,:] _set_blacks_whites_scale_and_clip(ifd, int[:,:,:] raw_image, t
     return raw_scaled
 
 
-cdef float _rescale_and_clip(float color_value, int black_level, int white_level):
+cpdef float _rescale_and_clip(float color_value, int black_level, int white_level):
     color_value = (color_value - black_level) / (white_level - black_level)
     if color_value < 0:
         color_value = 0
@@ -199,7 +199,7 @@ cdef float _rescale_and_clip(float color_value, int black_level, int white_level
     return color_value
 
 
-cdef int[:,:,:] _unpack_tile_data(ifd):
+cpdef int[:,:,:] _unpack_tile_data(ifd):
     # print(ifd)
     cdef int samples_per_pix = ifd['samples_per_pix']
     cdef int n_tiles_wide = max([n[0] for n in ifd['section_bytes'].keys()]) + 1
@@ -248,7 +248,7 @@ cdef int[:,:,:] _unpack_tile_data(ifd):
 
 
 # TODO: consolidate with _unpack_jpeg_data
-cdef int[:, :, :] _unpack_strip_data(ifd):
+cpdef int[:, :, :] _unpack_strip_data(ifd):
     cdef int samples_per_pix = ifd['samples_per_pix']
     cdef int[:,:,:] raw_scaled = np.empty((3,
                                            ifd['rendered_section_bounding_box'][2]
