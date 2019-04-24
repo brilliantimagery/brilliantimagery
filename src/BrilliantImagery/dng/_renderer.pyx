@@ -7,6 +7,7 @@ def render(ifd, rectangle, active_area_offset):
     if ifd['photometric_interpretation'] == 2:
     # RGB images
         if ifd['compression'] == 1:
+            # TODO: should work without assert but needs testing
             assert len(ifd['section_bytes']) == 1
             raw_image = _unpack_strip_data(ifd)
             return raw_image[:, ifd['rendered_rectangle'][0]: ifd['rendered_rectangle'][2],
