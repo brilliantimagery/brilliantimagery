@@ -14,7 +14,6 @@ def render(ifd, rectangle, active_area_offset):
 
     elif ifd['photometric_interpretation'] in [32803, 34892]:
     # Color Filter Array or Linear Raw images respectively
-        # print(ifd)
         if 'white_level' not in ifd:
             raise NotImplementedError(f'No "whitelevel" not implemented in {__name__}.')
         if len(ifd['black_level']) not in [1, 3, 4]:      # otherwise _render_utils.black_white_rescale breaks
@@ -156,16 +155,13 @@ cpdef float[:,:,:] _set_blacks_whites_scale_and_clip(ifd, int[:,:,:] raw_image, 
     cdef int white
 
     if 'linearization_table' in ifd:
-        # print('starting')
         linearization_table = ifd['linearization_table']
         for ic in range(raw_image.shape[0]):
             for iy in range(raw_image.shape[2]):
                 for ix in range(raw_image.shape[1]):
                     if raw_image[ic, ix, iy] >= len(linearization_table):
                         raw_image[ic, ix, iy] = linearization_table[-1]
-                        # print(ic, ix, iy, raw_image[ic, ix, iy], len(linearization_table))
                     else:
-                        # print(ic, ix, iy, linearization_table[raw_image[ic, ix, iy]])
                         raw_image[ic, ix, iy] = linearization_table[raw_image[ic, ix, iy]]
 
     if ifd['black_level_repeat_dim'] == [2, 2] and ifd['samples_per_pix'] == 1:
@@ -225,7 +221,6 @@ cpdef int[:,:,:] _unpack_tile_data(ifd):
                                            ifd['rendered_section_bounding_box'][3]
                                            - ifd['rendered_section_bounding_box'][1]),
                                           dtype=np.intc)
-
     for section_number, section_bytes in ifd['section_bytes'].items():
         if section_number[0] < n_tiles_wide - 1:
             tile_width = nominal_tile_width
@@ -236,15 +231,21 @@ cpdef int[:,:,:] _unpack_tile_data(ifd):
             tile_length = nominal_tile_length
         else:
             tile_length = raw_scaled.shape[2] - nominal_tile_length * (n_tiles_long - 1)
-
-        if compression == 7:
+        if compression == 1:
+            # TODO: needs testing
+            image_data_reshaped = np.reshape(np.asarray(section_bytes),
+                                             (samples_per_pix, nominal_tile_width, nominal_tile_length),
+                                             order='F')
+        elif compression == 7:
+            # TODO: should they not be 'nominal_'?
             image_data = ljpeg.decode(section_bytes)
+            image_data_reshaped = np.reshape(image_data,
+                                             (samples_per_pix, nominal_tile_width, nominal_tile_length),
+                                             order='F')
         else:
             raise NotImplementedError(f'Compression "{compression}" not implemented in {__name__}.')
 
-        image_data_reshaped = np.reshape(image_data,
-                                         (samples_per_pix, nominal_tile_width, nominal_tile_length),
-                                         order='F')
+        # TODO: should they not be 'nominal_'?
         raw_scaled[:,
                    section_number[0] * nominal_tile_width: (section_number[0]+1) * nominal_tile_width,
                    section_number[1] * nominal_tile_length: (section_number[1]+1) * nominal_tile_length] = \
@@ -253,25 +254,45 @@ cpdef int[:,:,:] _unpack_tile_data(ifd):
     return raw_scaled
 
 
-# TODO: consolidate with _unpack_jpeg_data
+# TODO: consolidate with _unpack_tile_data
 cpdef int[:, :, :] _unpack_strip_data(ifd):
     cdef int samples_per_pix = ifd['samples_per_pix']
-    cdef int[:,:,:] raw_scaled = np.empty((3,
+    cdef int[:,:,:] raw_scaled = np.empty((samples_per_pix,
                                            ifd['rendered_section_bounding_box'][2]
-                                         - ifd['rendered_section_bounding_box'][0],
-                                         ifd['rendered_section_bounding_box'][3]
-                                         - ifd['rendered_section_bounding_box'][1]),
-                                        dtype=np.intc)
+                                           - ifd['rendered_section_bounding_box'][0],
+                                           ifd['rendered_section_bounding_box'][3]
+                                           - ifd['rendered_section_bounding_box'][1]),
+                                          dtype=np.intc)
     cdef int n_strips_wide = 1
     cdef int n_strips_long = max([n[1] for n in ifd['section_bytes'].keys()]) + 1
     cdef tuple section_number
     cdef int[:] section_bytes
     cdef int[:, :, :] section_bytes_reshaped
-    cdef int section_width = ifd['image_width']
-    cdef int section_length = ifd['image_length']
+    cdef int nominal_section_width = ifd['image_width']
+    cdef int nominal_section_length = ifd['rows_per_strip']
+    cdef int compression = ifd['compression']
+    cdef int[:,:,:] image_data_reshaped
 
     for section_number, section_bytes in ifd['section_bytes'].items():
-        return np.reshape(section_bytes, (3, section_width, section_length), order='F')
+        if section_number[1] < n_strips_long - 1:
+            section_length = nominal_section_length
+        else:
+            section_length = raw_scaled.shape[2] - nominal_section_length * (n_strips_long - 1)
+
+        if compression == 1:
+            image_data_reshaped = np.reshape(np.asarray(section_bytes),
+                                             (samples_per_pix, nominal_section_width, section_length),
+                                             order='F')
+            raw_scaled[:, :, section_number[1] * section_length: (section_number[1]+1) * section_length] = \
+                image_data_reshaped[:, :, :section_length]
+
+        elif compression == 7:
+            raise NotImplementedError(f'Compression 7 with strips not implemented in {__name__}.')
+        else:
+            raise NotImplementedError(f'Compression not recognized in {__name__}.')
+
+    return raw_scaled
+
 
 #cython: profile=True
 #cython: linetrace=True

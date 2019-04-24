@@ -11,6 +11,7 @@ path = os.path.join(path, 'src')
 sys.path.insert(len(sys.path), path)
 
 from src.BrilliantImagery.sequence import Sequence
+from src.BrilliantImagery.dng import DNG
 
 
 def test_stabelize():
@@ -51,6 +52,7 @@ def main():
     # s.stabilize([0.5, 0.65, 0.7, 0.85], 8)
     # s.save()
     print('three', datetime.datetime.now(), datetime.datetime.now() - t1)
+
 
 
 if __name__ == '__main__':

@@ -144,7 +144,7 @@ def test_set_blacks_whites_scale_and_clip_w_2x2_mask_1_sample_per_pix(unscaled_r
 
 
 def test_set_blacks_whites_scale_and_clip_w_2x2_mask_1_sample_per_pix_odd(
-        unscaled_raw_data_w_2x2_mask_1_sample_per_pix_odd, data_folder_path):
+        unscaled_raw_data_w_2x2_mask_1_sample_per_pix_odd):
     # GIVEN a dng, a rendered area, a rectangle, and the active_area_offset
     import numpy as np
     from BrilliantImagery.dng import _renderer
@@ -153,14 +153,11 @@ def test_set_blacks_whites_scale_and_clip_w_2x2_mask_1_sample_per_pix_odd(
     # WHEN the used_fields are rendered
     actual = _renderer._set_blacks_whites_scale_and_clip(ifd, image, active_area_offset)
 
-    # with open(str(data_folder_path / 'unscaled_raw_data_w_2x2_mask_1_sample_per_pix_odd.np'), 'wb') as f:
-    #     expected_renderd_area = np.save(f, actual)
-
     # THEN the expected and actual arrays are equal
     assert np.array_equal(actual, expected_renderd_area)
 
 
-def test_set_blacks_whites_scale_and_clip_w_3_sample_per_pix(unscaled_raw_data_w_3_sample_per_pix, data_folder_path):
+def test_set_blacks_whites_scale_and_clip_w_3_sample_per_pix(unscaled_raw_data_w_3_sample_per_pix):
     # GIVEN a dng, a rendered area, a rectangle, and the active_area_offset
     import numpy as np
     from BrilliantImagery.dng import _renderer
@@ -169,14 +166,11 @@ def test_set_blacks_whites_scale_and_clip_w_3_sample_per_pix(unscaled_raw_data_w
     # WHEN the used_fields are rendered
     actual = _renderer._set_blacks_whites_scale_and_clip(ifd, image, active_area_offset)
 
-    # with open(str(data_folder_path / 'unscaled_raw_data_w_3_sample_per_pix.np'), 'wb') as f:
-    #     expected_renderd_area = np.save(f, actual)
-
     # THEN the expected and actual arrays are equal
     assert np.array_equal(actual, expected_renderd_area)
 
 
-def test_set_blacks_whites_scale_and_clip_w_linearization(unscaled_raw_data_w_linearization, data_folder_path):
+def test_set_blacks_whites_scale_and_clip_w_linearization(unscaled_raw_data_w_linearization):
     # GIVEN a dng, a rendered area, a rectangle, and the active_area_offset
     import numpy as np
     from BrilliantImagery.dng import _renderer
@@ -185,10 +179,54 @@ def test_set_blacks_whites_scale_and_clip_w_linearization(unscaled_raw_data_w_li
     # WHEN the used_fields are rendered
     actual = _renderer._set_blacks_whites_scale_and_clip(ifd, image, active_area_offset)
 
-    # with open(str(data_folder_path / 'unscaled_raw_data_w_linearization.np'), 'wb') as f:
-    #     expected_renderd_area = np.save(f, actual)
-
     # THEN the expected and actual arrays are equal
     assert np.array_equal(actual, expected_renderd_area)
 
-# TODO: test _set_blacks_whites_scale_and_clip with linearizationtables
+
+def test_clip_to_rendered_rectangle(rectangle_to_clip):
+    # GIVEN a dng, a rendered area, a rectangle
+    import numpy as np
+    from BrilliantImagery.dng import _renderer
+    ifd, image, expected = rectangle_to_clip
+
+    # WHEN the used_fields are rendered
+    actual = _renderer._clip_to_rendered_rectangle(ifd, image)
+
+    # THEN the expected and actual arrays are equal
+    assert np.array_equal(actual, expected)
+
+
+def test_unpack_compressed_tile_data(unpackable_ifd_w_compressed_tiles):
+    # GIVEN a dng, a rendered area, a rectangle, and the active_area_offset
+    import numpy as np
+    from BrilliantImagery.dng import _renderer
+    used_fields, expected_image, active_area_offset, rectangle = unpackable_ifd_w_compressed_tiles
+
+    actual = np.asarray(_renderer._unpack_tile_data(used_fields))
+
+    assert np.array_equal(actual, expected_image)
+
+
+def test_unpack_uncompressed_strip_data(unpackable_ifd_w_uncompressed_strips):
+    # GIVEN a dng, a rendered area, a rectangle, and the active_area_offset
+    import numpy as np
+    from BrilliantImagery.dng import _renderer
+    used_fields, expected_image, active_area_offset, rectangle = unpackable_ifd_w_uncompressed_strips
+
+    actual = np.asarray(_renderer._unpack_strip_data(used_fields))
+
+    assert np.array_equal(actual, expected_image)
+
+
+# def test_unpack_uncompressed_strip_data(unpackable_ifd_w_compressed_tiles, data_folder_path):
+#     # GIVEN a dng, a rendered area, a rectangle, and the active_area_offset
+#     import numpy as np
+#     from BrilliantImagery.dng import _renderer
+#     used_fields, expected_image, active_area_offset, rectangle = unpackable_ifd_w_compressed_tiles
+#
+#     actual = np.asarray(_renderer._unpack_tile_data(used_fields))
+#
+#     with open(str(data_folder_path / 'unpacked_compressed_tiles.np'), 'wb') as f:
+#         expected_renderd_area = np.save(f, actual)
+#
+#     assert np.array_equal(actual, expected_image)

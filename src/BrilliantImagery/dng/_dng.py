@@ -302,6 +302,22 @@ class DNG:
         self._used_fields['section_bytes'] = {}
         self._used_fields['rendered_section_bounding_box'] = []
         self._used_fields['rendered_rectangle'] = rectangle
+
+        if self._used_fields['bits_per_sample'][0] == 8 and self._used_fields['compression'] == 7:
+            data_type = np.uint8
+            devisor = 1
+        if self._used_fields['bits_per_sample'][0] == 8 and self._used_fields['compression'] == 1:
+            data_type = np.uint8
+            devisor = 1
+        elif self._used_fields['bits_per_sample'][0] == 16 and self._used_fields['compression'] == 1:
+            data_type = np.uint16
+            devisor = 2
+        elif self._used_fields['bits_per_sample'][0] == 16 and self._used_fields['compression'] == 7:
+            data_type = np.uint8
+            devisor = 1
+        else:
+            raise NotImplementedError(f'Compression not implemented in {__name__}.')
+
         with open(self._path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
             if 'tile_byte_counts' in self._used_fields:
                 section_byte_counts = self._used_fields['tile_byte_counts']
@@ -316,15 +332,15 @@ class DNG:
                 section_byte_counts = self._used_fields['strip_byte_counts']
                 section_offsets = self._used_fields['strip_offsets']
                 section_width = self._used_fields['image_width']
-                if 'tile_length' in self._used_fields:
-                    section_length = self._used_fields['tile_length']
+                if 'RowsPerStrip' in self._used_fields:
+                    section_length = self._used_fields['RowsPerStrip']
                 else:
                     section_length = self._used_fields['image_length']
                 image_width = self._used_fields['image_width']
                 image_length = self._used_fields['image_length']
                 n_tiles_wide = 1
                 n_tiles_long = math.ceil(image_length / section_length)
-            for index, (byte_counts, offsets) in enumerate(zip(section_byte_counts, section_offsets)):
+            for index, (byte_count, offset) in enumerate(zip(section_byte_counts, section_offsets)):
                 x1 = index % n_tiles_wide * section_width
                 y1 = index // n_tiles_wide * section_length
                 x2 = x1 + section_width
@@ -335,10 +351,10 @@ class DNG:
                     if 'x_tile_offset' not in locals():
                         x_tile_offset = x1 // section_width
                         y_tile_offset = y1 // section_length
-                    f.seek(offsets)
-                    self._used_fields['section_bytes'][tuple([index % n_tiles_wide - x_tile_offset,
-                                                              index // n_tiles_wide - y_tile_offset])] = \
-                        np.fromfile(f, np.uint8, byte_counts).astype(np.intc)
+                    f.seek(offset)
+                    self._used_fields['section_bytes'][(index % n_tiles_wide - x_tile_offset,
+                                                        index // n_tiles_wide - y_tile_offset)] = \
+                        np.fromfile(f, data_type, int(byte_count / devisor)).astype(np.intc)
 
     def _get_ifd_offsets(self) -> None:
         """

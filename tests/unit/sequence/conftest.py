@@ -15,7 +15,7 @@ Crops = namedtuple('Crops', ['left', 'top', 'right', 'bottom'])
 
 @pytest.fixture()
 def _base_sequence(data_folder_path):
-    sequence = Sequence(str(data_folder_path))
+    sequence = Sequence(str(data_folder_path / 'dng'))
     time = next(iter(sequence._images))
     image = sequence._images[time]
     for i in range(1, 10):

@@ -405,7 +405,19 @@ def used_ifd_fields_thumbnail():
 @pytest.fixture()
 def dng_canon_6d(data_folder_path):
     from BrilliantImagery.dng import DNG
-    return DNG(str(data_folder_path / 'test_image_canon_6d.dng'))
+    return DNG(str(data_folder_path / 'dng' / 'test_image_canon_6d.dng'))
+
+
+@pytest.fixture()
+def dng_canon_6d_uncompressed(data_folder_path):
+    from BrilliantImagery.dng import DNG
+    return DNG(str(data_folder_path / 'test_canon_6d_uncompressed.dng'))
+
+
+@pytest.fixture()
+def dng_pixel2(data_folder_path):
+    from BrilliantImagery.dng import DNG
+    return DNG(str(data_folder_path / 'Pixel2.dng'))
 
 
 @pytest.fixture()
@@ -468,7 +480,7 @@ def copied_dng_canon_6d(data_folder_path, dng_canon_6d, tmpdir):
     import shutil
     from BrilliantImagery.dng import DNG
 
-    shutil.copy(str(str(data_folder_path / 'test_image_canon_6d.dng')), str(tmpdir / 'test_image_canon_6d.dng'))
+    shutil.copy(str(str(data_folder_path / 'dng' / 'test_image_canon_6d.dng')), str(tmpdir / 'test_image_canon_6d.dng'))
     return DNG(str(tmpdir / 'test_image_canon_6d.dng'))
 
 
@@ -540,7 +552,6 @@ def dng_thumbnail_rendered_to_rgb_even_offsets(dng_canon_6d, data_folder_path):
 
     with open(str(data_folder_path / 'renderer_render_thumbnail_even.np'), 'rb') as f:
         expected_renderd_area = np.load(f)
-    # expected_renderd_area = 1
 
     return ifd, expected_renderd_area, active_area_offset, rectangle
 
@@ -701,6 +712,116 @@ def unscaled_raw_data_w_linearization(data_folder_path):
 
     with open(str(data_folder_path / 'unscaled_raw_data_w_linearization.np'), 'rb') as f:
         expected_renderd_area = np.load(f)
-    # expected_renderd_area = 1
 
     return ifd, image, active_area_offset, expected_renderd_area
+
+
+@pytest.fixture()
+def rectangle_to_clip():
+    rectangle = [2, 3, 8, 10]
+    bounding_box = [1, 2, 3, 3]
+
+    ifd = {}
+    ifd['rendered_rectangle'] = rectangle
+    ifd['rendered_section_bounding_box'] = bounding_box
+
+    image = [[[5, 15, 8, 8, 14, 10, 1, 7, 3, 9, 13, 15, 1],
+              [6, 10, 1, 7, 7, 12, 10, 13, 8, 12, 14, 12, 4],
+              [10, 5, 11, 5, 12, 1, 10, 9, 12, 14, 10, 12, 3],
+              [4, 8, 1, 6, 5, 4, 13, 8, 11, 11, 0, 14, 4],
+              [6, 13, 8, 5, 4, 14, 2, 12, 13, 3, 10, 11, 11],
+              [3, 15, 10, 4, 3, 15, 12, 7, 9, 14, 12, 15, 4],
+              [9, 2, 13, 8, 0, 15, 14, 2, 8, 1, 10, 4, 1],
+              [9, 15, 1, 13, 0, 1, 4, 0, 11, 10, 5, 5, 15],
+              [6, 3, 4, 8, 3, 7, 1, 11, 12, 11, 7, 5, 12],
+              [1, 12, 15, 14, 12, 6, 14, 2, 3, 9, 1, 0, 5],
+              [11, 8, 8, 6, 5, 7, 10, 7, 6, 6, 7, 6, 1]],
+             [[0, 15, 3, 5, 14, 4, 15, 11, 2, 8, 0, 11, 15],
+              [4, 7, 3, 5, 13, 11, 4, 2, 8, 2, 5, 1, 6],
+              [11, 3, 11, 7, 9, 2, 3, 8, 9, 4, 5, 7, 5],
+              [1, 2, 4, 5, 14, 4, 4, 6, 15, 15, 11, 10, 14],
+              [6, 8, 1, 15, 3, 1, 2, 1, 8, 3, 9, 12, 0],
+              [14, 10, 0, 13, 9, 5, 5, 7, 11, 6, 13, 5, 8],
+              [10, 15, 0, 11, 8, 3, 6, 14, 7, 1, 8, 12, 0],
+              [12, 10, 3, 6, 15, 2, 13, 11, 6, 1, 14, 13, 3],
+              [8, 3, 12, 1, 0, 7, 14, 6, 12, 9, 2, 1, 5],
+              [13, 10, 8, 11, 3, 5, 8, 3, 7, 3, 8, 3, 0],
+              [10, 9, 6, 7, 4, 12, 8, 1, 10, 5, 12, 8, 2]],
+             [[12, 3, 11, 3, 9, 2, 10, 6, 4, 14, 15, 8, 5],
+              [12, 0, 12, 2, 0, 4, 10, 5, 6, 9, 5, 0, 8],
+              [7, 3, 13, 7, 13, 8, 3, 8, 7, 14, 1, 5, 8],
+              [5, 8, 13, 6, 8, 13, 4, 14, 7, 12, 8, 12, 3],
+              [10, 9, 7, 1, 12, 15, 15, 3, 14, 5, 6, 14, 6],
+              [8, 4, 6, 9, 5, 12, 10, 3, 8, 13, 2, 3, 15],
+              [10, 9, 6, 10, 12, 15, 5, 9, 12, 14, 8, 14, 6],
+              [15, 7, 5, 11, 12, 5, 3, 8, 1, 11, 8, 9, 14],
+              [0, 4, 11, 15, 15, 12, 5, 15, 10, 12, 6, 5, 4],
+              [9, 3, 13, 12, 10, 7, 8, 15, 1, 0, 2, 5, 9],
+              [4, 10, 1, 13, 1, 9, 1, 3, 4, 1, 12, 4, 12]]
+             ]
+    image = np.asarray(unscaled_raw_image, dtype=np.int32)
+
+    cropped_image = image[:, 1: 7, 1: 8]
+
+    return ifd, image, cropped_image
+
+
+@pytest.fixture()
+def unpackable_ifd_w_compressed_tiles(dng_canon_6d, data_folder_path):
+    import numpy as np
+
+    active_area_offset = (28, 62)
+    rectangle = [100, 100, 500, 400]
+
+    dng_canon_6d.parse()
+    dng_canon_6d.default_shape()
+    dng_canon_6d._get_tile_or_strip_bytes(rectangle)
+    ifd = dng_canon_6d._used_fields
+
+    with open(str(data_folder_path / 'unpacked_compressed_tiles.np'), 'rb') as f:
+        expected_renderd_area = np.load(f)
+    # expected_renderd_area = 1
+
+    return ifd, expected_renderd_area, active_area_offset, rectangle
+
+
+@pytest.fixture()
+def unpackable_ifd_w_uncompressed_strips(dng_canon_6d_uncompressed, data_folder_path):
+    import numpy as np
+
+    active_area_offset = (28, 62)
+    rectangle = [100, 100, 500, 400]
+
+    dng_canon_6d_uncompressed.parse()
+    dng_canon_6d_uncompressed.default_shape()
+    dng_canon_6d_uncompressed._get_tile_or_strip_bytes(rectangle)
+    ifd = dng_canon_6d_uncompressed._used_fields
+
+    with open(str(data_folder_path / 'unpacked_uncompressed_strips.np'), 'rb') as f:
+        expected_renderd_area = np.load(f)
+    # expected_renderd_area = 1
+
+    return ifd, expected_renderd_area, active_area_offset, rectangle
+
+
+# @pytest.fixture()
+# def unpackable_ifd_w_uncompressed_strips(dng_pixel2, data_folder_path):
+#     import numpy as np
+#
+#     active_area_offset = (28, 62)
+#     rectangle = [100, 100, 500, 400]
+#
+#     dng_pixel2.parse()
+#     dng_pixel2.default_shape()
+#     dng_pixel2._get_tile_or_strip_bytes(rectangle)
+#     ifd = dng_pixel2._used_fields
+#
+#     # with open(str(data_folder_path / 'unpacked_compressed_tiles.np'), 'rb') as f:
+#     #     expected_renderd_area = np.load(f)
+#     expected_renderd_area = 1
+#
+#     return ifd, expected_renderd_area, active_area_offset, rectangle
+
+
+
+
