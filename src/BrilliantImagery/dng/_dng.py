@@ -121,26 +121,26 @@ class DNG:
 
         :return: A creation time formatted as a string.
         """
-        xmp = self._ifds[self._xmp_ifd_offset][700].values[0]
+        xmp = self._ifds.get(self._xmp_ifd_offset, {}).get(700, DNG.Field(0, 0, 0, 0, [b''])).values[0]
         capture_datetime = d_utils.get_xmp_attribute_value(xmp, b'xmp:CreateDate')
         if capture_datetime:
             return capture_datetime
         else:
             """
-                Try to get the date that a file was created, falling back to when it was
-                last modified if that isn't possible.
-                See http://stackoverflow.com/a/39501288/1709587 for explanation.
-                """
+            Try to get the date that a file was created, falling back to when it was
+            last modified if that isn't possible.
+            See http://stackoverflow.com/a/39501288/1709587 for explanation.
+            """
             if platform.system() == 'Windows':
-                return os.path.getctime(self._path)
+                return str(os.path.getctime(self._path))
             else:
                 stat = os.stat(self._path)
                 try:
-                    return stat.st_birthtime
+                    return str(stat.st_birthtime)
                 except AttributeError:
                     # We're probably on Linux. No easy way to get creation dates here,
                     # so we'll settle for when its content was last modified.
-                    return stat.st_mtime
+                    return str(stat.st_mtime)
 
     def _get_fields_required_to_render(self, sub_image: str):
         """
@@ -271,11 +271,14 @@ class DNG:
         as shown in the xmp data and values being a floats
         """
         if not self._xmp:
-            xmp_field = self._ifds[self._xmp_ifd_offset][700].values[0]
-            for xmp_attribute in d_cnst.XMP_TAGS.keys():
-                value = d_utils.get_xmp_attribute_value(xmp_field, xmp_attribute)
-                if value:
-                    self._xmp[xmp_attribute] = {'val': float(value), 'updated': False}
+            if self._xmp_ifd_offset in self._ifds:
+                xmp_field = self._ifds[self._xmp_ifd_offset][700].values[0]
+                for xmp_attribute in d_cnst.XMP_TAGS.keys():
+                    value = d_utils.get_xmp_attribute_value(xmp_field, xmp_attribute)
+                    if value:
+                        self._xmp[xmp_attribute] = {'val': float(value), 'updated': False}
+            else:
+                return {}
 
         return {k: v['val'] for k, v in self._xmp.items() if v}
 
@@ -305,16 +308,16 @@ class DNG:
 
         if self._used_fields['bits_per_sample'][0] == 8 and self._used_fields['compression'] == 7:
             data_type = np.uint8
-            devisor = 1
-        if self._used_fields['bits_per_sample'][0] == 8 and self._used_fields['compression'] == 1:
+            bytes_per_sample = 1
+        elif self._used_fields['bits_per_sample'][0] == 8 and self._used_fields['compression'] == 1:
             data_type = np.uint8
-            devisor = 1
+            bytes_per_sample = 1
         elif self._used_fields['bits_per_sample'][0] == 16 and self._used_fields['compression'] == 1:
             data_type = np.uint16
-            devisor = 2
+            bytes_per_sample = 2
         elif self._used_fields['bits_per_sample'][0] == 16 and self._used_fields['compression'] == 7:
             data_type = np.uint8
-            devisor = 1
+            bytes_per_sample = 1
         else:
             raise NotImplementedError(f'Compression not implemented in {__name__}.')
 
@@ -332,8 +335,8 @@ class DNG:
                 section_byte_counts = self._used_fields['strip_byte_counts']
                 section_offsets = self._used_fields['strip_offsets']
                 section_width = self._used_fields['image_width']
-                if 'RowsPerStrip' in self._used_fields:
-                    section_length = self._used_fields['RowsPerStrip']
+                if 'rows_per_strip' in self._used_fields:
+                    section_length = self._used_fields['rows_per_strip']
                 else:
                     section_length = self._used_fields['image_length']
                 image_width = self._used_fields['image_width']
@@ -354,7 +357,7 @@ class DNG:
                     f.seek(offset)
                     self._used_fields['section_bytes'][(index % n_tiles_wide - x_tile_offset,
                                                         index // n_tiles_wide - y_tile_offset)] = \
-                        np.fromfile(f, data_type, int(byte_count / devisor)).astype(np.intc)
+                        np.fromfile(f, data_type, byte_count // bytes_per_sample).astype(np.intc)
 
     def _get_ifd_offsets(self) -> None:
         """
@@ -373,7 +376,6 @@ class DNG:
             if 254 in self._ifds[offset]:
                 if self._ifds[offset][254].values[0] is 0:
                     self._orig_img_offset = offset
-                    # break
             if 700 in self._ifds[offset]:
                 self._xmp_ifd_offset = offset
             if self._orig_img_offset and self._xmp_ifd_offset:

@@ -11,7 +11,7 @@ import numpy as np
 
 from BrilliantImagery import ljpeg
 
-path = str(Path.cwd().parent / 'tests' / 'data' / 'F-18.ljpg')
+path = str(Path.cwd().parent / 'tests' / 'data' / 'ljpg_F-18.ljpg')
 input_file = np.fromfile(path, np.uint8).astype(np.intc)
     '''
 

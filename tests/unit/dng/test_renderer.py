@@ -202,7 +202,7 @@ def test_unpack_compressed_tile_data(unpackable_ifd_w_compressed_tiles):
     from BrilliantImagery.dng import _renderer
     used_fields, expected_image, active_area_offset, rectangle = unpackable_ifd_w_compressed_tiles
 
-    actual = np.asarray(_renderer._unpack_tile_data(used_fields))
+    actual = np.asarray(_renderer._unpack_section_data(used_fields))
 
     assert np.array_equal(actual, expected_image)
 
@@ -213,7 +213,7 @@ def test_unpack_uncompressed_strip_data(unpackable_ifd_w_uncompressed_strips):
     from BrilliantImagery.dng import _renderer
     used_fields, expected_image, active_area_offset, rectangle = unpackable_ifd_w_uncompressed_strips
 
-    actual = np.asarray(_renderer._unpack_strip_data(used_fields))
+    actual = np.asarray(_renderer._unpack_section_data(used_fields))
 
     assert np.array_equal(actual, expected_image)
 

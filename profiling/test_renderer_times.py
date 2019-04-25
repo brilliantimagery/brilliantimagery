@@ -14,7 +14,7 @@ from BrilliantImagery.dng import _renderer
 
 active_area_offset = (1787, 1646)
 rectangle = [1859, 1684, 2558, 2444]
-path = str(Path.cwd().parent / 'tests' / 'data' / 'test_image_canon_6d.dng')
+path = str(Path.cwd().parent / 'tests' / 'data' / 'dng_canon_6d.dng')
 
 dng = DNG(path)
 dng.parse()

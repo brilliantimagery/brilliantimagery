@@ -12,8 +12,6 @@ setup(
     author_email='chad.derosier@gmail.com',
     url='http://www.brilliantimagery.net',
 
-    install_requires=['Cython', 'numpy', 'tqdm', 'pytest'],
-
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
 
@@ -23,9 +21,11 @@ setup(
                            'src/BrilliantImagery/ppm/_save.pyx'],
                           compiler_directives={'cdivision': True,
                                                'boundscheck': False,
+                                               'language_level': 3,
                                                },
+
+                          # gdb_debug=True,
                           # annotate=True,
-                          # gdb_debug=True
     )
 )
 

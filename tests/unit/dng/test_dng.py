@@ -54,6 +54,18 @@ def test_get_capture_datetime(dng_canon_6d):
     assert expected == actual
 
 
+def test_get_capture_datetime_not_in_xmp(dng_pixel2):
+    # GIVEN an initialized DNG file and it's capture datetime
+    expected = '1529462969.0'
+
+    # WHEN parsed
+    dng_pixel2.parse()
+    actual = dng_pixel2.get_capture_datetime()
+
+    # THEN the capture datetime is as expected
+    assert expected == actual
+
+
 def test_get_fields_required_to_render_raw(dng_canon_6d, used_ifd_fields_raw):
     # GIVEN an initialized DNG and the expected used IFD fields
 

@@ -1,1 +1,1 @@
-from ._save import save
+from BrilliantImagery.ppm._save import save
