@@ -5,7 +5,7 @@ from libcpp cimport bool
 
 from BrilliantImagery import ljpeg
 
-def render(ifd, rectangle, active_area_offset):
+cpdef render(ifd, rectangle, active_area_offset):
     if ifd['photometric_interpretation'] == 2:
     # RGB images
         if ifd['compression'] == 1:
@@ -42,7 +42,7 @@ def render(ifd, rectangle, active_area_offset):
         return raw_scaled.base
 
 
-cpdef float[:,:,:] _raw_to_rgb(ifd, float[:,:] raw_scaled, active_area_offset):
+cdef float[:,:,:] _raw_to_rgb(ifd, float[:,:] raw_scaled, active_area_offset):
     cdef int width = raw_scaled.shape[0] - 1
     cdef int height = raw_scaled.shape[1] - 1
 
@@ -132,7 +132,7 @@ cpdef float[:,:,:] _raw_to_rgb(ifd, float[:,:] raw_scaled, active_area_offset):
     return rgb_image
 
 
-cpdef int[:,:,:] _clip_to_rendered_rectangle(ifd, int[:,:,:] raw_image):
+cdef int[:,:,:] _clip_to_rendered_rectangle(ifd, int[:,:,:] raw_image):
     return raw_image[:,
                      (ifd['rendered_rectangle'][0] - ifd['rendered_section_bounding_box'][0]):
                      (ifd['rendered_rectangle'][2] - ifd['rendered_section_bounding_box'][0]),
@@ -140,7 +140,7 @@ cpdef int[:,:,:] _clip_to_rendered_rectangle(ifd, int[:,:,:] raw_image):
                      (ifd['rendered_rectangle'][3] - ifd['rendered_section_bounding_box'][1])]
 
 
-cpdef float[:,:,:] _set_blacks_whites_scale_and_clip(ifd, int[:,:,:] raw_image, tuple active_area_offset):
+cdef float[:,:,:] _set_blacks_whites_scale_and_clip(ifd, int[:,:,:] raw_image, tuple active_area_offset):
     cdef int ix
     cdef int iy
     cdef int ic
@@ -192,7 +192,7 @@ cpdef float[:,:,:] _set_blacks_whites_scale_and_clip(ifd, int[:,:,:] raw_image, 
     return raw_scaled
 
 
-cpdef float _rescale_and_clip(float color_value, int black_level, int white_level):
+cdef float _rescale_and_clip(float color_value, int black_level, int white_level):
     color_value = (color_value - black_level) / (white_level - black_level)
     if color_value < 0:
         color_value = 0
@@ -202,7 +202,7 @@ cpdef float _rescale_and_clip(float color_value, int black_level, int white_leve
     return color_value
 
 
-cpdef int[:,:,:] _unpack_section_data(ifd):
+cdef int[:,:,:] _unpack_section_data(ifd):
     cdef int samples_per_pix = ifd['samples_per_pix']
     cdef int n_sections_wide
     cdef int n_sections_long
