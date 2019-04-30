@@ -405,7 +405,7 @@ def used_ifd_fields_thumbnail():
 @pytest.fixture()
 def dng_canon_6d(data_folder_path):
     from BrilliantImagery.dng import DNG
-    return DNG(str(data_folder_path / 'dng' / 'dng_canon_6d.dng'))
+    return DNG(str(data_folder_path / 'dng_canon_6d.dng'))
 
 
 @pytest.fixture()
@@ -474,7 +474,7 @@ def copied_dng_canon_6d(data_folder_path, dng_canon_6d, tmpdir):
     import shutil
     from BrilliantImagery.dng import DNG
 
-    shutil.copy(str(str(data_folder_path / 'dng' / 'dng_canon_6d.dng')), str(tmpdir / 'dng_canon_6d.dng'))
+    shutil.copy(str(str(data_folder_path / 'dng_canon_6d.dng')), str(tmpdir / 'dng_canon_6d.dng'))
     return DNG(str(tmpdir / 'dng_canon_6d.dng'))
 
 

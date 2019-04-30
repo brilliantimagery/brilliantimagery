@@ -22,9 +22,9 @@ class Sequence:
         ###################### FASTER ##########################################
         with concurrent.futures.ProcessPoolExecutor() as executor:
             images = list(tqdm(executor.map(MetaImage, files), total=len(files), desc='Parsing files: '))
-
         ###################### Avoids apparend pytest/pycharm # bug ##############
         # images = [MetaImage(f) for f in files]
+        # self.is_single_threaded = True
         ###################### End bug section #################################
 
         self._images = {i.get_capture_datetime(): i for i in images}

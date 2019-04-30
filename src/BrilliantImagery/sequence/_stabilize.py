@@ -37,11 +37,11 @@ class Stabilizer:
         for task in tasks:
             t, i = task.get()
             images[t] = i
-
         ###################### Avoids apparend pytest/pycharm # bug ##############
         # for time0, time1 in zip(ordered_times[:-1], ordered_times[1:]):
         #     _, images[time1] = sutil.find_misalignment(images[time0], images[time1],
         #                                                self._rectangle, keep_brightness, time1)
+        # self.is_single_threaded = True
         ###################### End bug section #################################
 
         for time0, time1 in zip(ordered_times[:-1], ordered_times[1:]):

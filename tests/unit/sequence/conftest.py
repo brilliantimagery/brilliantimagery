@@ -15,7 +15,8 @@ Crops = namedtuple('Crops', ['left', 'top', 'right', 'bottom'])
 
 @pytest.fixture()
 def _base_sequence(data_folder_path):
-    sequence = Sequence(str(data_folder_path / 'dng'))
+    sequence = Sequence(str(data_folder_path))
+    sequence._images = {'2017-09-07T16:01:38.03': sequence._images['2017-09-07T16:01:38.03']}
     time = next(iter(sequence._images))
     image = sequence._images[time]
     for i in range(1, 10):
@@ -92,7 +93,7 @@ def sequence_minimal_crop(_sequence_info):
         image.set_xmp_attribute(b'crs:CropBottom', (1 - 3 * pix_per_prcnt_lngth) - pix_per_prcnt_lngth * offset[1])
         image.store_xmp_field()
 
-    return _sequence, deepcopy(rectangle), offsets
+    return _sequence, deepcopy([0.1, 0.1, 0.4, 0.4]), offsets
 
 
 @pytest.fixture()

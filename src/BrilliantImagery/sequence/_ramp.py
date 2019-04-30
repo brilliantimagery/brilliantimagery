@@ -122,14 +122,13 @@ class Ramper:
                 tasks.append(task)
             pool.close()
             pool.join()
-
             for task in tasks:
                 t, i = task.get()
                 self._images[t].brightness = i
-
             ###################### Avoids apparend pytest/pycharm # bug ##############
             # for time, image in self._images.items():
             #     _, image.brightness = self._get_brightness(time, image, rectangle)
+            # self.is_single_threaded = True
             ###################### End bug section #################################
 
         ramp = []
@@ -151,9 +150,6 @@ class Ramper:
                 exposure = math.log(target / self._images[time].brightness, 2)
                 self._images[time].set_xmp_attribute('Exposure', exposure)
             target += ramp[reference_frame_index]
-
-    # def _calc_image_brightness(self, time):
-    #     return self._images[time].brightness * 2 ** self._images[time].get_xmp_attribute('Exposure')
 
     @staticmethod
     def _get_brightness(time, image, rectangle):

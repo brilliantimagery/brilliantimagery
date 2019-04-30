@@ -91,3 +91,11 @@ def test_stabilize(rampable_and_stablizable_sequence):
         assert top == expected_crops.top
         assert right == expected_crops.right
         assert bottom == expected_crops.bottom
+
+
+def test_is_multithreaded(rampable_and_stablizable_sequence):
+    # GIVEN a sequence
+    sequence, non_exp_xmp, expected_exp, rectangle, crops = rampable_and_stablizable_sequence
+
+    # THEN 'is_single_threaded' shouldn't be a present property
+    assert not hasattr(sequence, 'is_single_threaded')

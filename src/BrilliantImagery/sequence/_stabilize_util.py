@@ -15,8 +15,8 @@ def find_misalignment(image0, image1, rectangle, keep_brightness, time_index):
 
 
 def _find_offset(im1, im2):
-    image_1_gray = (im1[0, :, :] + im1[0, :, :] + im1[0, :, :]) / 3
-    image_2_gray = (im2[0, :, :] + im2[0, :, :] + im2[0, :, :]) / 3
+    image_1_gray = (im1[0, :, :] + im1[1, :, :] + im1[2, :, :]) / 3
+    image_2_gray = (im2[0, :, :] + im2[1, :, :] + im2[2, :, :]) / 3
 
     image_1_median = np.median(image_1_gray)
     image_2_median = np.median(image_2_gray)
@@ -33,6 +33,7 @@ def _find_offset(im1, im2):
     return [shift[1][0], shift[0][0]]
 
 
+# TODO: delete this?
 def _get_brightness_deltas(rgb_image):
     avg_pix_brightness = np.add(rgb_image[0, :, :], np.add(rgb_image[1, :, :], rgb_image[2, :, :]))
     shifted_left = avg_pix_brightness[:-2, 1:-1]
@@ -62,6 +63,7 @@ def misalignment_bounding_box(images):
     return min_x, min_y, max_x, max_y
 
 
+# TODO: delete this?
 def update_xmp_attributes(image, left, top, right, bottom):
     image.set_xmp_attribute('CropLeft', left)
     image.set_xmp_attribute('CropTop', top)

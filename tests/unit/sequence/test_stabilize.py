@@ -77,3 +77,15 @@ def test_update_crop_w_small_preexisting_crop_success(stabelized_sequence_minima
         assert top == expected_crops.top
         assert right == expected_crops.right
         assert bottom == expected_crops.bottom
+
+
+def test_is_multithreaded(sequence):
+    # GIVEN an image sequence to stabelize and the expected offsets/misalignments
+    sequence, rectangle, offsets = sequence
+    _stabilizer = Stabilizer(sequence._images, rectangle)
+
+    # WHEN the misalignments are found
+    _stabilizer.find_misalignments(keep_brightness=False)
+
+    # THEN 'is_single_threaded' shouldn't be a present property
+    assert not hasattr(_stabilizer, 'is_single_threaded')
