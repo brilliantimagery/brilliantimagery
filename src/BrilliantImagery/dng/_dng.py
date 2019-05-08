@@ -94,7 +94,9 @@ class DNG:
         self._byte_order = ''
         self._zeroth_ifd = 0
 
-    def parse(self):
+        self._parse()
+
+    def _parse(self):
         """
         Parses the image's IFDs so that other functions have data to work with.
 

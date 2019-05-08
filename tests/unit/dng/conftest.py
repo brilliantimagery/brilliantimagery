@@ -486,7 +486,7 @@ def dng_rendered_to_rgb_even_offsets(dng_canon_6d, data_folder_path):
     active_area_offset = (28, 62)
     rectangle = [100, 100, 500, 400]
 
-    dng_canon_6d.parse()
+    # dng_canon_6d.parse()
     dng_canon_6d.default_shape()
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
@@ -504,7 +504,7 @@ def dng_rendered_to_rgb_odd_offsets(dng_canon_6d, data_folder_path):
     active_area_offset = (29, 63)
     rectangle = [101, 101, 500, 400]
 
-    dng_canon_6d.parse()
+    # dng_canon_6d.parse()
     dng_canon_6d.default_shape()
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
@@ -522,7 +522,7 @@ def dng_rendered_to_rgb_even_odd_offsets(dng_canon_6d, data_folder_path):
     active_area_offset = (28, 62)
     rectangle = [100, 100, 501, 401]
 
-    dng_canon_6d.parse()
+    # dng_canon_6d.parse()
     dng_canon_6d.default_shape()
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
@@ -540,7 +540,7 @@ def dng_thumbnail_rendered_to_rgb_even_offsets(dng_canon_6d, data_folder_path):
     active_area_offset = (28, 62)
     rectangle = [20, 20, 200, 100]
 
-    dng_canon_6d.parse()
+    # dng_canon_6d.parse()
     dng_canon_6d.get_image(rectangle, 'thumbnail')
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
@@ -558,7 +558,7 @@ def dng_thumbnail_rendered_to_rgb_odd_offsets(dng_canon_6d, data_folder_path):
     active_area_offset = (29, 63)
     rectangle = [21, 2, 200, 100]
 
-    dng_canon_6d.parse()
+    # dng_canon_6d.parse()
     dng_canon_6d.get_image(rectangle, 'thumbnail')
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
@@ -768,7 +768,7 @@ def unpackable_ifd_w_compressed_tiles(dng_canon_6d, data_folder_path):
     active_area_offset = (28, 62)
     rectangle = [100, 100, 500, 400]
 
-    dng_canon_6d.parse()
+    # dng_canon_6d.parse()
     dng_canon_6d.default_shape()
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
@@ -786,7 +786,7 @@ def unpackable_ifd_w_uncompressed_strips(dng_pixel2, data_folder_path):
     active_area_offset = (28, 62)
     rectangle = [100, 100, 500, 400]
 
-    dng_pixel2.parse()
+    # dng_pixel2.parse()
     dng_pixel2.default_shape()
     dng_pixel2._get_tile_or_strip_bytes(rectangle)
     ifd = dng_pixel2._used_fields

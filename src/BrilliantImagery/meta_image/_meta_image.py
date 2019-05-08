@@ -25,7 +25,7 @@ class MetaImage:
         :param str path: Path to the image file.
         """
         self.image = DNG(path)
-        self.image.parse()
+        # self.image.parse()
         self.brightness = 0
 
     def get_capture_datetime(self):

@@ -17,7 +17,6 @@ Usage
   from BrilliantImagery.dng import DNG
 
   dng = DNG('path/to/dng.dng')
-  dng.parse()
 
   image = dng.get_image([0, 0, 0.5, 0.5], 'RAW')
 
@@ -28,7 +27,6 @@ Usage
   from BrilliantImagery.dng import DNG
 
   dng = DNG('path/to/dng.dng')
-  dng.parse()
 
   val = dng.get_xmp_attribute(b'xmp:attr')
 
