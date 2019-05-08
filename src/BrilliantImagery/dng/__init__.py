@@ -1,1 +1,1 @@
-from ._dng import DNG
+from BrilliantImagery.dng._dng import DNG

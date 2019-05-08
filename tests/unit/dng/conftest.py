@@ -15,6 +15,7 @@ xmp_to_try = ((b'xmp:Rating', '2'),
               (b'crs:Shadows2012', '-24'),
               (b'crs:RedHue', '0'),
               (b'crs:CropTop', '0.050467'),
+              (b'hello', None),
               # (b'crs:AlreadyApplied', 'False'),
               )
 

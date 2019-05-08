@@ -10,7 +10,7 @@ setup(
     version='19.0',
     author='Chad DeRosier',
     author_email='chad.derosier@gmail.com',
-    url='http://www.brilliantimagery.net',
+    url='http://www.brilliantimagery.org',
 
     packages=find_packages(where='src'),
     package_dir={'': 'src', 'tests': 'tests'},
@@ -24,6 +24,7 @@ setup(
                           compiler_directives={'cdivision': True,
                                                'boundscheck': False,
                                                'language_level': 3,
+                                               'embedsignature': True,
                                                },
                           # gdb_debug=True,
                           # annotate=True,

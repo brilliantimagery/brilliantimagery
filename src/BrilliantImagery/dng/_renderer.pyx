@@ -6,6 +6,17 @@ from libcpp cimport bool
 from BrilliantImagery import ljpeg
 
 cpdef render(ifd, rectangle, active_area_offset):
+    """
+    
+    :param ifd: 
+    :type ifd: 
+    :param rectangle: 
+    :type rectangle: 
+    :param active_area_offset: 
+    :type active_area_offset: 
+    :return: 
+    :rtype: 
+    """
     if ifd['photometric_interpretation'] == 2:
     # RGB images
         if ifd['compression'] == 1:

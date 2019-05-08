@@ -42,12 +42,15 @@ def decode(int[:] encoded_image):
     Decode a Lossless Jpeg according to the 1992 standard T.81, 10918.1, 
     into its raw components.
 
-    :param image: A 1D Numpy array holding the compressed image. 
-    "image" can be created with something like 
-    np.fromfile('F-18.ljpg', np.uint8).astype(np.intc), 
-    note the "astype" at the end
+    Returned array properties are to be used to get input image
+    properties such as shape a number of color channels.
+
+    :param encoded_image: A 1D Numpy array holding the compressed image.
+        :attr:`encoded_image` can be created with something like
+        ``np.fromfile('F-18.ljpg', np.uint8).astype(np.intc)``,
+        note the :func:`astype` at the end.
     :return: A 3 dimensional Numpy array with index 1 being the color channel, 
-    index 2 being the X coordinate, and index 3 being the Y coordinate.
+        index 2 being the X coordinate, and index 3 being the Y coordinate.
     """
     global rd_index, bit_rd_index, raw_image
 
@@ -235,7 +238,7 @@ cdef inline int __get_huffmaned_value(int component, int actual_vs_predicted_pix
     cdef cpp_map[cpp_string, int] huff_table = huffman_tables[component]
 
     cdef int end_j
-    cdef cpp_string guess = ''
+    cdef cpp_string guess = b''
 
     # TODO: don't know if it should be start_j + max_huffman_code_length + 1 or start_j + max_huffman_code_length
     for jj in range(jj, jj + min_huffman_code_lengths[component] - 1):
@@ -371,7 +374,7 @@ cdef int[:] __get_image_bits(int[:] encoded_image) except *:
 
 cdef cpp_map[cpp_string, int] __make_ssss_table(int[:, :] code_lengths) except *:
 
-    cdef cpp_string code = ''
+    cdef cpp_string code = b''
     cdef int valuesWNBits = 0
 
     # table = {}

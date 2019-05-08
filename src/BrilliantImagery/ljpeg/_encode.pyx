@@ -34,11 +34,11 @@ def encode(int[:, :, :] image, int precision, int predictor):
     This is neither highly optimized nor heavily tested.
     
     :param image: A 3 dimensional Numpy array with index 1 being the color 
-    channel, index 2 being the X coordinate, and index 3 being the Y 
-    coordinate.
+        channel, index 2 being the X coordinate, and index 3 being the Y
+        coordinate.
     :param precision: The number of bits of precision for each color value. 
-    This could be different from the number of bits of precision used by the 
-    array holding the values.
+        This could be different from the number of bits of precision used by the
+        array holding the values.
     :param predictor: The predictor, Ss from the Jpeg standard, to be used.
     :return: A compressed Lossless Jpeg as a MemoryView to a 1D Numpy array.
     """

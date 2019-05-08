@@ -56,7 +56,7 @@ def test_get_capture_datetime(dng_canon_6d):
 
 def test_get_capture_datetime_not_in_xmp(dng_pixel2):
     # GIVEN an initialized DNG file and it's capture datetime
-    expected = '1530683175.0'
+    expected = '1556658902.9690008'
 
     # WHEN parsed
     dng_pixel2.parse()
@@ -269,8 +269,10 @@ def test_get_xmp_attribute(dng_canon_6d, xmp_params):
     dng_canon_6d.parse()
     attr, expected_value = xmp_params
     actual_value = dng_canon_6d.get_xmp_attribute(attr)
-    expected_value = float(expected_value)
-    actual_value = float(actual_value)
+    if expected_value:
+        expected_value = float(expected_value)
+    if actual_value:
+        actual_value = float(actual_value)
 
     # THEN the attribute value is as expected
     assert actual_value == expected_value
