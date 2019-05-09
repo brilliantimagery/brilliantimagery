@@ -22,6 +22,8 @@ Usage
 
 **Example: Get, update, and save XMP data**
 
+Input:
+
 .. code-block:: python
 
   from BrilliantImagery.dng import DNG
@@ -46,7 +48,7 @@ Usage
 
 Returns:
 
-.. code-block::
+.. code-block:: Python
 
   Was: 5.5
   Is: 10.5
