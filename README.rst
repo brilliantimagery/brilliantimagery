@@ -1,7 +1,10 @@
-# BrilliantImagery
+BrilliantImagery
+================
+
 A DNG based photo editing package
 
-<h2>TESTING</h2> 
+TESTING
+-------
 
 Install all of the dependencies:
 ```

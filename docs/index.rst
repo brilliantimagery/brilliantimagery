@@ -39,12 +39,12 @@ Sub-Functionality
 .. toctree::
    :maxdepth: 2
 
-   ljpeg
+   dng
 
 .. toctree::
    :maxdepth: 2
 
-   dng
+   ljpeg
 
 .. toctree::
    :maxdepth: 2
