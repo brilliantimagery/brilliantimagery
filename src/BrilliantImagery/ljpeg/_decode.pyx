@@ -13,7 +13,6 @@ import numpy as np
 import cython
 import subprocess
 
-# cdef int SOF0 = 0xFFC0  # not implimented
 cdef int SOF3 = 0xFFC3
 
 cdef int SOI = 0xFFD8    # Start of image

@@ -72,8 +72,9 @@ class MetaImage:
     def save(self):
         self.image.save()
 
+    @property
     def is_reference_frame(self):
-        return self.image.is_reference_frame()
+        return self.image.is_reference_frame
 
     def get_xmp(self):
         return self.image.get_xmp()

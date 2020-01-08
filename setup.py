@@ -2,7 +2,6 @@ from distutils.core import setup
 from Cython.Build import cythonize
 from setuptools import find_packages
 
-
 setup(
     name='BrilliantImagery',
     description='A DNG based photo editing package',

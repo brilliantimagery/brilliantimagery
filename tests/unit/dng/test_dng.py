@@ -338,7 +338,7 @@ def test_not_is_reference_frame_success(dng_canon_6d):
     # dng_canon_6d.parse()
 
     # THEN it's found to not be a ref frame
-    assert not dng_canon_6d.is_reference_frame()
+    assert not dng_canon_6d.is_reference_frame
 
 
 def test_is_reference_frame_success(dng_canon_6d):
@@ -352,7 +352,7 @@ def test_is_reference_frame_success(dng_canon_6d):
     dng_canon_6d.store_xmp_field()
 
     # THEN it's found to be a ref frame
-    assert dng_canon_6d.is_reference_frame()
+    assert dng_canon_6d.is_reference_frame
 
 
 def test_get_brightness(dng_canon_6d):

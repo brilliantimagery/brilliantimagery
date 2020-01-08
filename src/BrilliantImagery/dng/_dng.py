@@ -758,6 +758,7 @@ class DNG:
         """
         self._used_fields['section_bytes'] = None
 
+    @property
     def is_reference_frame(self):
         if not self._xmp:
             self.get_xmp()

@@ -20,3 +20,5 @@ ljpeg.decode(input_file)
     '''
 
     print('Total ljpg.decode time:', timeit.timeit(run, setup, number=number) / number)
+
+    # 0.1135

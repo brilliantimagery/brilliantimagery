@@ -29,7 +29,7 @@ class Ramper:
 
         index = -1
         for time in self._sorted_times:
-            if self._images[time].is_reference_frame():
+            if self._images[time].is_reference_frame:
                 self._ref_frames.append(time)
                 self._ref_frame_gaps.append(1)
                 index += 1
