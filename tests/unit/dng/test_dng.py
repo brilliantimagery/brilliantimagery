@@ -1,9 +1,11 @@
+import os
+import platform
 from io import BytesIO
 
 import pytest
 import numpy as np
 
-from BrilliantImagery.dng import DNG
+# from BrilliantImagery.dng import DNG
 
 
 def test_get_byte_order_bII_success():
@@ -19,6 +21,8 @@ def test_get_byte_order_bII_success():
 
 
 def test_get_byte_order_bMM_success():
+    from BrilliantImagery.dng import DNG
+
     # GIVEN an initialized DNG
     dng = DNG('fake.file')
 
@@ -30,6 +34,8 @@ def test_get_byte_order_bMM_success():
 
 
 def test_get_byte_order_bad_raises():
+    from BrilliantImagery.dng import DNG
+
     # GIVEN an initialized DNG
     dng = DNG('fake.file')
     expected = "Byte order should be b'II' or b'MM' but is"
@@ -57,6 +63,17 @@ def test_get_capture_datetime(dng_canon_6d):
 def test_get_capture_datetime_not_in_xmp(dng_pixel2):
     # GIVEN an initialized DNG file and it's capture datetime
     expected = '1530683175.0'
+
+    if platform.system() == 'Windows':
+        expected = str(os.path.getctime(dng_pixel2._path))
+    else:
+        stat = os.stat(dng_pixel2._path)
+        try:
+            expected = str(stat.st_birthtime)
+        except AttributeError:
+            # We're probably on Linux. No easy way to get creation dates here,
+            # so we'll settle for when its content was last modified.
+            expected = str(stat.st_mtime)
 
     # WHEN parsed
     dng_pixel2.parse()

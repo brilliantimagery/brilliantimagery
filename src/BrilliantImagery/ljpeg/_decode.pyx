@@ -235,7 +235,8 @@ cdef inline int __get_huffmaned_value(int component, int actual_vs_predicted_pix
     cdef cpp_map[cpp_string, int] huff_table = huffman_tables[component]
 
     cdef int end_j
-    cdef cpp_string guess = ''
+    # cdef cpp_string guess = ''
+    cdef cpp_string guess = b''
 
     # TODO: don't know if it should be start_j + max_huffman_code_length + 1 or start_j + max_huffman_code_length
     for jj in range(jj, jj + min_huffman_code_lengths[component] - 1):
@@ -371,7 +372,8 @@ cdef int[:] __get_image_bits(int[:] encoded_image) except *:
 
 cdef cpp_map[cpp_string, int] __make_ssss_table(int[:, :] code_lengths) except *:
 
-    cdef cpp_string code = ''
+    # cdef cpp_string code = ''
+    cdef cpp_string code = b''
     cdef int valuesWNBits = 0
 
     # table = {}
