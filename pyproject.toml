@@ -2,7 +2,7 @@
 # https://github.com/iamishalkin/cyrtd
 
 [tool.poetry]
-name = "brilliantimagery"
+name = "brilliant-imagery"
 version = "20.1.0"
 description = "A python DNG editing package."
 license = "GPL-3.0-only"

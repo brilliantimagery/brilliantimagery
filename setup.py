@@ -5,7 +5,7 @@ from Cython.Build import cythonize
 import brilliantimagery
 
 setup(
-    name='brilliantimagery',
+    name='brilliant-imagery',
     description='A DNG based photo editing package',
 
     version=brilliantimagery.__version__,
