@@ -1,4 +1,4 @@
-from BrilliantImagery.meta_image import META_TO_DNG
+from brilliantimagery.meta_image import META_TO_DNG
 
 
 def test_ramp_minus_exmpsure(sequence_wo_exposure_w_expected_values):

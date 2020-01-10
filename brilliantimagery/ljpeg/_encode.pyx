@@ -26,7 +26,7 @@ cdef int Al = 0    # Successive approx bit position low or point transform
 cdef int P = 0
 
 
-def encode(int[:, :, :] image, int precision, int predictor):
+def encode(int[:, :, :] image, int precision, int predictor) -> int[:]:
     """
     Encode a raw image into a Lossless Jpeg according to the 1992 standard 
     T.81, 10918.1.
@@ -34,11 +34,11 @@ def encode(int[:, :, :] image, int precision, int predictor):
     This is neither highly optimized nor heavily tested.
     
     :param image: A 3 dimensional Numpy array with index 1 being the color 
-    channel, index 2 being the X coordinate, and index 3 being the Y 
-    coordinate.
+        channel, index 2 being the X coordinate, and index 3 being the Y
+        coordinate.
     :param precision: The number of bits of precision for each color value. 
-    This could be different from the number of bits of precision used by the 
-    array holding the values.
+        This could be different from the number of bits of precision used by the
+        array holding the values.
     :param predictor: The predictor, Ss from the Jpeg standard, to be used.
     :return: A compressed Lossless Jpeg as a MemoryView to a 1D Numpy array.
     """
@@ -53,40 +53,40 @@ def encode(int[:, :, :] image, int precision, int predictor):
     P = precision
     Al = 0
 
-    __write_frame_info(P)
-    huff_codes, actual_vs_predicted_diffs = __make_huffman_info()
-    __write_SOS(huff_codes, actual_vs_predicted_diffs)
+    _write_frame_info(P)
+    huff_codes, actual_vs_predicted_diffs = _make_huffman_info()
+    _write_SOS(huff_codes, actual_vs_predicted_diffs)
 
     while rd_index % 8 is not 0:
         rd_index += 1
 
-    encoded_image = __int_into_array(encoded_image, EOI, 16)
+    encoded_image = _int_into_array(encoded_image, EOI, 16)
     encoded_image = encoded_image[:rd_index // 8]
 
     return encoded_image.base
 
 
-cdef __write_frame_info(int P):
+cdef _write_frame_info(int P):
     global encoded_image
 
-    encoded_image = __int_into_array(encoded_image, SOI, 16)
+    encoded_image = _int_into_array(encoded_image, SOI, 16)
 
-    encoded_image = __int_into_array(encoded_image, SOF3, 16)
-    encoded_image = __int_into_array(encoded_image, 8 + 3 * Ns, 16)
-    encoded_image = __int_into_array(encoded_image, P, 8)
-    encoded_image = __int_into_array(encoded_image, raw_image.shape[2], 16)
-    encoded_image = __int_into_array(encoded_image, raw_image.shape[1], 16)
-    encoded_image = __int_into_array(encoded_image, Ns, 8)
+    encoded_image = _int_into_array(encoded_image, SOF3, 16)
+    encoded_image = _int_into_array(encoded_image, 8 + 3 * Ns, 16)
+    encoded_image = _int_into_array(encoded_image, P, 8)
+    encoded_image = _int_into_array(encoded_image, raw_image.shape[2], 16)
+    encoded_image = _int_into_array(encoded_image, raw_image.shape[1], 16)
+    encoded_image = _int_into_array(encoded_image, Ns, 8)
 
     cdef int i
     for i in range(Ns):
-        encoded_image = __int_into_array(encoded_image, i, 8)
-        encoded_image = __int_into_array(encoded_image, 1, 4)
-        encoded_image = __int_into_array(encoded_image, 1, 4)
-        encoded_image = __int_into_array(encoded_image, 0, 8)
+        encoded_image = _int_into_array(encoded_image, i, 8)
+        encoded_image = _int_into_array(encoded_image, 1, 4)
+        encoded_image = _int_into_array(encoded_image, 1, 4)
+        encoded_image = _int_into_array(encoded_image, 0, 8)
 
 
-cdef __make_huffman_info():
+cdef _make_huffman_info():
     global width, height, actual_predicted_pixel_diff
 
     cdef int write_index = 0  # write index of the decompressed image data
@@ -109,26 +109,26 @@ cdef __make_huffman_info():
         for component in range(Ns):
             x = write_index % width
             y = write_index // width
-            context = __get_context(component, x, y, context)
-            px = __get_predicted_value(write_index, context)
+            context = _get_context(component, x, y, context)
+            px = _get_predicted_value(write_index, context)
             actual_predicted_pixel_diff = raw_image[component, x, y] - px
-            diff_precision_freques[__get_ssss(actual_predicted_pixel_diff), component] += 1
+            diff_precision_freques[_get_ssss(actual_predicted_pixel_diff), component] += 1
             actual_vs_predicted_diffs[component, x, y] = actual_predicted_pixel_diff
         write_index += 1
 
     huff_codes = []
     for component in range(Ns):
-        huff_codes.append(__build_codes(diff_precision_freques[:, component]))
+        huff_codes.append(_build_codes(diff_precision_freques[:, component]))
 
     huff_tables = []
     for code in huff_codes:
-        huff_tables.append(__build_tables(code))
+        huff_tables.append(_build_tables(code))
 
-    __write_huff_tables(huff_tables)
+    _write_huff_tables(huff_tables)
     return huff_codes, actual_vs_predicted_diffs
 
 
-cdef int[:] __get_context(int component, int x, int y, int[:] context):
+cdef int[:] _get_context(int component, int x, int y, int[:] context):
 
     cdef int a = 0
     cdef int b = 0
@@ -155,7 +155,7 @@ cdef int[:] __get_context(int component, int x, int y, int[:] context):
     return context
 
 
-cdef int __get_predicted_value(int x, int[:] context):
+cdef int _get_predicted_value(int x, int[:] context):
     # see 10918-1 T.81 section H.1.2.1 Page 132
 
     cdef int predictor = 0
@@ -184,7 +184,7 @@ cdef int __get_predicted_value(int x, int[:] context):
         return (context[1] + context[2]) // 2
 
 
-cdef int __get_ssss(int numb):
+cdef int _get_ssss(int numb):
     """Table H.2, P. 134"""
 
     if numb == 0:
@@ -223,7 +223,7 @@ cdef int __get_ssss(int numb):
         return 16
 
 
-cdef __write_SOS(codes, actual_vs_predicted_diffs):
+cdef _write_SOS(codes, actual_vs_predicted_diffs):
     global rd_index, encoded_image
 
     cdef int x
@@ -232,30 +232,30 @@ cdef __write_SOS(codes, actual_vs_predicted_diffs):
     cdef int actual_vs_predicted_pixel_diff
     cdef int ssss                           # The required precision to hold actual_vs_predicted_pixel_diff
 
-    encoded_image = __int_into_array(encoded_image, SOS, 16)
-    encoded_image = __int_into_array(encoded_image, 6 + Ns * 2, 16)
-    encoded_image = __int_into_array(encoded_image, Ns, 8)
+    encoded_image = _int_into_array(encoded_image, SOS, 16)
+    encoded_image = _int_into_array(encoded_image, 6 + Ns * 2, 16)
+    encoded_image = _int_into_array(encoded_image, Ns, 8)
     for i in range(Ns):
-        encoded_image = __int_into_array(encoded_image, i, 8)
-        encoded_image = __int_into_array(encoded_image, i, 4)
-        encoded_image = __int_into_array(encoded_image, 0, 4)
-    encoded_image = __int_into_array(encoded_image, Ss, 8)
-    encoded_image = __int_into_array(encoded_image, 0, 8)
-    encoded_image = __int_into_array(encoded_image, 0, 4)
-    encoded_image = __int_into_array(encoded_image, 0, 4)
+        encoded_image = _int_into_array(encoded_image, i, 8)
+        encoded_image = _int_into_array(encoded_image, i, 4)
+        encoded_image = _int_into_array(encoded_image, 0, 4)
+    encoded_image = _int_into_array(encoded_image, Ss, 8)
+    encoded_image = _int_into_array(encoded_image, 0, 8)
+    encoded_image = _int_into_array(encoded_image, 0, 4)
+    encoded_image = _int_into_array(encoded_image, 0, 4)
 
     for y in range(height):
         for x in range(width):
             for component in range(Ns):
                 actual_vs_predicted_pixel_diff = actual_vs_predicted_diffs[component, x, y]
-                ssss = __get_ssss(actual_vs_predicted_pixel_diff)
+                ssss = _get_ssss(actual_vs_predicted_pixel_diff)
                 if actual_vs_predicted_pixel_diff < 0:
                     actual_vs_predicted_pixel_diff = actual_vs_predicted_pixel_diff + (1 << ssss) - 1
-                encoded_image = __write_code_and_diff(encoded_image, codes[component][ssss],
+                encoded_image = _write_code_and_diff(encoded_image, codes[component][ssss],
                                                       actual_vs_predicted_pixel_diff, ssss)
 
 
-cdef int[:] __write_code_and_diff(int[:] buffer, code, actual_vs_predicted_pixel_diff, n_bits):
+cdef int[:] _write_code_and_diff(int[:] buffer, code, actual_vs_predicted_pixel_diff, n_bits):
     global rd_index
 
     cdef int byte_number
@@ -287,7 +287,7 @@ cdef int[:] __write_code_and_diff(int[:] buffer, code, actual_vs_predicted_pixel
     return buffer
 
 
-cdef int[:] __int_into_array(int[:] arr, int numb, int n_bits):
+cdef int[:] _int_into_array(int[:] arr, int numb, int n_bits):
     global rd_index
 
     cdef int bit_val
@@ -303,8 +303,7 @@ cdef int[:] __int_into_array(int[:] arr, int numb, int n_bits):
     return arr
 
 
-cdef __build_codes(frequs):
-
+cdef _build_codes(frequs):
     cdef list nodes = []
     cdef int n_bits
 
@@ -384,7 +383,7 @@ cdef __build_codes(frequs):
     return table
 
 
-cdef __build_tables(code):
+cdef _build_tables(code):
 
     cdef dict output = {}
 
@@ -397,7 +396,7 @@ cdef __build_tables(code):
     return output
 
 
-cdef __write_huff_tables(tables):
+cdef _write_huff_tables(tables):
     global encoded_image
 
     cdef int i = 0
@@ -405,16 +404,16 @@ cdef __write_huff_tables(tables):
         lq = 19
         for k, v in table.items():
             lq += len(v)
-        encoded_image = __int_into_array(encoded_image, DHT, 16)
-        encoded_image = __int_into_array(encoded_image, lq, 16)
-        encoded_image = __int_into_array(encoded_image, 0, 4)
-        encoded_image = __int_into_array(encoded_image, i, 4)
+        encoded_image = _int_into_array(encoded_image, DHT, 16)
+        encoded_image = _int_into_array(encoded_image, lq, 16)
+        encoded_image = _int_into_array(encoded_image, 0, 4)
+        encoded_image = _int_into_array(encoded_image, i, 4)
         for j in range(1, 17):
             if j in table:
-                encoded_image = __int_into_array(encoded_image, len(table[j]), 8)
+                encoded_image = _int_into_array(encoded_image, len(table[j]), 8)
             else:
-                encoded_image = __int_into_array(encoded_image, 0, 8)
+                encoded_image = _int_into_array(encoded_image, 0, 8)
         for k, v in table.items():
             for jj in v:
-                encoded_image = __int_into_array(encoded_image, jj, 8)
+                encoded_image = _int_into_array(encoded_image, jj, 8)
         i += 1

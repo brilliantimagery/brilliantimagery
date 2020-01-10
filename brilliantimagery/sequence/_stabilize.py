@@ -2,7 +2,7 @@ import multiprocessing
 
 from tqdm import tqdm
 
-from BrilliantImagery.sequence import _stabilize_util as sutil
+from brilliantimagery.sequence import _stabilize_util as sutil
 
 
 class Stabilizer:

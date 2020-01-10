@@ -1,17 +1,44 @@
 from typing import Union
 
-from BrilliantImagery.dng import DNG
+from brilliantimagery.dng import DNG
 
 from ._meta_constants import META_TO_DNG
 
 
 class MetaImage:
-    def __init__(self, path):
+    """
+    A representation of an image file.
+
+    Only DNG image files are supported.
+
+    Arguments:
+        path (string): The path to an existing image file file.
+
+    Attributes:
+        image (DNG): A representation of the underlying image file
+        brightness (float): A value representing the brightness of the image.
+    """
+    def __init__(self, path: str):
+        """
+        Initializes an image file representation.
+
+        :param str path: Path to the image file.
+        """
         self.image = DNG(path)
-        self.image.parse()
+        # self.image.parse()
         self.brightness = 0
 
     def get_capture_datetime(self):
+        """
+        Gets the datetime for when the image was captured.
+
+        May return any of a variety of formats depending on the
+        available information.
+
+        :return:
+        :rtype:
+        :return: A creation time formatted as a string.
+        """
         return self.image.get_capture_datetime()
 
     def get_image(self, rectangle=[0.0, 0.0, 1.0, 1.0], sub_image_type='RAW'):
@@ -45,8 +72,9 @@ class MetaImage:
     def save(self):
         self.image.save()
 
+    @property
     def is_reference_frame(self):
-        return self.image.is_reference_frame()
+        return self.image.is_reference_frame
 
     def get_xmp(self):
         return self.image.get_xmp()

@@ -1,4 +1,4 @@
-from BrilliantImagery.sequence._stabilize import Stabilizer
+from brilliantimagery.sequence._sequence import Stabilizer
 
 
 def test_find_misalignment_w_large_preexisting_crop_success(sequence):
@@ -38,7 +38,7 @@ def test_find_misalignment_w_small_preexisting_crop_success(sequence_minimal_cro
 def test_update_crop_w_large_preexisting_crop_success(stabelized_sequence):
     # GIVEN a stabilized sequence where the needed offsets are found
     # and the resulting needed crops are given
-    from BrilliantImagery.meta_image import META_TO_DNG
+    from brilliantimagery.meta_image import META_TO_DNG
     sequence, rectangle, crops = stabelized_sequence
     _stabilizer = Stabilizer(sequence._images, rectangle)
 
@@ -60,7 +60,7 @@ def test_update_crop_w_large_preexisting_crop_success(stabelized_sequence):
 def test_update_crop_w_small_preexisting_crop_success(stabelized_sequence_minimal_crop):
     # GIVEN a stabilized sequence where the needed offsets are found
     # and the resulting needed crops are given
-    from BrilliantImagery.meta_image import META_TO_DNG
+    from brilliantimagery.meta_image import META_TO_DNG
     sequence, rectangle, crops = stabelized_sequence_minimal_crop
     _stabilizer = Stabilizer(sequence._images, rectangle)
 

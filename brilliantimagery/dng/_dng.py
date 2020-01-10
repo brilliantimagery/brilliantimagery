@@ -1,64 +1,58 @@
+from collections import defaultdict
+from io import BytesIO
 import math
 import os
 import platform
 import struct
-from collections import defaultdict
 from typing import Dict, Union
-from typing import IO
 from typing import List
 
-from Cython.Compiler import MemoryView
+# from Cython.Compiler import MemoryView
 import numpy as np
+import numpy
 
-from . import _dng_constants as d_cnst
-from . import _dng_utils as d_utils
-from . import _renderer
+from brilliantimagery.dng import _dng_constants as d_cnst
+from brilliantimagery.dng import _dng_utils as d_utils
+from brilliantimagery.dng import _renderer
 
 
 class DNG:
     """
     A representation of a DNG image file.
 
-    Based on the DNG 1.4 standard and not fully backwards compatible.
+    Allows reading and editing the underlying file.
 
-    Arguments:
-        path (string): The path to an existing DNG file.
+    Based on the DNG 1.4 standard but not fully implemented or fully
+    backwards compatible.
 
-    Attributes:
-        path (string): The path to the original DNG file.
-
+    :param str path: The path to the represented DNG file.
     """
 
-    class Field:
-        """
-        A TIFF Field as defigned by the TIFF6 standard.
+    class _Field:
+        """A TIFF Field as defined by the TIFF6 standard."""
 
-        Arguments:
-            tag (int): The tag number of the field
-            type (int): The type number of the field
-            count (int): The count of the field
-            value_offset (int): The value of the field.
-            Could be the offset to the value(s) depending on the type
-            and count.
-            values (list): The list of the fields values as
-            preformatted data, it should be correct, actual field
-            values Fields with 1 value should have it in a list of
-            len 1.
+        def __init__(self, tag, type, count, value_offset, values=None):
+            """
+            Initializes the :class:`brilliantimagery.dng.DNG.Field` class.
 
-        Attributes:
-            tag (int): The tag number of the field
-            type (int): The type number of the field
-            count (int): The count of the field
-            value_offset (int): The value of the field.
-            Could be the offset to the value(s) depending on the type
-            and count.
-            values (list): The list of the fields values as
-            preformatted data, it should be correct, actual field
-            values Fields with 1 value should have it in a list of
-            len 1.
-        """
-
-        def __init__(self, tag, type, count, value_offset, values=[]):
+            :param int tag: The tag number of the field
+            :param int type: The type number of the field
+            :param int count: The count of the field
+            :param int value_offset: The value of the field or the offset
+                to the value(s) if the combination of type and count
+                require more than the 4 allotted bytes to store the
+                Field's value(s).
+            :param list[int or float] values: The list of the field's values.
+                Values should be preconverted from the file's binary data
+                to the intended value through the use of
+                :meth:`brilliantimagery.dng._dng_utils.get_value_from_type`
+                or
+                :meth:`brilliantimagery.dng._dng_utils.get_values_from_type`
+                or some other similar process. Fields with 1 value should
+                have it in a list with a length of 1.
+            """
+            if not values:
+                values = []
             self.tag = tag
             self.type = type
             self.count = count
@@ -75,14 +69,7 @@ class DNG:
     _BUFFER_SIZE = 50000000
     _REFERENCE_FRAME_STARS = 3
 
-    def __init__(self, path):
-        """
-        Initialize a DNG file representation.
-
-        Test to make sure the input file is a valid DNG and read the
-        beginning of the file so that it can be parsed.
-        :param path: File name of the DNG file
-        """
+    def __init__(self, path: str):
         self._path = path
         self._ifds = dict()
         self._used_fields = dict()
@@ -93,7 +80,18 @@ class DNG:
         self._byte_order = ''
         self._zeroth_ifd = 0
 
-    def parse(self):
+        self._parse()
+
+    def _parse(self):
+        """
+        Parses the image's IFDs so that other functions have data to work with.
+
+        Note: the image data is not read or stored with this call, only pointers and
+        sizes are.
+
+        :return: None
+
+        """
         with open(self._path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
             f = self._get_byte_order(f)
             assert (struct.unpack(f'{self._byte_order}H', f.read(2))[0] == 42)
@@ -102,7 +100,20 @@ class DNG:
             self._parse_ifds()
             self._get_ifd_offsets()
 
-    def _get_byte_order(self, f):
+    def _get_byte_order(self, f: BytesIO) -> BytesIO:
+        """
+        Gets the byte order used in the file.
+
+        :param BytesIO f: The I/O stream to the file. Assumes the read index points
+            to the first byte of the byte order denoting pair of bytes.
+
+        :return: The I/O stream to the file with the read index pointing
+            to the byte that immediately follows the byte order denoting pair.
+        :rtype: BytesIO
+
+        :raises ValueError: If the order denoting bytes aren't either of the
+            expected options.
+        """
         self._byte_order = f.read(2)
         if self._byte_order == b'II':
             self._byte_order = '<'
@@ -114,23 +125,21 @@ class DNG:
 
     def get_capture_datetime(self) -> str:
         """
-        Gets a datetime for when the image was captured.
+        Gets when the image was captured.
 
-        Gets the standardised capture datetime, first looking in the
-        xmp data, and then falling back to the file creation time.
+        May return any of a variety of formats (i.e. a datetime or unix
+        time stamp) depending on the available information. The format
+        should be consistent between images captured on the same camera
+        and processes with the same workflow.
 
-        :return: A creation time formatted as a string.
+        :return: A creation time.
+        :rtype: str
         """
-        xmp = self._ifds.get(self._xmp_ifd_offset, {}).get(700, DNG.Field(0, 0, 0, 0, [b''])).values[0]
+        xmp = self._ifds.get(self._xmp_ifd_offset, {}).get(700, DNG._Field(0, 0, 0, 0, [b''])).values[0]
         capture_datetime = d_utils.get_xmp_attribute_value(xmp, b'xmp:CreateDate')
         if capture_datetime:
             return capture_datetime
         else:
-            """
-            Try to get the date that a file was created, falling back to when it was
-            last modified if that isn't possible.
-            See http://stackoverflow.com/a/39501288/1709587 for explanation.
-            """
             if platform.system() == 'Windows':
                 return str(os.path.getctime(self._path))
             else:
@@ -138,20 +147,22 @@ class DNG:
                 try:
                     return str(stat.st_birthtime)
                 except AttributeError:
-                    # We're probably on Linux. No easy way to get creation dates here,
-                    # so we'll settle for when its content was last modified.
                     return str(stat.st_mtime)
 
     def _get_fields_required_to_render(self, sub_image: str):
         """
-        Consolidate the info required to render a DNG file.
+        Consolidate the info required to render the DNG file.
 
         Consolidate the fields from throughout the file into a
         single IFD like structure holding all of the fields needed
         to render the desired image.
+
         :param sub_image: 'thumbnail' or 'RAW' depending on which
-        is to be rendered.
+            is to be rendered.
+
         :return: None
+
+        :raises ValueError: If an invalid 'sub_image' is given.
         """
         if sub_image.lower() == 'thumbnail':
             offset = self._thumbnail_offset
@@ -171,12 +182,13 @@ class DNG:
                              **{'orientation': self._ifds[self._thumbnail_offset][274].values[0]},
                              }
 
-    def _get_ifd_fields(self, f: IO):
+    def _get_ifd_fields(self, f: BytesIO):
         """
-        Parses the IFD fields and gets their values
+        Parses the IFD fields and gets their values.
 
-        :param f: the '_io.BufferedReader' holding the read index
-        of the start of the IFD from within the file
+        :param BytesIO f: the ``IO`` holding the read index
+            of the start of the IFD from within the file
+
         :return: None
         """
         ifd_offset = f.tell()
@@ -184,7 +196,7 @@ class DNG:
         ifd = dict()
         for _ in range(n_ifd_fields):
             field_values = []
-            field_offset = f.tell()
+            # field_offset = f.tell()
             tag = d_utils.get_value_from_type(f.read(2), 3, self._byte_order)
             field_type = d_utils.get_value_from_type(f.read(2), 3, self._byte_order)
             count = d_utils.get_value_from_type(f.read(4), 4, self._byte_order)
@@ -219,36 +231,57 @@ class DNG:
                     self._get_ifd_fields(f)
                     f.seek(position)
 
-            ifd[tag] = DNG.Field(tag, field_type, count, value_offset, field_values)
+            ifd[tag] = DNG._Field(tag, field_type, count, value_offset, field_values)
             if d_utils.get_num_of_bytes_in_type(field_type) in (1, 2) and n_bytes < 5:
                 ifd[tag].value_offset_buffer = value_offset_buffer
 
         self._ifds[ifd_offset] = ifd
 
-    def get_image(self, rectangle=[0.0, 0.0, 1.0, 1.0], sub_image_type='RAW') -> MemoryView:
+    def get_image(self, rectangle=[0.0, 0.0, 1.0, 1.0], sub_image='RAW') -> numpy.ndarray:
         """
-        Get the desired image, thumbnail or raw.
+        Get the desired portion of the desired reference image.
 
-        :param rectangle: The bounding box of the image to be rendered.
-        In the format X1, Y1, X2, Y2 where:
-        X1 is the x position of the top left corner,
-        Y1 is the y position of the top left corner,
-        X2 is the x position of the bottom right corner,
-        Y2 is the y position of the top right corner.
-        The input values are to but in percents of the way across the
-        image from the origin.
-        The top left corner of the cropped area is assumed to be the
-        origin. If no crop is applied by the user than the
-        DefaultCropOrigin tag data is used as the origin.
-        :param sub_image_type: selects which sub-image to return from the file
-        'RAW' to get the original raw image,
-        'thumbnail' to get the thumbnail if present.
-        :return: A 3D numpy array holding the rendered image.
-        The first dimension covers the color channels, Red, Green, Blue.
-        The second covers the width.
-        The third covers the height.
+        No transforms such as white balancing or exposure compensation
+        are performed so the image may not look as expected (they're
+        often too green).
+
+        The rendering algorithm is relatively rudimentary so the
+        results will be less refined than some other renderers.
+
+        While many (most?) cameras are, or could with relative ease
+        be supported, some Fuji cameras (and presumably others)
+        will require further development.
+
+        :param rectangle: The bounding box of the portion of the image that's
+            to be rendered. In the format X1, Y1, X2, Y2 where:
+
+            * X1 is the x position of the top left corner,
+            * Y1 is the y position of the top left corner,
+            * X2 is the x position of the bottom right corner,
+            * Y2 is the y position of the top right corner.
+
+            The input values can either be in fractions of the way across the
+            image from the origin, or pixels from the origin.
+            The top left corner of the cropped area is assumed to be the
+            origin. If no crop is applied by the user than the
+            :attr:`DefaultCropOrigin` field data is used as the origin.
+        :type rectangle: list[int or float]
+
+        :param str sub_image: selects which sub-image to return from the file.
+
+            :attr:`RAW` to get the original, raw, image.
+
+            :attr:`thumbnail` to get the thumbnail if present.
+
+        :return: A 3D float array holding the rendered image.
+
+            * The first dimension represents the color channels: Red, Green, Blue at indices 0, 1, and 2 respectively.
+            * The second represents the width.
+            * The third represents the height.
+        :rtype: Numpy.ndarray
+
         """
-        self._get_fields_required_to_render(sub_image_type)
+        self._get_fields_required_to_render(sub_image)
         if not self._xmp:
             self.get_xmp()
         rectangle = d_utils.convert_rectangle_percent_to_pixels(self._used_fields, rectangle,
@@ -256,19 +289,23 @@ class DNG:
                                                                 self._xmp[b'crs:CropTop'].get('val', 0),
                                                                 self._xmp[b'crs:CropRight'].get('val', 1),
                                                                 self._xmp[b'crs:CropBottom'].get('val', 1),
-                                                                sub_image_type)
-        active_area_offset = d_utils.get_active_area_offset(self._used_fields, rectangle, sub_image_type)
+                                                                sub_image)
+        active_area_offset = d_utils.get_active_area_offset(self._used_fields, rectangle, sub_image)
         self._get_tile_or_strip_bytes(rectangle)
         image = _renderer.render(self._used_fields, rectangle, active_area_offset)
         self._clear_section_data()
         return image
 
-    def get_xmp(self) -> Dict[bytes, int]:
+    def get_xmp(self) -> Dict[bytes, float]:
         """
-        Gets the xmp data from the dng.
+        Gets the stored XMP data from the represented dng file.
 
-        :return: The xmp data as a dict with the keys being properties
-        as shown in the xmp data and values being a floats
+        The XMP data holds all of the edits that have been made in Lightroom.
+
+        :return: The xmp data as a dict with the keys being the properties
+            as found in the XMP data and values being the associated values
+            as floats.
+        :rtype: dict[bytes, float]
         """
         if not self._xmp:
             if self._xmp_ifd_offset in self._ifds:
@@ -284,7 +321,7 @@ class DNG:
 
     def _parse_ifds(self):
         """
-        Read the IFDs from the file and organize them into self._ifds
+        Read the IFDs from the file and organizes them into self._ifds
 
         :return: None
         """
@@ -294,12 +331,13 @@ class DNG:
 
     def _get_tile_or_strip_bytes(self, rectangle: List) -> None:
         """
-        Retrieve the raw image data.
+        Retrieves the raw image data.
 
-        Get the image data from the file for the relevant image,
-        whether it be stored as strips or tiles, is is needed to
+        Gets the image data from the file for the relevant image,
+        whether it be stored as strips or tiles, as is needed to
         render the portion of the image that's covered by the rectangle
-        :param rectangle:
+
+        :param rectangle: The bounding box of the area to be rendered.
         :return: None
         """
         self._used_fields['section_bytes'] = {}
@@ -361,7 +399,10 @@ class DNG:
 
     def _get_ifd_offsets(self) -> None:
         """
-        Get the byte indexes of the thumbnail and main uncompressed/raw image in the file
+        Gets the byte indexes relevant IFDs.
+
+        Stores the offsets of the thumbnail and main uncompressed/raw
+        image IFDs for the image file for later use.
 
         :return: None
         """
@@ -371,10 +412,10 @@ class DNG:
 
         offsets = sorted(self._ifds.keys())  # sorting since the thumbnail is the first IFD if present
         for offset in offsets:
-            if self._thumbnail_offset is 0:
+            if self._thumbnail_offset == 0:
                 self._thumbnail_offset = offset
             if 254 in self._ifds[offset]:
-                if self._ifds[offset][254].values[0] is 0:
+                if self._ifds[offset][254].values[0] == 0:
                     self._orig_img_offset = offset
             if 700 in self._ifds[offset]:
                 self._xmp_ifd_offset = offset
@@ -383,23 +424,25 @@ class DNG:
 
     def set_xmp_attribute(self, xmp_attribute: bytes, value: Union[int, float, str]) -> bool:
         """
-        Updates the stored value of the xmp attribute.
+        Updates the stored value of an XMP attribute.
 
-        Can not add attributes that aren't already present. If an
-        attribute wasn't previously updated and present it can't be
+        Cannot update attributes that aren't already present. If an
+        attribute wasn't previously present it can't be
         updated.
 
-        Only updates the representation in the DNG object.
-        DNG.store_xmp_fields() and DNG.save() have to be called to
+        Only updates the representation in the :class:`DNG` object.
+        :func:`DNG.store_xmp_field` and :func:`DNG.save` have to be called to
         permanently save the updated values.
 
-        :param xmp_attribute: The xmp attribute to be updated. Should be
-        a key from the _dng_constants.XMP_TAGS Dict
+        :param xmp_attribute: The XMP attribute to be updated. Should be
+            a key from the :attr:`_dng_constants.XMP_TAGS` dict
         :param value: The number to be assigned to the attribute.
-        Can be an int, float, or str
+        :type value: int, float, or str
+
         :return: True if it's successful, False if it isn't, presumably
-        because the attribute isn't present or the value was already
-        stored.
+            because the attribute isn't present or the value was already
+            stored.
+        :rtype: bool
         """
 
         if not self._xmp:
@@ -412,10 +455,10 @@ class DNG:
 
     def store_xmp_field(self) -> None:
         """
-        Consolidate updated xmp attributes in the xmp data.
+        Consolidate updated XMP attributes in the XMP data.
 
-        If this isn't called, the xmp data won't be updated in the
-        file even if DNG.save() is called.
+        If this isn't called, the XMP data won't be updated in the
+        file even if :func:`DNG.save` is called.
 
         :return: None
         """
@@ -451,12 +494,13 @@ class DNG:
 
     def rendered_shape(self) -> List[int]:
         """
-        The dimensions of the raw image, as cropped and rendered.
+        Gets the dimensions of the raw image, as cropped and rendered.
 
         Dimensions are in units of pixels.
 
         :return: A list of ints where the first is the width and the
-        second is the height or length.
+            second is the length (height) of the image.
+        :rtype: list[int, int]
         """
         shape = self.default_shape()
         if not self._xmp:
@@ -471,12 +515,13 @@ class DNG:
 
     def default_shape(self) -> List[int]:
         """
-        The dimensions of the raw image, before it's edited and cropped.
+        Gets the dimensions of the raw image, before it's edited or cropped.
 
         Dimensions are in units of pixels.
 
-        :return: A list of floats where the first is the width and the
-        second is the height or length.
+        :return: A list of ints where the first is the width and the
+            second is the length (height) of the image.
+        :rtype: list[int, int]
         """
         if not self._used_fields:
             self._get_fields_required_to_render('RAW')
@@ -484,20 +529,27 @@ class DNG:
 
     def get_xmp_attribute(self, xmp_attribute: bytes):
         """
+        Gets the value of an XMP attribute.
 
+        Only works for attributes with numeric values.
 
-        Known Bug: this only works for properties with numeric values, or maybe for what's said to be needed to render
-        :param xmp_attribute:
-        :return:
+        :param bytes xmp_attribute: The attribute to be interrogated.
+            Must include the full attribute name, the part before and after the :attr:`:``
+
+        :return: The value of the attribute if it's present and numeric, otherwise :attr:`None`.
+        :rtype: float or None
         """
         if not self._xmp:
             self.get_xmp()
 
-        return self._xmp[xmp_attribute].get('val')
+        if xmp_attribute in self._xmp:
+            return self._xmp[xmp_attribute].get('val')
+        else:
+            return None
 
     def save(self) -> None:
         """
-        Overwrites the DNG file with the updated xmp info.
+        Overwrites the dng's XMP data with the updated XMP data.
 
         :return: None
         """
@@ -525,7 +577,7 @@ class DNG:
 
     def _write_dng(self):
         """
-        Writes a whole new DNG file as apposed to editing the xmp info.
+        Writes a whole new dng file as apposed to editing the xmp info.
 
         :return: None
         """
@@ -549,15 +601,16 @@ class DNG:
         os.remove(self._path)
         os.rename(self._path + '.temp', self._path)
 
-    def _write_ifd(self, wf, rf, ifd, write_location):
+    def _write_ifd(self, wf: BytesIO, rf: BytesIO, ifd: Dict, write_location: int):
         """
         Writes an IFD into a file.
 
-        :param wf: The io buffer for the file being written to.
-        :param rf: The io buffer for the file being referenced.
-        :param ifd: The IFD to be written.
-        :param write_location: The index of the start of the IFD from
+        :param BytesIO wf: The io buffer for the file being written to.
+        :param BytesIO rf: The io buffer for the file being referenced.
+        :param dict ifd: The IFD to be written.
+        :param int write_location: The index of the start of the IFD from
         the beginning of the file in units of bytes.
+
         :return: None
         """
         end_write_index = len(ifd) * 12 + 6 + write_location
@@ -650,18 +703,21 @@ class DNG:
 
         return end_write_index
 
-    def _write_value(self, f, value, data_type=4, values=None, n_bytes=None):
+    def _write_value(self, f: BytesIO, value: int, data_type=4, values=None, n_bytes=None):
         """
         Writes a value/values to a write buffer.
 
-        :param f: The io buffer for the file being written to.
+        :param ByteIO f: The io buffer for the file being written to.
         :param value: The number to be written.
-        :param data_type: The datatype , 1 - 12, of the value as
-        defined by the TIFF standard.
+        :type value: int or float
+        :param int data_type: The datatype , 1 - 12, of the value as
+            defined by the TIFF standard.
         :param values: The values, as a list, to be written when there
-        are multiple.
-        :param n_bytes: The number of bytes that should be used to
-        write the value or values
+            are multiple.
+        :type values: list[int or float]
+        :param int n_bytes: The number of bytes that should be used to
+            write the value or values
+
         :return: None
         """
         # TODO: make this a dict?
@@ -693,15 +749,16 @@ class DNG:
 
     def _clear_section_data(self):
         """
-        Clears the tile/strip data from the DNG object to save space.
+        Clears the tile/strip data from the :class:`DNG` object to save space.
 
-        Used to keep large collections of DNG objects from taking up
+        Used to keep large collections of :class:`DNG` objects from taking up
         too much space.
 
         :return: None
         """
         self._used_fields['section_bytes'] = None
 
+    @property
     def is_reference_frame(self):
         if not self._xmp:
             self.get_xmp()
@@ -715,4 +772,25 @@ class DNG:
 
     @staticmethod
     def get_possible_xmp_attributes():
+        """
+        Gets the inclusive set of relevant XMP attributes.
+
+        Attributes are deemed relevant if they are editable or
+        otherwise used externally.
+
+        :return: A :class:`dict` of the below key value pairs:
+
+            | - :attr:`key` is the property name.
+            | - :attr:`value` is a :class:`namedtuple` with the follow properties.
+
+                | - :attr:`n_decimal_places`: int - The number of decimal places
+                    to use when storing the property value.
+                | - :attr:`default_value`: str - The default value in Lightroom.
+                | - :attr:`is_vector`: bool - True if it always has a
+                    sign in the XMP data, otherwise False.
+                | - :attr:`is_ramped`: bool - True if it should be linearly ramped
+                    (i.e. Temperature), otherwise False (i.e. Rating)
+
+        :rtype: dict(bytes: namedtuple(int, str, bool, bool))
+        """
         return d_cnst.XMP_TAGS

@@ -1,4 +1,3 @@
-import pickle
 from collections import namedtuple
 
 import pytest
@@ -15,6 +14,7 @@ xmp_to_try = ((b'xmp:Rating', '2'),
               (b'crs:Shadows2012', '-24'),
               (b'crs:RedHue', '0'),
               (b'crs:CropTop', '0.050467'),
+              (b'hello', None),
               # (b'crs:AlreadyApplied', 'False'),
               )
 
@@ -404,13 +404,13 @@ def used_ifd_fields_thumbnail():
 
 @pytest.fixture()
 def dng_canon_6d(data_folder_path):
-    from BrilliantImagery.dng import DNG
+    from brilliantimagery.dng import DNG
     return DNG(str(data_folder_path / 'dng_canon_6d.dng'))
 
 
 @pytest.fixture()
 def dng_pixel2(data_folder_path):
-    from BrilliantImagery.dng import DNG
+    from brilliantimagery.dng import DNG
     return DNG(str(data_folder_path / 'dng_Pixel2.dng'))
 
 
@@ -448,7 +448,7 @@ def storable_dng_xmp():
 
 @pytest.fixture()
 def dng_file_io_ifd(dng_canon_6d):
-    from BrilliantImagery.dng import DNG
+    from brilliantimagery.dng import DNG
     with open(dng_canon_6d._path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
         f.seek(8)
         yield dng_canon_6d, f
@@ -472,7 +472,7 @@ def canon_6d_compressed_tiles(data_folder_path):
 @pytest.fixture()
 def copied_dng_canon_6d(data_folder_path, dng_canon_6d, tmpdir):
     import shutil
-    from BrilliantImagery.dng import DNG
+    from brilliantimagery.dng import DNG
 
     shutil.copy(str(str(data_folder_path / 'dng_canon_6d.dng')), str(tmpdir / 'dng_canon_6d.dng'))
     return DNG(str(tmpdir / 'dng_canon_6d.dng'))
@@ -485,7 +485,7 @@ def dng_rendered_to_rgb_even_offsets(dng_canon_6d, data_folder_path):
     active_area_offset = (28, 62)
     rectangle = [100, 100, 500, 400]
 
-    dng_canon_6d.parse()
+    # dng_canon_6d.parse()
     dng_canon_6d.default_shape()
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
@@ -503,7 +503,7 @@ def dng_rendered_to_rgb_odd_offsets(dng_canon_6d, data_folder_path):
     active_area_offset = (29, 63)
     rectangle = [101, 101, 500, 400]
 
-    dng_canon_6d.parse()
+    # dng_canon_6d.parse()
     dng_canon_6d.default_shape()
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
@@ -521,7 +521,7 @@ def dng_rendered_to_rgb_even_odd_offsets(dng_canon_6d, data_folder_path):
     active_area_offset = (28, 62)
     rectangle = [100, 100, 501, 401]
 
-    dng_canon_6d.parse()
+    # dng_canon_6d.parse()
     dng_canon_6d.default_shape()
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
@@ -539,7 +539,7 @@ def dng_thumbnail_rendered_to_rgb_even_offsets(dng_canon_6d, data_folder_path):
     active_area_offset = (28, 62)
     rectangle = [20, 20, 200, 100]
 
-    dng_canon_6d.parse()
+    # dng_canon_6d.parse()
     dng_canon_6d.get_image(rectangle, 'thumbnail')
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
@@ -557,7 +557,7 @@ def dng_thumbnail_rendered_to_rgb_odd_offsets(dng_canon_6d, data_folder_path):
     active_area_offset = (29, 63)
     rectangle = [21, 2, 200, 100]
 
-    dng_canon_6d.parse()
+    # dng_canon_6d.parse()
     dng_canon_6d.get_image(rectangle, 'thumbnail')
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
@@ -767,7 +767,7 @@ def unpackable_ifd_w_compressed_tiles(dng_canon_6d, data_folder_path):
     active_area_offset = (28, 62)
     rectangle = [100, 100, 500, 400]
 
-    dng_canon_6d.parse()
+    # dng_canon_6d.parse()
     dng_canon_6d.default_shape()
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
@@ -785,7 +785,7 @@ def unpackable_ifd_w_uncompressed_strips(dng_pixel2, data_folder_path):
     active_area_offset = (28, 62)
     rectangle = [100, 100, 500, 400]
 
-    dng_pixel2.parse()
+    # dng_pixel2.parse()
     dng_pixel2.default_shape()
     dng_pixel2._get_tile_or_strip_bytes(rectangle)
     ifd = dng_pixel2._used_fields

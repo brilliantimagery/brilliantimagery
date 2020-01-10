@@ -5,12 +5,15 @@ from os.path import isfile, join
 
 from tqdm import tqdm
 
-from ._stabilize import Stabilizer
-from ._ramp import Ramper
-from BrilliantImagery.meta_image import MetaImage
+from brilliantimagery.sequence._stabilize import Stabilizer
+from brilliantimagery.sequence._ramp import Ramper
+from brilliantimagery.meta_image import MetaImage
 
 
 class Sequence:
+    """
+    Sequence stuff
+    """
     def __init__(self, path):
         tqdm.monitor_interval = 0
         self._path = path
@@ -30,6 +33,14 @@ class Sequence:
         self._images = {i.get_capture_datetime(): i for i in images}
 
     def ramp_minus_exmpsure(self):
+        """
+        Ramps the metadata attributes other than the exposure.
+
+        Won't adjust the exposure if it is as desired, and is faster
+        then also ramping exposure since image rendering isn't required.
+
+        :return: None
+        """
         ramper = Ramper(self._images)
         ramper.ramp_minus_exposure()
 
