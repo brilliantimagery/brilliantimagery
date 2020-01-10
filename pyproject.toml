@@ -3,7 +3,7 @@
 
 [tool.poetry]
 name = "brilliantimagery"
-#version = "20.1.0"
+version = "20.1.0"
 description = "A python DNG editing package."
 license = "GPL-3.0-only"
 authors = ["Chad DeRosier <chad.derosier@gmail.com>"]
@@ -11,8 +11,11 @@ readme = "README.rst"
 homepage = 'brilliantimagery.org'
 repository = 'https://github.com/brilliantimagery/brilliantimagery'
 #build = 'build.py'
+#packages = [
+#    { include = "BrilliantImagery", from = "src" },
+#]
 packages = [
-    { include = "BrilliantImagery", from = "src" },
+    { include = "BrilliantImagery"},
 ]
 
 [tool.poetry.dependencies]

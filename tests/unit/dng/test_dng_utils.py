@@ -1,6 +1,3 @@
-from BrilliantImagery.dng import _dng_utils
-
-
 def test_get_xmp_attribute_value_success(xmp_buffer, xmp_params):
     # GIVEN xmp data
     from BrilliantImagery.dng import _dng_utils

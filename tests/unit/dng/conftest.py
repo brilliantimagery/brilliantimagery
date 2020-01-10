@@ -1,4 +1,3 @@
-import pickle
 from collections import namedtuple
 
 import pytest

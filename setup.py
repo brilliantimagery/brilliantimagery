@@ -14,13 +14,15 @@ setup(
     author_email='chad.derosier@gmail.com',
     url='http://www.brilliantimagery.org',
 
-    packages=find_packages(where='src'),
-    package_dir={'': 'src', 'tests': 'tests'},
+    # packages=find_packages(where='src'),
+    # package_dir={'': 'src', 'tests': 'tests'},
+    # package_dir={'BrilliantImagery': 'BrilliantImagery', 'tests': 'tests'},
+    packages=['BrilliantImagery', 'tests'],
 
-    ext_modules=cythonize(['src/BrilliantImagery/ljpeg/_decode.pyx',
-                           'src/BrilliantImagery/ljpeg/_encode.pyx',
-                           'src/BrilliantImagery/ppm/_save.pyx',
-                           'src/BrilliantImagery/dng/_renderer.pyx',
+    ext_modules=cythonize(['BrilliantImagery/ljpeg/_decode.pyx',
+                           'BrilliantImagery/ljpeg/_encode.pyx',
+                           'BrilliantImagery/ppm/_save.pyx',
+                           'BrilliantImagery/dng/_renderer.pyx',
                            'tests/unit/dng/renderer_exporter.pyx',
                            ],
                           compiler_directives={'cdivision': True,
@@ -28,8 +30,10 @@ setup(
                                                'language_level': 3,
                                                'embedsignature': True,
                                                },
-                          include_path=[
-                              os.path.join(os.path.dirname(os.path.abspath(__file__)), "src")],
+                          # include_path=[
+                          #     os.path.join(os.path.dirname(os.path.abspath(__file__)), "src")],
+                          include_path=[os.path.dirname(os.path.abspath(__file__))],
+
                           # gdb_debug=True,
                           # annotate=True,
                           )

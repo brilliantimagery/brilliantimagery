@@ -32,7 +32,7 @@ version = pkg_resources.require("BrilliantImagery")[0].version
 # -- Project information -----------------------------------------------------
 
 project = 'BrilliantImagery'
-copyright = '2019, Chad DeRosier'
+copyright = '2020, Chad DeRosier'
 author = 'Chad DeRosier'
 
 

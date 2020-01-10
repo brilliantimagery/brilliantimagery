@@ -1,4 +1,4 @@
-from BrilliantImagery.sequence._stabilize import Stabilizer
+from BrilliantImagery.sequence._sequence import Stabilizer
 
 
 def test_find_misalignment_w_large_preexisting_crop_success(sequence):

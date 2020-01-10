@@ -4,8 +4,6 @@ from copy import deepcopy
 import pytest
 
 from BrilliantImagery.sequence import Sequence
-from BrilliantImagery.sequence._stabilize import Stabilizer
-from BrilliantImagery.sequence._ramp import Ramper
 
 rectangle = [0.1, 0.1, 0.3, 0.3]
 offsets = [[0, 0], [1, -3], [2, 4], [-10, 11], [5, 17], [-8, 3], [2, -1], [0, -5], [8, 8], [-9, 1]]

@@ -5,8 +5,6 @@ from io import BytesIO
 import pytest
 import numpy as np
 
-from BrilliantImagery.dng import DNG
-
 
 def test_get_byte_order_bII_success(dng_canon_6d):
     # GIVEN an initialized DNG
