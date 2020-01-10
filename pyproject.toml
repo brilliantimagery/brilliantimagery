@@ -1,0 +1,39 @@
+# https://github.com/ADicksonLab/geomm
+# https://github.com/iamishalkin/cyrtd
+
+[tool.poetry]
+name = "brilliantimagery"
+#version = "20.1.0"
+description = "A python DNG editing package."
+license = "GPL-3.0-only"
+authors = ["Chad DeRosier <chad.derosier@gmail.com>"]
+readme = "README.rst"
+homepage = 'brilliantimagery.org'
+repository = 'https://github.com/brilliantimagery/brilliantimagery'
+#build = 'build.py'
+packages = [
+    { include = "BrilliantImagery", from = "src" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+cython = "0.29"
+numpy = "1.16"
+opencv-contrib-python = "^4.1.2"
+tqdm = "4.31"
+
+Sphinx = "2.0"
+sphinx_rtd_theme = "^0.4.3"
+
+[tool.poetry.dev-dependencies]
+pytest = "4.4"
+coverage = "4.5"
+pytest-cov = "2.6"
+
+[tool.poetry.extras]
+docs = ["sphinx", "sphinx_rtd_theme"]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+#requires = ['setuptools', 'wheel', 'Cython', 'numpy']

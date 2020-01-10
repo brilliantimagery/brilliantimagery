@@ -1,3 +1,5 @@
+import os
+import platform
 from io import BytesIO
 
 import pytest
@@ -57,6 +59,15 @@ def test_get_capture_datetime(dng_canon_6d):
 def test_get_capture_datetime_not_in_xmp(dng_pixel2):
     # GIVEN an initialized DNG file and it's capture datetime
     expected = '1556658902.9690008'
+
+    if platform.system() == 'Windows':
+        expected = str(os.path.getctime(dng_pixel2._path))
+    else:
+        stat = os.stat(dng_pixel2._path)
+        try:
+            expected = str(stat.st_birthtime)
+        except AttributeError:
+            expected = str(stat.st_mtime)
 
     # WHEN parsed
     # dng_pixel2.parse()

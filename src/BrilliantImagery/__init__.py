@@ -1,1 +1,1 @@
-# from ljpeg import ._decode
+__version__ = '20.1.0'
