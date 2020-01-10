@@ -5,9 +5,9 @@ from os.path import isfile, join
 
 from tqdm import tqdm
 
-from BrilliantImagery.sequence._stabilize import Stabilizer
-from BrilliantImagery.sequence._ramp import Ramper
-from BrilliantImagery.meta_image import MetaImage
+from brilliantimagery.sequence._stabilize import Stabilizer
+from brilliantimagery.sequence._ramp import Ramper
+from brilliantimagery.meta_image import MetaImage
 
 
 class Sequence:

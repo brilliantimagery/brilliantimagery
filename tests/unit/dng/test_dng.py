@@ -8,7 +8,7 @@ import numpy as np
 
 def test_get_byte_order_bII_success(dng_canon_6d):
     # GIVEN an initialized DNG
-    # from BrilliantImagery.dng import DNG
+    # from brilliantimagery.dng import DNG
     # dng = DNG('fake.file')
 
     # WHEN the dng has small ended IO bytes passes in
@@ -316,7 +316,7 @@ def test_save_xmp_length_unchanged_success(copied_dng_canon_6d, dng_canon_6d):
 # def test_save_xmp_length_changed_success(copied_dng_canon_6d, saved_dng_canon_6d):
 def test_save_xmp_length_changed_success(copied_dng_canon_6d, post_save_ifds):
     # GIVEN two copies of the same dng
-    from BrilliantImagery.dng import DNG
+    from brilliantimagery.dng import DNG
 
     # WHEN one has the xmp data changed and then saved, and then reprocessed
     # and the other has equivalent operations other than the xmp change
@@ -352,7 +352,7 @@ def test_not_is_reference_frame_success(dng_canon_6d):
 
 def test_is_reference_frame_success(dng_canon_6d):
     # GIVEN a initialized dng that isn't a reference frame (it's 2 stars)
-    from BrilliantImagery.dng import DNG
+    from brilliantimagery.dng import DNG
 
     # WHEN it's parsed and has it's rating set to that of the ref frame rating
     # dng_canon_6d.parse()

@@ -11,9 +11,9 @@ from typing import List
 import numpy as np
 import numpy
 
-from BrilliantImagery.dng import _dng_constants as d_cnst
-from BrilliantImagery.dng import _dng_utils as d_utils
-from BrilliantImagery.dng import _renderer
+from brilliantimagery.dng import _dng_constants as d_cnst
+from brilliantimagery.dng import _dng_utils as d_utils
+from brilliantimagery.dng import _renderer
 
 
 class DNG:
@@ -412,10 +412,10 @@ class DNG:
 
         offsets = sorted(self._ifds.keys())  # sorting since the thumbnail is the first IFD if present
         for offset in offsets:
-            if self._thumbnail_offset is 0:
+            if self._thumbnail_offset == 0:
                 self._thumbnail_offset = offset
             if 254 in self._ifds[offset]:
-                if self._ifds[offset][254].values[0] is 0:
+                if self._ifds[offset][254].values[0] == 0:
                     self._orig_img_offset = offset
             if 700 in self._ifds[offset]:
                 self._xmp_ifd_offset = offset

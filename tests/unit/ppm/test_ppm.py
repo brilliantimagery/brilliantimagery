@@ -1,6 +1,6 @@
 import numpy as np
 
-from BrilliantImagery import ppm
+from brilliantimagery import ppm
 
 
 def test_save(setup_ppm_saving, tmpdir):

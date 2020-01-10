@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from BrilliantImagery import ljpeg
+from brilliantimagery import ljpeg
 
 
 @pytest.mark.ljpeg

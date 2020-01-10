@@ -1,6 +1,6 @@
 def test_get_xmp_attribute_value_success(xmp_buffer, xmp_params):
     # GIVEN xmp data
-    from BrilliantImagery.dng import _dng_utils
+    from brilliantimagery.dng import _dng_utils
     property, expected = xmp_params
 
     # WHEN it's searched for known attribute, value pairs
@@ -12,7 +12,7 @@ def test_get_xmp_attribute_value_success(xmp_buffer, xmp_params):
 
 def test_get_xmp_attribute_value_bad_value_none(xmp_buffer):
     # GIVEN xmp data
-    from BrilliantImagery.dng import _dng_utils
+    from brilliantimagery.dng import _dng_utils
     expected = None
 
     # WHEN it's searched for known attribute, value pairs
@@ -24,7 +24,7 @@ def test_get_xmp_attribute_value_bad_value_none(xmp_buffer):
 
 def test_renderd_area_bounding_box_success(bounding_box_params):
     # GIVEN bounding box data
-    from BrilliantImagery.dng import _dng_utils
+    from brilliantimagery.dng import _dng_utils
     bbx = bounding_box_params
 
     # WHEN the bounding box data is run through the conversion
@@ -36,7 +36,7 @@ def test_renderd_area_bounding_box_success(bounding_box_params):
 
 def test_convert_rectangle_percent_to_pixels_default(used_ifd_fields_raw):
     # GIVEN the _used_field data
-    from BrilliantImagery.dng import _dng_utils
+    from brilliantimagery.dng import _dng_utils
 
     # WHEN
     actual = _dng_utils.convert_rectangle_percent_to_pixels(used_ifd_fields_raw,
@@ -50,7 +50,7 @@ def test_convert_rectangle_percent_to_pixels_default(used_ifd_fields_raw):
 
 def test_get_active_area_offset_default(used_ifd_fields_raw):
     # GIVEN the _used_field data
-    from BrilliantImagery.dng import _dng_utils
+    from brilliantimagery.dng import _dng_utils
 
     # WHEN
     actual = _dng_utils.get_active_area_offset(used_ifd_fields_raw, [1547, 1430, 3451, 2757])
@@ -62,7 +62,7 @@ def test_get_active_area_offset_default(used_ifd_fields_raw):
 
 def test_convert_rectangle_percent_to_pixels_raw(used_ifd_fields_raw):
     # GIVEN the _used_field data
-    from BrilliantImagery.dng import _dng_utils
+    from brilliantimagery.dng import _dng_utils
 
     # WHEN
     actual = _dng_utils.convert_rectangle_percent_to_pixels(used_ifd_fields_raw,
@@ -76,7 +76,7 @@ def test_convert_rectangle_percent_to_pixels_raw(used_ifd_fields_raw):
 
 def test_get_active_area_offset_raw(used_ifd_fields_raw):
     # GIVEN the _used_field data
-    from BrilliantImagery.dng import _dng_utils
+    from brilliantimagery.dng import _dng_utils
 
     # WHEN
     actual = _dng_utils.get_active_area_offset(used_ifd_fields_raw, [1547, 1430, 3451, 2757], 'RAW')
@@ -88,7 +88,7 @@ def test_get_active_area_offset_raw(used_ifd_fields_raw):
 
 def test_convert_rectangle_percent_to_pixels_thumbnail(used_ifd_fields_thumbnail):
     # GIVEN the _used_field data
-    from BrilliantImagery.dng import _dng_utils
+    from brilliantimagery.dng import _dng_utils
 
     # WHEN
     actual = _dng_utils.convert_rectangle_percent_to_pixels(used_ifd_fields_thumbnail,
@@ -102,7 +102,7 @@ def test_convert_rectangle_percent_to_pixels_thumbnail(used_ifd_fields_thumbnail
 
 def test_get_active_area_offset_thumbnail(used_ifd_fields_thumbnail):
     # GIVEN the _used_field data
-    from BrilliantImagery.dng import _dng_utils
+    from brilliantimagery.dng import _dng_utils
 
     # WHEN
     actual = _dng_utils.get_active_area_offset(used_ifd_fields_thumbnail, [64, 64, 166, 137], 'thumbnail')

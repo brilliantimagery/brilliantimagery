@@ -12,10 +12,10 @@ homepage = 'brilliantimagery.org'
 repository = 'https://github.com/brilliantimagery/brilliantimagery'
 #build = 'build.py'
 #packages = [
-#    { include = "BrilliantImagery", from = "src" },
+#    { include = "brilliantimagery", from = "src" },
 #]
 packages = [
-    { include = "BrilliantImagery"},
+    { include = "brilliantimagery"},
 ]
 
 [tool.poetry.dependencies]

@@ -404,13 +404,13 @@ def used_ifd_fields_thumbnail():
 
 @pytest.fixture()
 def dng_canon_6d(data_folder_path):
-    from BrilliantImagery.dng import DNG
+    from brilliantimagery.dng import DNG
     return DNG(str(data_folder_path / 'dng_canon_6d.dng'))
 
 
 @pytest.fixture()
 def dng_pixel2(data_folder_path):
-    from BrilliantImagery.dng import DNG
+    from brilliantimagery.dng import DNG
     return DNG(str(data_folder_path / 'dng_Pixel2.dng'))
 
 
@@ -448,7 +448,7 @@ def storable_dng_xmp():
 
 @pytest.fixture()
 def dng_file_io_ifd(dng_canon_6d):
-    from BrilliantImagery.dng import DNG
+    from brilliantimagery.dng import DNG
     with open(dng_canon_6d._path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
         f.seek(8)
         yield dng_canon_6d, f
@@ -472,7 +472,7 @@ def canon_6d_compressed_tiles(data_folder_path):
 @pytest.fixture()
 def copied_dng_canon_6d(data_folder_path, dng_canon_6d, tmpdir):
     import shutil
-    from BrilliantImagery.dng import DNG
+    from brilliantimagery.dng import DNG
 
     shutil.copy(str(str(data_folder_path / 'dng_canon_6d.dng')), str(tmpdir / 'dng_canon_6d.dng'))
     return DNG(str(tmpdir / 'dng_canon_6d.dng'))

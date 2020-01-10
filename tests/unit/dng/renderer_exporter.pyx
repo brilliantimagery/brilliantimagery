@@ -1,9 +1,9 @@
-from BrilliantImagery.dng._renderer import render as _render
-from BrilliantImagery.dng._renderer cimport _raw_to_rgb as rtr
-from BrilliantImagery.dng._renderer cimport _clip_to_rendered_rectangle as ctrr
-from BrilliantImagery.dng._renderer cimport _set_blacks_whites_scale_and_clip as sbwsac
-from BrilliantImagery.dng._renderer cimport _rescale_and_clip as rac
-from BrilliantImagery.dng._renderer cimport _unpack_section_data as usd
+from brilliantimagery.dng._renderer import render as _render
+from brilliantimagery.dng._renderer cimport _raw_to_rgb as rtr
+from brilliantimagery.dng._renderer cimport _clip_to_rendered_rectangle as ctrr
+from brilliantimagery.dng._renderer cimport _set_blacks_whites_scale_and_clip as sbwsac
+from brilliantimagery.dng._renderer cimport _rescale_and_clip as rac
+from brilliantimagery.dng._renderer cimport _unpack_section_data as usd
 
 def render(ifd, rectangle, active_area_offset):
     return _render(ifd, rectangle, active_area_offset)

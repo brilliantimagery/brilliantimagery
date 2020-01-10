@@ -1,1 +1,0 @@
-from BrilliantImagery.sequence._sequence import Sequence

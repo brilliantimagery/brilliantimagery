@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from BrilliantImagery.dng import DNG
-from BrilliantImagery.ppm import save
+from brilliantimagery.dng import DNG
+from brilliantimagery.ppm import save
 
 
 def main():

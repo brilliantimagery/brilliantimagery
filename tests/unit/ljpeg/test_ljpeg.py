@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 # from tests._test_utils import data_folder
-from BrilliantImagery import ljpeg
+from brilliantimagery import ljpeg
 
 
 @pytest.mark.render

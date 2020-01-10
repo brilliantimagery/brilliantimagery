@@ -3,7 +3,7 @@ import numpy as np
 
 from libcpp cimport bool
 
-from BrilliantImagery import ljpeg
+from brilliantimagery import ljpeg
 
 cpdef render(ifd, rectangle, active_area_offset):
     """

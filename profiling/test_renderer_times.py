@@ -9,8 +9,8 @@ from pathlib import Path
 
 import numpy as np
 
-from BrilliantImagery.dng import DNG
-from BrilliantImagery.dng import _renderer
+from brilliantimagery.dng import DNG
+from brilliantimagery.dng import _renderer
 
 active_area_offset = (1787, 1646)
 rectangle = [1859, 1684, 2558, 2444]

@@ -1,6 +1,6 @@
 from typing import Union
 
-from BrilliantImagery.dng import DNG
+from brilliantimagery.dng import DNG
 
 from ._meta_constants import META_TO_DNG
 

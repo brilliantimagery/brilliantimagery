@@ -1,6 +1,6 @@
 def test_ramp_minus_exposure_success(sequence_wo_exposure_w_expected_values):
     # GIVEN a sequence to be ramped
-    from BrilliantImagery.sequence._ramp import Ramper
+    from brilliantimagery.sequence._ramp import Ramper
     sequence, non_exp_xmp, expected_exp, rectangle = sequence_wo_exposure_w_expected_values
     ramper = Ramper(sequence._images)
 
@@ -16,7 +16,7 @@ def test_ramp_minus_exposure_success(sequence_wo_exposure_w_expected_values):
 
 def test_ramp_exposue_wo_preexisting_brightness_success(sequence_wo_exposure_w_expected_values):
     # GIVEN a sequence to be ramped
-    from BrilliantImagery.sequence._ramp import Ramper
+    from brilliantimagery.sequence._ramp import Ramper
     sequence, non_exp_xmp, expected_exp, rectangle = sequence_wo_exposure_w_expected_values
     ramper = Ramper(sequence._images)
 
@@ -32,7 +32,7 @@ def test_ramp_exposue_wo_preexisting_brightness_success(sequence_wo_exposure_w_e
 
 def test_ramp_exposue_w_preexisting_brightness_success(sequence_w_exposure_and_expected_values):
     # GIVEN a sequence to be ramped
-    from BrilliantImagery.sequence._ramp import Ramper
+    from brilliantimagery.sequence._ramp import Ramper
     sequence, non_exp_xmp, expected_exp, rectangle = sequence_w_exposure_and_expected_values
     ramper = Ramper(sequence._images)
 
@@ -48,7 +48,7 @@ def test_ramp_exposue_w_preexisting_brightness_success(sequence_w_exposure_and_e
 
 def test_is_multithreaded(sequence_wo_exposure_w_expected_values):
     # GIVEN a sequence to be ramped
-    from BrilliantImagery.sequence._ramp import Ramper
+    from brilliantimagery.sequence._ramp import Ramper
     sequence, non_exp_xmp, expected_exp, rectangle = sequence_wo_exposure_w_expected_values
     ramper = Ramper(sequence._images)
 
