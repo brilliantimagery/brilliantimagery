@@ -39,13 +39,13 @@ Terminal coverage reports can be generated:
 
 ::
 
-$ poetry run pytest --cov
+$ poetry run pytest --cov=brilliantimagery
 
 HTML coverage reports can be generated when tests are run:
 
 ::
 
-$ poetry run pytest --cov --cov-report=html
+$ poetry run pytest --cov=brilliantimagery --cov-report=html
 
 Docs
 ~~~~
