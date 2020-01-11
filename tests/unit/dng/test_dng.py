@@ -252,7 +252,7 @@ def test_rendered_shape(dng_canon_6d):
 
     # WHEN it's parsed and then has it's rendered shape is read
     # dng_canon_6d.parse()
-    actual_shape = dng_canon_6d.rendered_shape()
+    actual_shape = dng_canon_6d.get_rendered_shape()
 
     # THEN the expected and actual shapes are equal
     assert actual_shape == expected_shape
@@ -264,27 +264,27 @@ def test_default_shape(dng_canon_6d):
 
     # WHEN it's parsed and then has it's default shape is read
     # dng_canon_6d.parse()
-    actual_shape = dng_canon_6d.default_shape()
+    actual_shape = dng_canon_6d.get_default_shape()
 
     # THEN the expected and actual shapes are equal
     assert actual_shape == expected_shape
 
 
-def test_get_xmp_attribute(dng_canon_6d, xmp_params):
-    # GIVEN an initialized dng, and xmp attributes and values
-
-    # WHEN the xmp value is gotten for each attribute and then converted to floats
-    # (to avoid type mismatch issues
-    # dng_canon_6d.parse()
-    attr, expected_value = xmp_params
-    actual_value = dng_canon_6d.get_xmp_attribute(attr)
-    if expected_value:
-        expected_value = float(expected_value)
-    if actual_value:
-        actual_value = float(actual_value)
-
-    # THEN the attribute value is as expected
-    assert actual_value == expected_value
+# def test_get_xmp_attribute(dng_canon_6d, xmp_params):
+#     # GIVEN an initialized dng, and xmp attributes and values
+#
+#     # WHEN the xmp value is gotten for each attribute and then converted to floats
+#     # (to avoid type mismatch issues
+#     # dng_canon_6d.parse()
+#     attr, expected_value = xmp_params
+#     actual_value = dng_canon_6d.get_xmp_attribute(attr)
+#     if expected_value:
+#         expected_value = float(expected_value)
+#     if actual_value:
+#         actual_value = float(actual_value)
+#
+#     # THEN the attribute value is as expected
+#     assert actual_value == expected_value
 
 
 def test_save_xmp_length_unchanged_success(copied_dng_canon_6d, dng_canon_6d):
@@ -340,17 +340,17 @@ def test_save_xmp_length_changed_success(copied_dng_canon_6d, post_save_ifds):
     assert actual == post_save_ifds
 
 
-def test_not_is_reference_frame_success(dng_canon_6d):
+def test_not_is_key_frame_success(dng_canon_6d):
     # GIVEN a initialized dng that isn't a reference frame (it's 2 stars)
 
     # WHEN it's parsed
     # dng_canon_6d.parse()
 
     # THEN it's found to not be a ref frame
-    assert not dng_canon_6d.is_reference_frame
+    assert not dng_canon_6d.is_key_frame
 
 
-def test_is_reference_frame_success(dng_canon_6d):
+def test_is_key_frame_success(dng_canon_6d):
     # GIVEN a initialized dng that isn't a reference frame (it's 2 stars)
     from brilliantimagery.dng import DNG
 
@@ -361,7 +361,7 @@ def test_is_reference_frame_success(dng_canon_6d):
     dng_canon_6d.store_xmp_field()
 
     # THEN it's found to be a ref frame
-    assert dng_canon_6d.is_reference_frame
+    assert dng_canon_6d.is_key_frame
 
 
 def test_get_brightness(dng_canon_6d):

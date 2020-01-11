@@ -67,7 +67,7 @@ class Stabilizer:
     def update_crop_xmp_attributes(self):
         example_image = next(iter(self._images.values()))
         min_x, min_y, max_x, max_y = sutil.misalignment_bounding_box(self._images.values())
-        shape = example_image.rendered_shape()
+        shape = example_image.get_rendered_shape()
         left = example_image.get_xmp_attribute('CropLeft')
         top = example_image.get_xmp_attribute('CropTop')
         right = example_image.get_xmp_attribute('CropRight')

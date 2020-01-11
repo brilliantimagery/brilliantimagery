@@ -374,76 +374,82 @@ unlinearized_raw_image = [[[1, 6, 14, 12, 10, 3, 13, 5, 8, 7, 8, 12, 3],
 
 def id_xmp_data(fixture_value):
     """A function to generate fixture IDs"""
-    return f'xmp({fixture_value[0]}, {fixture_value[1]})'
+    yield f'xmp({fixture_value[0]}, {fixture_value[1]})'
 
 
 @pytest.fixture(params=xmp_to_try, ids=id_xmp_data)
 def xmp_params(request):
-    return request.param
+    yield request.param
 
 
 @pytest.fixture()
 def xmp_buffer():
-    return xmp_data
+    yield xmp_data
 
 
 @pytest.fixture(params=bounding_boxes)
 def bounding_box_params(request):
-    return request.param
+    yield request.param
 
 
 @pytest.fixture()
 def used_ifd_fields_raw():
-    return used_fields_raw
+    yield used_fields_raw
 
 
 @pytest.fixture()
 def used_ifd_fields_thumbnail():
-    return used_fields_thumbnail
+    yield used_fields_thumbnail
 
 
 @pytest.fixture()
 def dng_canon_6d(data_folder_path):
     from brilliantimagery.dng import DNG
-    return DNG(str(data_folder_path / 'dng_canon_6d.dng'))
+    yield DNG(str(data_folder_path / 'dng_canon_6d.dng'))
+
+
+@pytest.fixture()
+def meta_image_canon_6d(data_folder_path):
+    from brilliantimagery.meta_image import MetaImage
+    yield MetaImage(str(data_folder_path / 'dng_canon_6d.dng'))
 
 
 @pytest.fixture()
 def dng_pixel2(data_folder_path):
     from brilliantimagery.dng import DNG
-    return DNG(str(data_folder_path / 'dng_Pixel2.dng'))
+    yield DNG(str(data_folder_path / 'dng_Pixel2.dng'))
 
 
 @pytest.fixture()
 def post_save_ifds():
-    return saved_ifds
+    yield saved_ifds
 
 
 @pytest.fixture()
 def numpy_cropped_canon_6d(data_folder_path):
     image = np.load(str(data_folder_path / 'test_image_canon_6d_cropped.np'))
     rendered_area = [1500 / 5030, 1450 / 3350, (1500 + 700) / 5030, (1450 + 760) / 3350]
-    return image, rendered_area
+    yield image, rendered_area
 
 
 @pytest.fixture()
 def numpy_thumbnail_canon_6d(data_folder_path):
-    return np.load(str(data_folder_path / 'test_image_canon_6d_thumb.np'))
+    yield np.load(str(data_folder_path / 'test_image_canon_6d_thumb.np'))
 
 
 @pytest.fixture()
 def dng_xmp():
-    return expected_xmp
+    yield expected_xmp
 
 
 @pytest.fixture()
 def updated_dng_xmp():
-    return updated_xmp, new_xmp_values
+    yield updated_xmp, new_xmp_values
 
 
 @pytest.fixture()
 def storable_dng_xmp():
-    return xmp_to_be_stored, updated_xmp_data
+    yield xmp_to_be_stored, updated_xmp_data
 
 
 @pytest.fixture()
@@ -456,7 +462,7 @@ def dng_file_io_ifd(dng_canon_6d):
 
 @pytest.fixture()
 def canon_6d_idfs():
-    return ifds
+    yield ifds
 
 
 @pytest.fixture()
@@ -466,7 +472,7 @@ def canon_6d_compressed_tiles(data_folder_path):
 
     tiles = pickle.load(open(str(data_folder_path / 'compressed_tiles.p'), 'rb'))
 
-    return rectangle, tiles
+    yield rectangle, tiles
 
 
 @pytest.fixture()
@@ -475,7 +481,7 @@ def copied_dng_canon_6d(data_folder_path, dng_canon_6d, tmpdir):
     from brilliantimagery.dng import DNG
 
     shutil.copy(str(str(data_folder_path / 'dng_canon_6d.dng')), str(tmpdir / 'dng_canon_6d.dng'))
-    return DNG(str(tmpdir / 'dng_canon_6d.dng'))
+    yield DNG(str(tmpdir / 'dng_canon_6d.dng'))
 
 
 @pytest.fixture()
@@ -486,14 +492,14 @@ def dng_rendered_to_rgb_even_offsets(dng_canon_6d, data_folder_path):
     rectangle = [100, 100, 500, 400]
 
     # dng_canon_6d.parse()
-    dng_canon_6d.default_shape()
+    dng_canon_6d.get_default_shape()
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
 
     with open(str(data_folder_path / 'renderer_render_raw_even_even.np'), 'rb') as f:
         expected_renderd_area = np.load(f)
 
-    return ifd, expected_renderd_area, active_area_offset, rectangle
+    yield ifd, expected_renderd_area, active_area_offset, rectangle
 
 
 @pytest.fixture()
@@ -504,14 +510,14 @@ def dng_rendered_to_rgb_odd_offsets(dng_canon_6d, data_folder_path):
     rectangle = [101, 101, 500, 400]
 
     # dng_canon_6d.parse()
-    dng_canon_6d.default_shape()
+    dng_canon_6d.get_default_shape()
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
 
     with open(str(data_folder_path / 'renderer_render_raw_odd_even.np'), 'rb') as f:
         expected_renderd_area = np.load(f)
 
-    return ifd, expected_renderd_area, active_area_offset, rectangle
+    yield ifd, expected_renderd_area, active_area_offset, rectangle
 
 
 @pytest.fixture()
@@ -522,14 +528,14 @@ def dng_rendered_to_rgb_even_odd_offsets(dng_canon_6d, data_folder_path):
     rectangle = [100, 100, 501, 401]
 
     # dng_canon_6d.parse()
-    dng_canon_6d.default_shape()
+    dng_canon_6d.get_default_shape()
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
 
     with open(str(data_folder_path / 'renderer_render_raw_even_odd.np'), 'rb') as f:
         expected_renderd_area = np.load(f)
 
-    return ifd, expected_renderd_area, active_area_offset, rectangle
+    yield ifd, expected_renderd_area, active_area_offset, rectangle
 
 
 @pytest.fixture()
@@ -547,7 +553,7 @@ def dng_thumbnail_rendered_to_rgb_even_offsets(dng_canon_6d, data_folder_path):
     with open(str(data_folder_path / 'renderer_render_thumbnail_even.np'), 'rb') as f:
         expected_renderd_area = np.load(f)
 
-    return ifd, expected_renderd_area, active_area_offset, rectangle
+    yield ifd, expected_renderd_area, active_area_offset, rectangle
 
 
 @pytest.fixture()
@@ -566,7 +572,7 @@ def dng_thumbnail_rendered_to_rgb_odd_offsets(dng_canon_6d, data_folder_path):
         expected_renderd_area = np.load(f)
     # expected_renderd_area = 1
 
-    return ifd, expected_renderd_area, active_area_offset, rectangle
+    yield ifd, expected_renderd_area, active_area_offset, rectangle
 
 
 @pytest.fixture()
@@ -584,7 +590,7 @@ def scaled_raw_data_w_ifd_0112_even_offset(data_folder_path):
     with open(str(data_folder_path / 'raw_data_to_rgb_0112_even_offset.np'), 'rb') as f:
         expected_renderd_area = np.load(f)
 
-    return ifd, image, active_area_offset, expected_renderd_area
+    yield ifd, image, active_area_offset, expected_renderd_area
 
 
 @pytest.fixture()
@@ -602,7 +608,7 @@ def scaled_raw_data_w_ifd_0112_odd_offset(data_folder_path):
     with open(str(data_folder_path / 'raw_data_to_rgb_0112_odd_offset.np'), 'rb') as f:
         expected_renderd_area = np.load(f)
 
-    return ifd, image, active_area_offset, expected_renderd_area
+    yield ifd, image, active_area_offset, expected_renderd_area
 
 
 @pytest.fixture()
@@ -621,7 +627,7 @@ def scaled_raw_data_w_ifd_1021_even_offset(data_folder_path):
         expected_renderd_area = np.load(f)
     # expected_renderd_area = 1
 
-    return ifd, image, active_area_offset, expected_renderd_area
+    yield ifd, image, active_area_offset, expected_renderd_area
 
 
 @pytest.fixture()
@@ -642,7 +648,7 @@ def unscaled_raw_data_w_2x2_mask_1_sample_per_pix(data_folder_path):
     with open(str(data_folder_path / 'unscaled_raw_data_w_2x2_mask_1_sample_per_pix.np'), 'rb') as f:
         expected_renderd_area = np.load(f)
 
-    return ifd, image, active_area_offset, expected_renderd_area
+    yield ifd, image, active_area_offset, expected_renderd_area
 
 
 @pytest.fixture()
@@ -664,7 +670,7 @@ def unscaled_raw_data_w_2x2_mask_1_sample_per_pix_odd(data_folder_path):
         expected_renderd_area = np.load(f)
     # expected_renderd_area = 0
 
-    return ifd, image, active_area_offset, expected_renderd_area
+    yield ifd, image, active_area_offset, expected_renderd_area
 
 
 @pytest.fixture()
@@ -685,7 +691,7 @@ def unscaled_raw_data_w_3_sample_per_pix(data_folder_path):
         expected_renderd_area = np.load(f)
     # expected_renderd_area = 1
 
-    return ifd, image, active_area_offset, expected_renderd_area
+    yield ifd, image, active_area_offset, expected_renderd_area
 
 
 @pytest.fixture()
@@ -707,7 +713,7 @@ def unscaled_raw_data_w_linearization(data_folder_path):
     with open(str(data_folder_path / 'unscaled_raw_data_w_linearization.np'), 'rb') as f:
         expected_renderd_area = np.load(f)
 
-    return ifd, image, active_area_offset, expected_renderd_area
+    yield ifd, image, active_area_offset, expected_renderd_area
 
 
 @pytest.fixture()
@@ -757,7 +763,7 @@ def rectangle_to_clip():
 
     cropped_image = image[:, 1: 7, 1: 8]
 
-    return ifd, image, cropped_image
+    yield ifd, image, cropped_image
 
 
 @pytest.fixture()
@@ -768,14 +774,14 @@ def unpackable_ifd_w_compressed_tiles(dng_canon_6d, data_folder_path):
     rectangle = [100, 100, 500, 400]
 
     # dng_canon_6d.parse()
-    dng_canon_6d.default_shape()
+    dng_canon_6d.get_default_shape()
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
 
     with open(str(data_folder_path / 'unpacked_compressed_tiles.np'), 'rb') as f:
         expected_renderd_area = np.load(f)
 
-    return ifd, expected_renderd_area, active_area_offset, rectangle
+    yield ifd, expected_renderd_area, active_area_offset, rectangle
 
 
 @pytest.fixture()
@@ -786,7 +792,7 @@ def unpackable_ifd_w_uncompressed_strips(dng_pixel2, data_folder_path):
     rectangle = [100, 100, 500, 400]
 
     # dng_pixel2.parse()
-    dng_pixel2.default_shape()
+    dng_pixel2.get_default_shape()
     dng_pixel2._get_tile_or_strip_bytes(rectangle)
     ifd = dng_pixel2._used_fields
 
@@ -794,4 +800,4 @@ def unpackable_ifd_w_uncompressed_strips(dng_pixel2, data_folder_path):
         expected_renderd_area = np.load(f)
     # expected_renderd_area = 1
 
-    return ifd, expected_renderd_area, active_area_offset, rectangle
+    yield ifd, expected_renderd_area, active_area_offset, rectangle

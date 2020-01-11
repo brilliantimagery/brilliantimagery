@@ -12,10 +12,11 @@ simple functions to accomplish powerful tasks, and to allow the
 the underlying functionality to be leveraged to enable the creation
 of even more powerful functionality.
 
-.. warning::
+.. Note::
+   This project is in an Alpha/Beta state of development. While every effort is made to have it work well and predictably, the integrity of your data can't be guaranteed.
 
-   This project is in an Alpha state of development. While every effort 
-   is made to have it work well and predictably, at times it may not.
+.. note::
+   These docs are geared towards development with the package, not the workflow it's designed to be used with to edit photos. The API's functionality is covered in detail but in order to learn more about the photo editing workflow that it's expected to be used with go to `brilliantimagery.org <http://www.brilliantimagery.org/>`_.
 
 Features
 --------
@@ -36,6 +37,11 @@ Top-Level Functionality
 
 Sub-Functionality
 -----------------
+.. toctree::
+   :maxdepth: 2
+
+   meta_image
+
 .. toctree::
    :maxdepth: 2
 

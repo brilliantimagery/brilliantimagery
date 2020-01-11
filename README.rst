@@ -50,7 +50,13 @@ $ poetry run pytest --cov=brilliantimagery --cov-report=html
 Docs
 ~~~~
 
-After making changes to the docs, to update them, assuming ``./brilliantiamgery`` is the current working directory, change the working directory to the ``/docs`` folder:
+After making changes to the docs, to update them, assuming ``./brilliantiamgery`` is the current working directory, activate a poetry shell:
+
+::
+
+$ poetry shell
+
+Change the working directory to the ``/docs`` folder:
 
 ::
 

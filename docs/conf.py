@@ -24,14 +24,14 @@ import pkg_resources  # part of setuptools
 # build documents.
 #
 # The short X.Y version.
-version = pkg_resources.require("brilliantimagery")[0].version
+version = pkg_resources.require("brilliant-imagery")[0].version
 # The full version, including alpha/beta/rc tags.
-version = pkg_resources.require("brilliantimagery")[0].version
+version = pkg_resources.require("brilliant-imagery")[0].version
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'brilliantimagery'
+project = 'brilliant-imagery'
 copyright = '2020, Chad DeRosier'
 author = 'Chad DeRosier'
 

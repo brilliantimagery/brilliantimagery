@@ -1,4 +1,0 @@
--rrequirements.txt
-coverage==4.5.3
-pytest==4.4.0
-pytest-cov==2.6.1

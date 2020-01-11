@@ -17,34 +17,36 @@ class Ramper:
 
     def __init__(self, images):
         self._images = images
-        self._ref_frames = []
-        self._ref_frame_gaps = []
+        self._key_frames = []
+        self._key_frame_gaps = []
 
         self._sorted_times = sorted(self._images.keys())
         example_image = self._images[self._sorted_times[0]]
         xmp_attributes = example_image.get_xmp()
-        possible_xmp = {attr: prop.is_ramped for attr, prop
-                        in example_image.get_possible_xmp_attributes().items()}
-        self._xmp_attributes = [attr for attr in xmp_attributes.keys() if possible_xmp.get(attr, False)]
+        possible_xmp = {attr: prop.is_ramped
+                        for attr, prop in example_image.get_relevant_xmp_attributes().items()}
+        self._xmp_attributes = [attr
+                                for attr in xmp_attributes.keys()
+                                if possible_xmp.get(attr, False)]
 
         index = -1
         for time in self._sorted_times:
-            if self._images[time].is_reference_frame:
-                self._ref_frames.append(time)
-                self._ref_frame_gaps.append(1)
+            if self._images[time].is_key_frame:
+                self._key_frames.append(time)
+                self._key_frame_gaps.append(1)
                 index += 1
             else:
-                self._ref_frame_gaps[index] += 1
+                self._key_frame_gaps[index] += 1
 
     def ramp_minus_exposure(self, ramp_blacks=False):
         ramps = {}
-        for index, ref_frame in enumerate(self._ref_frames[:-1]):
+        for index, key_frame in enumerate(self._key_frames[:-1]):
             for attr in self._xmp_attributes:
                 if attr not in ramps:
                     ramps[attr] = []
-                ramps[attr].append((self._images[self._ref_frames[index + 1]].get_xmp_attribute(attr)
-                                    - self._images[ref_frame].get_xmp_attribute(attr))
-                                   / self._ref_frame_gaps[index])
+                ramps[attr].append((self._images[self._key_frames[index + 1]].get_xmp_attribute(attr)
+                                    - self._images[key_frame].get_xmp_attribute(attr))
+                                   / self._key_frame_gaps[index])
         for attr in self._xmp_attributes:
             ramps[attr].append(0.0)
 
@@ -52,14 +54,14 @@ class Ramper:
         for attr in self._xmp_attributes:
             targets[attr] = self._images[self._sorted_times[0]].get_xmp_attribute(attr)
 
-        reference_frame_index = -1
+        key_frame_index = -1
         for time in self._sorted_times:
             for attr in self._xmp_attributes:
                 self._images[time].set_xmp_attribute(attr, targets[attr])
-            if time in self._ref_frames:
-                reference_frame_index += 1
+            if time in self._key_frames:
+                key_frame_index += 1
             for attr in self._xmp_attributes:
-                targets[attr] += ramps[attr][reference_frame_index]
+                targets[attr] += ramps[attr][key_frame_index]
         if ramp_blacks:
             self._ramp_blacks()
 
@@ -67,13 +69,13 @@ class Ramper:
     def _ramp_blacks(self):
         ramps = {}
         _xmp_attributes = ['Blacks', 'Exposure']
-        for index, ref_frame in enumerate(self._ref_frames[:-1]):
+        for index, key_frame in enumerate(self._key_frames[:-1]):
             for attr in _xmp_attributes:
                 if attr not in ramps:
                     ramps[attr] = []
-                ramps[attr].append((self._images[self._ref_frames[index + 1]].get_xmp_attribute(attr)
-                                    - self._images[ref_frame].get_xmp_attribute(attr))
-                                   / self._ref_frame_gaps[index])
+                ramps[attr].append((self._images[self._key_frames[index + 1]].get_xmp_attribute(attr)
+                                    - self._images[key_frame].get_xmp_attribute(attr))
+                                   / self._key_frame_gaps[index])
         for attr in _xmp_attributes:
             ramps[attr].append(0.0)
 
@@ -81,7 +83,7 @@ class Ramper:
         for attr in _xmp_attributes[:-1]:
             targets[attr] = self._images[self._sorted_times[0]].get_xmp_attribute(attr)
 
-        reference_frame_index = 0
+        key_frame_index = 0
         last_exposure = self._images[self._sorted_times[0]].get_xmp_attribute('Exposure')
         for index, time in enumerate(self._sorted_times[1:]):
             this_exposure = self._images[time].get_xmp_attribute('Exposure')
@@ -94,15 +96,15 @@ class Ramper:
                 exposure_compensation = Ramper._LATE_BLACKS_EXPOSURE_COMPENSATION
 
             for attr in _xmp_attributes[:-1]:
-                targets[attr] += ramps[attr][reference_frame_index] \
-                                 + (this_exposure - last_exposure - ramps['Exposure'][reference_frame_index]) \
+                targets[attr] += ramps[attr][key_frame_index] \
+                                 + (this_exposure - last_exposure - ramps['Exposure'][key_frame_index]) \
                                  * exposure_compensation
 
             for attr in _xmp_attributes[:-1]:
                 self._images[time].set_xmp_attribute(attr, targets[attr])
 
-            if time in self._ref_frames:
-                reference_frame_index += 1
+            if time in self._key_frames:
+                key_frame_index += 1
 
             last_exposure = this_exposure
 
@@ -132,24 +134,25 @@ class Ramper:
             ###################### End bug section #################################
 
         ramp = []
-        for index, ref_frame in enumerate(self._ref_frames[:-1]):
-            next_brightness = self._images[self._ref_frames[index + 1]].brightness * \
-                              2 ** self._images[self._ref_frames[index + 1]].get_xmp_attribute('Exposure')
-            this_brightness = self._images[ref_frame].brightness * \
-                              2 ** self._images[ref_frame].get_xmp_attribute('Exposure')
-            ramp.append((next_brightness - this_brightness) / self._ref_frame_gaps[index])
+        for index, key_frame in enumerate(self._key_frames[:-1]):
+            next_brightness = self._images[self._key_frames[index + 1]].brightness * \
+                              2 ** self._images[self._key_frames[index + 1]].get_xmp_attribute('Exposure')
+            this_brightness = self._images[key_frame].brightness * \
+                              2 ** self._images[key_frame].get_xmp_attribute('Exposure')
+            ramp.append((next_brightness - this_brightness) / self._key_frame_gaps[index])
 
         ramp.append(0)
 
-        reference_frame_index = -1
+
+        key_frame_index = -1
         for time in self._sorted_times:
-            if time in self._ref_frames:
+            if time in self._key_frames:
                 target = self._images[time].brightness * 2 ** self._images[time].get_xmp_attribute('Exposure')
-                reference_frame_index += 1
+                key_frame_index += 1
             else:
                 exposure = math.log(target / self._images[time].brightness, 2)
                 self._images[time].set_xmp_attribute('Exposure', exposure)
-            target += ramp[reference_frame_index]
+            target += ramp[key_frame_index]
 
     @staticmethod
     def _get_brightness(time, image, rectangle):

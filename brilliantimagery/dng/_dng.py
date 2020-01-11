@@ -4,7 +4,7 @@ import math
 import os
 import platform
 import struct
-from typing import Dict, Union
+from typing import Dict, Union, Optional, NamedTuple
 from typing import List
 
 # from Cython.Compiler import MemoryView
@@ -22,8 +22,9 @@ class DNG:
 
     Allows reading and editing the underlying file.
 
-    Based on the DNG 1.4 standard but not fully implemented or fully
-    backwards compatible.
+    It's based on the DNG 1.4 standard and works for most cameras by most
+    manufacturers but the standard is not fully implemented and not
+    all edge cases for older versions of the standard are fully supported.
 
     :param str path: The path to the represented DNG file.
     """
@@ -127,15 +128,16 @@ class DNG:
         """
         Gets when the image was captured.
 
-        May return any of a variety of formats (i.e. a datetime or unix
-        time stamp) depending on the available information. The format
+        The return value may be formatted as a datetime or unix
+        time stamp depending on the available information. The format
         should be consistent between images captured on the same camera
-        and processes with the same workflow.
+        and processed with the same workflow.
 
         :return: A creation time.
         :rtype: str
         """
-        xmp = self._ifds.get(self._xmp_ifd_offset, {}).get(700, DNG._Field(0, 0, 0, 0, [b''])).values[0]
+        xmp = self._ifds.get(self._xmp_ifd_offset, {}). \
+            get(700, DNG._Field(0, 0, 0, 0, [b''])).values[0]
         capture_datetime = d_utils.get_xmp_attribute_value(xmp, b'xmp:CreateDate')
         if capture_datetime:
             return capture_datetime
@@ -248,9 +250,14 @@ class DNG:
         The rendering algorithm is relatively rudimentary so the
         results will be less refined than some other renderers.
 
-        While many (most?) cameras are, or could with relative ease
-        be supported, some Fuji cameras (and presumably others)
-        will require further development.
+        Note that the output is a float in the range of 0 to 1 so for many
+        applications it'll have to be scaled.
+
+        While many (most?) cameras are supported, or could with relative
+        ease once rare edge cases are pointed out,
+        some Fuji cameras (and presumably others)
+        will require further development (which can potentially happen if
+        it's requested).
 
         :param rectangle: The bounding box of the portion of the image that's
             to be rendered. In the format X1, Y1, X2, Y2 where:
@@ -462,6 +469,7 @@ class DNG:
 
         :return: None
         """
+
         xmp_data = self._ifds[self._xmp_ifd_offset][700].values[0]
         xmp_length = len(xmp_data)
         for field, value in self._xmp.items():
@@ -492,7 +500,7 @@ class DNG:
         self._ifds[self._xmp_ifd_offset][700].values[0] = xmp_data
         self._ifds[self._xmp_ifd_offset][700].count = len(xmp_data)
 
-    def rendered_shape(self) -> List[int]:
+    def get_rendered_shape(self) -> List[int]:
         """
         Gets the dimensions of the raw image, as cropped and rendered.
 
@@ -502,7 +510,8 @@ class DNG:
             second is the length (height) of the image.
         :rtype: list[int, int]
         """
-        shape = self.default_shape()
+
+        shape = self.get_default_shape()
         if not self._xmp:
             self.get_xmp()
 
@@ -513,7 +522,7 @@ class DNG:
 
         return [round(shape[0] * (right - left)), round(shape[1] * (bottom - top))]
 
-    def default_shape(self) -> List[int]:
+    def get_default_shape(self) -> List[int]:
         """
         Gets the dimensions of the raw image, before it's edited or cropped.
 
@@ -523,29 +532,31 @@ class DNG:
             second is the length (height) of the image.
         :rtype: list[int, int]
         """
+
         if not self._used_fields:
             self._get_fields_required_to_render('RAW')
         return [int(a) for a in self._used_fields['default_crop_size']]
 
-    def get_xmp_attribute(self, xmp_attribute: bytes):
-        """
-        Gets the value of an XMP attribute.
-
-        Only works for attributes with numeric values.
-
-        :param bytes xmp_attribute: The attribute to be interrogated.
-            Must include the full attribute name, the part before and after the :attr:`:``
-
-        :return: The value of the attribute if it's present and numeric, otherwise :attr:`None`.
-        :rtype: float or None
-        """
-        if not self._xmp:
-            self.get_xmp()
-
-        if xmp_attribute in self._xmp:
-            return self._xmp[xmp_attribute].get('val')
-        else:
-            return None
+    # def get_xmp_attribute(self, xmp_attribute: bytes) -> Optional[float]:
+    #     """
+    #     Gets the value of an XMP attribute.
+    #
+    #     Only works for attributes with numeric values.
+    #
+    #     :param bytes xmp_attribute: The attribute to be interrogated.
+    #         Must include the full attribute name, the part before and after the :attr:`:`
+    #
+    #     :return: The value of the attribute if it's present and numeric, otherwise :attr:`None`.
+    #     :rtype: float or None
+    #     """
+    #
+    #     if not self._xmp:
+    #         self.get_xmp()
+    #
+    #     if xmp_attribute in self._xmp:
+    #         return self._xmp[xmp_attribute].get('val')
+    #     else:
+    #         return None
 
     def save(self) -> None:
         """
@@ -553,6 +564,7 @@ class DNG:
 
         :return: None
         """
+
         if self._updated:
             if self._xmp_length_changed:
                 last_item = 0
@@ -581,6 +593,7 @@ class DNG:
 
         :return: None
         """
+
         first_ifd_location = 8
         # TODO: https://www.tutorialspoint.com/How-to-create-an-empty-file-using-Python
         with open(self._path + '.temp', 'w+b') as wf:
@@ -613,6 +626,7 @@ class DNG:
 
         :return: None
         """
+
         end_write_index = len(ifd) * 12 + 6 + write_location
         section_offsets = []
         section_byte_counts = []
@@ -720,6 +734,7 @@ class DNG:
 
         :return: None
         """
+
         # TODO: make this a dict?
         bytes_to_skip = 0
         if data_type == 1:
@@ -756,27 +771,75 @@ class DNG:
 
         :return: None
         """
+
         self._used_fields['section_bytes'] = None
 
     @property
-    def is_reference_frame(self):
+    def is_key_frame(self):
+        """
+        Says whether or not an image is a reference frame.
+
+        For timelapse sequences, specifies whether or not the given image is
+        intended to be used as a reference frame. This is determined by the
+        image star rating and whether or not it matches the number of stars
+        that a DNG image must have to be considered a reference frame, 3 by
+        default.
+
+        :return: True if it's a reference frame, otherwise false.
+        :rtype: bool
+
+        """
+
         if not self._xmp:
             self.get_xmp()
 
         return int(self._xmp[b'xmp:Rating'].get('val', 0)) == DNG._REFERENCE_FRAME_STARS
 
     def get_brightness(self, rectangle=None, image=None):
+        """
+        Gets a reference brightness value for the image.
+
+        The median green value for the image is used as the reference.
+
+        :param rectangle: The bounding box of the portion of the image that's
+            to be rendered. In the format X1, Y1, X2, Y2 where:
+
+            * X1 is the x position of the top left corner,
+            * Y1 is the y position of the top left corner,
+            * X2 is the x position of the bottom right corner,
+            * Y2 is the y position of the top right corner.
+
+            The input values can either be in fractions of the way across the
+            image from the origin, or pixels from the origin.
+            The top left corner of the cropped area is assumed to be the
+            origin. If no crop is applied by the user than the
+            :attr:`DefaultCropOrigin` field data is used as the origin.
+        :type rectangle: list[int or float]
+        :param image: A 3D float array holding the rendered image.
+
+            * The first dimension represents the color channels: Red, Green, Blue at indices 0, 1, and 2 respectively.
+            * The second represents the width.
+            * The third represents the height.
+
+        :type image: Numpy.ndarray
+        :return: The median green value from the image as a float in the range from 0 to 1.
+        :rtype: float
+        """
+
         if image is None:
             image = self.get_image(rectangle)
         return np.median(image[1, :, :])
 
+    # def get_relevant_xmp_attributes() -> Dict[bytes, NamedTuple[int, str, bool, bool]]:
     @staticmethod
-    def get_possible_xmp_attributes():
+    def get_relevant_xmp_attributes():
         """
-        Gets the inclusive set of relevant XMP attributes.
+        Gets the list of XMP attributes that are relevant to image rendering.
 
-        Attributes are deemed relevant if they are editable or
-        otherwise used externally.
+        These are attributes that are edited with photo editing software
+        such as exposure, rating, and saturation. Irrelevant attributes,
+        from a photo editing perspective, such as when the photo was
+        taken, are not returned.
 
         :return: A :class:`dict` of the below key value pairs:
 
@@ -784,12 +847,12 @@ class DNG:
             | - :attr:`value` is a :class:`namedtuple` with the follow properties.
 
                 | - :attr:`n_decimal_places`: int - The number of decimal places
-                    to use when storing the property value.
+                    to use when storing the attribute value.
                 | - :attr:`default_value`: str - The default value in Lightroom.
                 | - :attr:`is_vector`: bool - True if it always has a
-                    sign in the XMP data, otherwise False.
+                    sign in a DNG file's XMP data, otherwise False.
                 | - :attr:`is_ramped`: bool - True if it should be linearly ramped
-                    (i.e. Temperature), otherwise False (i.e. Rating)
+                    (i.e. Temperature), otherwise False (i.e. Rating or Exposure)
 
         :rtype: dict(bytes: namedtuple(int, str, bool, bool))
         """

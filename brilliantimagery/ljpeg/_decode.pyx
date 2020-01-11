@@ -15,7 +15,7 @@ import subprocess
 
 cdef int SOF3 = 0xFFC3
 
-cdef int SOI = 0xFFD8    # Start of image
+cdef int SOI = 0xFFD8  # Start of image
 
 cdef int SOS = 0xFFDA  # Start of scan
 cdef int DQT = 0xFFDB  # Define quantization table(s)
@@ -31,9 +31,9 @@ cdef int precision          # P
 cdef cpp_map[int, cpp_map[cpp_string, int]] huffman_tables
 cdef int[:] max_huffman_code_lengths = np.zeros(4, dtype=np.intc)
 cdef int[:] min_huffman_code_lengths = np.zeros(4, dtype=np.intc)
-cdef int rd_index
-cdef int bit_rd_index
-cdef int[:,:,:] raw_image
+cdef int rd_index           # the index of the byte that's being reference, with respect to the first byte of the input image
+cdef int bit_rd_index       # The index of the bit that's being referenced
+cdef int[:,:,:] image       # The decoded image
 
 
 def decode(int[:] encoded_image) -> int[:,:,:]:
@@ -42,16 +42,20 @@ def decode(int[:] encoded_image) -> int[:,:,:]:
     into its raw components.
 
     Returned array properties are to be used to get input image
-    properties such as shape a number of color channels.
+    properties such as shape and number of color channels.
+    For a monochromatic image ``decode(img).shape[0]`` would equal 1.
+    In a typical DNG tile it would equal 2, and it would equal 3 for
+    an RGB image. Similar procedures can be used to get the image
+    width and length.
 
     :param encoded_image: A 1D Numpy array holding the compressed image.
         :attr:`encoded_image` can be created with something like
         ``np.fromfile('F-18.ljpg', np.uint8).astype(np.intc)``,
         note the :func:`astype` at the end.
-    :return: A 3 dimensional Numpy array with index 1 being the color channel, 
-        index 2 being the X coordinate, and index 3 being the Y coordinate.
+    :return: A 3 dimensional Numpy array with index 0 being the color channel,
+        index 1 being the X coordinate, and index 2 being the Y coordinate.
     """
-    global rd_index, bit_rd_index, raw_image
+    global rd_index, bit_rd_index, image
 
     cdef int marker
     rd_index = 0
@@ -60,6 +64,9 @@ def decode(int[:] encoded_image) -> int[:,:,:]:
     cdef Py_ssize_t rd_index_length = encoded_image.shape[0]
 
     while rd_index < rd_index_length:
+        # Step through the file looking for pairs of bytes which have
+        # large enough value to be an image marker and parse out
+        # the accompanying data when found.
         marker = __bytes_to_int(encoded_image[rd_index:rd_index + 2])
         if marker > 0xFF00:
             rd_index += 2
@@ -67,7 +74,7 @@ def decode(int[:] encoded_image) -> int[:,:,:]:
         else:
             rd_index += 1
 
-    return raw_image.base
+    return image.base
 
 
 cdef int __parse_marker(int[:] encoded_image, int marker) except *:
@@ -87,7 +94,7 @@ cdef int __parse_marker(int[:] encoded_image, int marker) except *:
 
 cdef void __get_frame_header_info(int[:] encoded_image) except *:
     # see 10918-1 T.81 section B.2.2 Page 35
-    global raw_image, rd_index, precision, X, Y, n_components#, Hi, Vi, Tqi#, HiViTqi
+    global image, rd_index, precision, X, Y, n_components#, Hi, Vi, Tqi#, HiViTqi
 
     cdef int Lf = __bytes_to_int(encoded_image[rd_index:rd_index + 2])
     rd_index += 2
@@ -99,6 +106,7 @@ cdef void __get_frame_header_info(int[:] encoded_image) except *:
     rd_index += 2
     n_components = encoded_image[rd_index]
     rd_index += 1
+    cdef int i
 
     for i in range(rd_index, rd_index + n_components * 3, 3):
         if (encoded_image[i + 1] >> 4) is not 1:
@@ -108,7 +116,7 @@ cdef void __get_frame_header_info(int[:] encoded_image) except *:
         if (encoded_image[i + 2]) is not 0:
             raise ValueError('Tqi should be 0')
 
-    raw_image = np.zeros((n_components, X, Y), dtype=np.int32)
+    image = np.zeros((n_components, X, Y), dtype=np.int32)
 
     rd_index += n_components * 3
 
@@ -119,7 +127,6 @@ cdef void __get_huffman_table_info(int[:] encoded_image) except *:
 
     cdef int Lh = __bytes_to_int(encoded_image[rd_index:rd_index + 2])
     rd_index += 2
-    # cdef int Tc = encoded_image[rd_index] >> 4
     cdef int Th = encoded_image[rd_index] & 0xF
     rd_index += 1
 
@@ -188,7 +195,7 @@ cdef void __get_scan_header_info(int[:] encoded_image) except *:
 
 
 cdef void __decode_scan(int[:] encoded_image, int predictor, int point_transform) except *:
-    global raw_image
+    global image
 
     cdef int width = X
     cdef int height = Y
@@ -214,12 +221,12 @@ cdef void __decode_scan(int[:] encoded_image, int predictor, int point_transform
         for component in range(n_components):
             x = write_index % width
             y = write_index // width
-            context = __get_context(component, x, y, context, point_transform, P, raw_image)
+            context = __get_context(component, x, y, context, point_transform, P, image)
             px = __get_predicted_value(write_index, context, predictor, width)
             actual_vs_predicted_pixel_diff = __get_huffmaned_value(component,
                                                                    actual_vs_predicted_pixel_diff,
                                                                    img_bits)
-            raw_image[component, x, y] = (px + actual_vs_predicted_pixel_diff) & ((1 << P) - 1)
+            image[component, x, y] = (px + actual_vs_predicted_pixel_diff) & ((1 << P) - 1)
         write_index += 1
 
 
