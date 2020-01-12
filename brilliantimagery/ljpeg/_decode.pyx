@@ -36,7 +36,7 @@ cdef int bit_rd_index       # The index of the bit that's being referenced
 cdef int[:,:,:] image       # The decoded image
 
 
-def decode(int[:] encoded_image) -> int[:,:,:]:
+cpdef decode(int[:] encoded_image):
     """
     Decode a Lossless Jpeg according to the 1992 standard T.81, 10918.1, 
     into its raw components.

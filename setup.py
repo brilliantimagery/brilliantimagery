@@ -4,6 +4,10 @@ from Cython.Build import cythonize
 
 import brilliantimagery
 
+README_rst = ''
+with open('README.rst', mode='r', encoding='utf-8') as fd:
+    README_rst = fd.read()
+
 setup(
     name='brilliant-imagery',
     description='A DNG based photo editing package',
@@ -14,6 +18,8 @@ setup(
     url='http://www.brilliantimagery.org',
 
     packages=['brilliantimagery'],
+    include_package_data=True,
+    long_description=README_rst,
 
     ext_modules=cythonize(['brilliantimagery/ljpeg/_decode.pyx',
                            'brilliantimagery/ljpeg/_encode.pyx',

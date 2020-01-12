@@ -26,7 +26,7 @@ cdef int Al = 0    # Successive approx bit position low or point transform
 cdef int P = 0
 
 
-def encode(int[:, :, :] image, int precision, int predictor) -> int[:]:
+cpdef encode(int[:, :, :] image, int precision, int predictor):
     """
     Encode a raw image into a Lossless Jpeg according to the 1992 standard 
     T.81, 10918.1.

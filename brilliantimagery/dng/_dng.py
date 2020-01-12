@@ -13,7 +13,7 @@ import numpy
 
 from brilliantimagery.dng import _dng_constants as d_cnst
 from brilliantimagery.dng import _dng_utils as d_utils
-from brilliantimagery.dng import _renderer
+# from brilliantimagery.dng import _renderer
 
 
 class DNG:
@@ -288,6 +288,9 @@ class DNG:
         :rtype: Numpy.ndarray
 
         """
+
+        from brilliantimagery.dng import _renderer
+
         self._get_fields_required_to_render(sub_image)
         if not self._xmp:
             self.get_xmp()

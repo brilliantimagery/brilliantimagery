@@ -1,0 +1,1 @@
+cpdef decode(int[:] encoded_image)
