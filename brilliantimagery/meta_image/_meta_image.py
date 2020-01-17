@@ -74,7 +74,7 @@ class MetaImage:
             :attr:`DefaultCropOrigin` field data is used as the origin.
         :type rectangle: list[int or float]
 
-        :param str sub_image: selects which sub-image to return from the file.
+        :param str sub_image_type: selects which sub-image to return from the file.
 
             :attr:`RAW` to get the original, raw, image.
 

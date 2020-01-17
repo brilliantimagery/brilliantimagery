@@ -3,6 +3,7 @@ import concurrent.futures
 from os import listdir
 from os.path import isfile, join
 
+import numpy as np
 from tqdm import tqdm
 
 from brilliantimagery.sequence._stabilize import Stabilizer
@@ -47,6 +48,59 @@ class Sequence:
         ###################### End bug section #################################
 
         self._images = {i.get_capture_datetime(): i for i in images}
+
+    def get_reference_image(self, rectangle=[0, 0, 1, 1], sub_image_type='thumbnail', index_order='cxy'):
+        """
+        Gets a reference image for the sequence.
+
+        The first image in the image sequence is used as the reference.
+
+        :param rectangle: The bounding box of the portion of the image that's
+            to be rendered. In the format X1, Y1, X2, Y2 where:
+
+            * X1 is the x position of the top left corner,
+            * Y1 is the y position of the top left corner,
+            * X2 is the x position of the bottom right corner,
+            * Y2 is the y position of the top right corner.
+
+            The numbers should be in the range 0 - 1, representing the
+            percent of the way across the image that the position is.
+        :type rectangle: list[int or float]
+        :param str sub_image_type: 'thumbnail' or 'RAW' depending on which
+            is to be rendered. If no thumbnail is embedded within the
+            image then the raw image will be rendered.
+        :param str index_order: The order of the array indexes. The two
+        options are 'cxy' and 'yxc'.
+
+            * 'cxy' equates to:
+
+                index 0 being color channel,
+                index 1 being pixel x position
+                index 2 being pixel y position
+
+            * 'yxc' equates to:
+
+                index 0 being pixel y position
+                index 1 being pixel x position
+                index 2 being color channel,
+
+        Returns: A 3D float array holding the rendered image where each array
+        index represents the information specified by the 'index_order'
+        attribute.
+        """
+
+        reference_image = self._images[next(iter(self._images))]
+        image_array = reference_image.get_image(rectangle, sub_image_type)
+
+        if index_order.lower() == 'cxy':
+            return image_array
+        elif index_order.lower() == 'yxc':
+            shape = image_array.shape
+            image_array = np.reshape(image_array, image_array.size, 'C')
+            image_array = np.reshape(image_array, (shape[2], shape[1], shape[0]), 'F')
+            return image_array
+        else:
+            raise ValueError('"index_order" must either be "cxy"or "yxc".')
 
     def ramp_minus_exmpsure(self):
         """

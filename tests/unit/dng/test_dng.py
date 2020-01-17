@@ -141,7 +141,7 @@ def test_get_image_full_thumbnail(dng_canon_6d, numpy_thumbnail_canon_6d):
 
     # WHEN it's parsed and then the thumbnail's rendered
     # dng_canon_6d.parse()
-    actual_image = dng_canon_6d.get_image(sub_image='thumbnail')
+    actual_image = dng_canon_6d.get_image(sub_image_type='thumbnail')
 
     # THEN the rendered image is as expected
     assert np.array_equal(actual_image, numpy_thumbnail_canon_6d)

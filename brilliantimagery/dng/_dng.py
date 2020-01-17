@@ -239,7 +239,7 @@ class DNG:
 
         self._ifds[ifd_offset] = ifd
 
-    def get_image(self, rectangle=[0.0, 0.0, 1.0, 1.0], sub_image='RAW') -> numpy.ndarray:
+    def get_image(self, rectangle=[0.0, 0.0, 1.0, 1.0], sub_image_type='RAW') -> numpy.ndarray:
         """
         Get the desired portion of the desired reference image.
 
@@ -274,7 +274,7 @@ class DNG:
             :attr:`DefaultCropOrigin` field data is used as the origin.
         :type rectangle: list[int or float]
 
-        :param str sub_image: selects which sub-image to return from the file.
+        :param str sub_image_type: selects which sub-image to return from the file.
 
             :attr:`RAW` to get the original, raw, image.
 
@@ -291,7 +291,7 @@ class DNG:
 
         from brilliantimagery.dng import _renderer
 
-        self._get_fields_required_to_render(sub_image)
+        self._get_fields_required_to_render(sub_image_type)
         if not self._xmp:
             self.get_xmp()
         rectangle = d_utils.convert_rectangle_percent_to_pixels(self._used_fields, rectangle,
@@ -299,8 +299,8 @@ class DNG:
                                                                 self._xmp[b'crs:CropTop'].get('val', 0),
                                                                 self._xmp[b'crs:CropRight'].get('val', 1),
                                                                 self._xmp[b'crs:CropBottom'].get('val', 1),
-                                                                sub_image)
-        active_area_offset = d_utils.get_active_area_offset(self._used_fields, rectangle, sub_image)
+                                                                sub_image_type)
+        active_area_offset = d_utils.get_active_area_offset(self._used_fields, rectangle, sub_image_type)
         self._get_tile_or_strip_bytes(rectangle)
         image = _renderer.render(self._used_fields, rectangle, active_area_offset)
         self._clear_section_data()
