@@ -1,0 +1,1 @@
+cpdef render(ifd, rectangle, active_area_offset)

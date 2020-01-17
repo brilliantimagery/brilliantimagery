@@ -5,7 +5,18 @@ from brilliantimagery.dng._renderer cimport _set_blacks_whites_scale_and_clip as
 from brilliantimagery.dng._renderer cimport _rescale_and_clip as rac
 from brilliantimagery.dng._renderer cimport _unpack_section_data as usd
 
-def render(ifd, rectangle, active_area_offset):
+cpdef render(ifd, rectangle, active_area_offset):
+    """
+    Exposes the render function.
+    
+    Args:
+        ifd: 
+        rectangle: 
+        active_area_offset: 
+
+    Returns:
+
+    """
     return _render(ifd, rectangle, active_area_offset)
 
 cpdef _raw_to_rgb(ifd, float[:,:] raw_scaled, active_area_offset):
