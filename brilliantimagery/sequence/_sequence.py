@@ -142,7 +142,7 @@ class Sequence:
         self.stabilize(rectangle, keep_brightness=True)
         self.ramp(rectangle)
 
-    def ramp_minus_exposure_plus_stabilize(self, rectangle):
+    def ramp_minus_exposure_and_stabilize(self, rectangle):
         """
         Ramps all setting other than exposure and stabilizes the sequence.
 
@@ -151,6 +151,15 @@ class Sequence:
 
         self.stabilize(rectangle)
         self.ramp_minus_exmpsure(rectangle)
+
+    def ramp_exposure_and_stabilize(self, rectangle):
+        """
+        Ramps only exposureand stabilizes the sequence.
+
+        :return: None
+        """
+        self.stabilize(rectangle, keep_brightness=True)
+        self.ramp_exposure(rectangle)
 
     def stabilize(self, rectangle, keep_brightness=False):
         """

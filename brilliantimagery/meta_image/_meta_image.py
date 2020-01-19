@@ -1,8 +1,9 @@
 from typing import Union
+from copy import copy
 
 from brilliantimagery.dng import DNG
 
-from ._meta_constants import META_TO_DNG
+from brilliantimagery.meta_image._meta_constants import META_TO_DNG
 
 
 class MetaImage:
@@ -90,7 +91,7 @@ class MetaImage:
 
         """
 
-        return self.image.get_image(list.copy(rectangle), sub_image_type)
+        return self.image.get_image(copy(rectangle), sub_image_type)
 
     def get_brightness(self, rectangle=None, image=None):
         """
