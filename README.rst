@@ -1,16 +1,33 @@
 Brilliant Imagery
 =================
 
-A DNG based photo editing package
+A DNG based photo editing package. It can do things such as:
 
-Instilation
------------
+* Decode and render lossless JPG images.
+* Encode lessless JPG images.
+* Render DNG images.
+* Edit DNG metadata.
+* Ramp Adobe Lightroom edits for image sequences.
+* Stabilize shaky image sequences using the Adobe Lightroom crop property.
 
-The `Poetry <https://python-poetry.org/>`_ package and dependency manager is used by Brilliant Imagery so install it if you haven't already done so. Some of the project files must be compiles. This process is automated within the below instructions.
+Installation
+------------
+
+From PyPI
+~~~~~~~~~
+
+::
+
+$ pip install brilliantimagery
+
+From Source
+~~~~~~~~~~~
+
+The `Poetry <https://python-poetry.org/>`_ package and dependency manager is used by BrilliantImagery so install it if you haven't already done so. Some of the project files must be compiled. This accomplished within the below instructions.
 
 Clone the `git repo <https://github.com/brilliantimagery/brilliantimagery.git>`_.
 
-From within the top ``/brilliantimagery`` folder, the one that contains the ``pyproject.toml`` file, install Brilliant Imagery:
+From within the top ``/brilliantimagery`` folder, the one that contains the ``pyproject.toml`` file, install BrilliantImagery:
 
 ::
 

@@ -422,11 +422,8 @@ optional = false
 python-versions = "*"
 version = "0.1.8"
 
-[extras]
-docs = ["Sphinx"]
-
 [metadata]
-content-hash = "51b6952dd69764bf164fd977c82e5dd801f4ca2dad4e140426d5c3b2abca9c88"
+content-hash = "84bb487dff19260086b1239367001bbbf888deebe40b74575323d2db1ea21e9a"
 python-versions = "^3.8"
 
 [metadata.files]

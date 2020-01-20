@@ -75,14 +75,14 @@ class Sequence:
             * 'cxy' equates to:
 
                 index 0 being color channel,
-                index 1 being pixel x position
+                index 1 being pixel x position,
                 index 2 being pixel y position
 
             * 'yxc' equates to:
 
-                index 0 being pixel y position
-                index 1 being pixel x position
-                index 2 being color channel,
+                index 0 being pixel y position,
+                index 1 being pixel x position,
+                index 2 being color channel
 
         Returns: A 3D float array holding the rendered image where each array
         index represents the information specified by the 'index_order'
