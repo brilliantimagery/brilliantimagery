@@ -10,6 +10,11 @@ A DNG based photo editing package. It can do things such as:
 * Ramp Adobe Lightroom edits for image sequences.
 * Stabilize shaky image sequences using the Adobe Lightroom crop property.
 
+Documentation
+-------------
+
+Docs can be found at `brilliantimagery.org/docs <http://www.brilliantimagery.org/docs/>`_
+
 Installation
 ------------
 
