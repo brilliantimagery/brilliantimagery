@@ -9,7 +9,7 @@ The :attr:`Sequence` class is used for editing sequences of images. It's primary
 Usage
 -----
 
-In the below examples it's assumed that the photos are in a single folder and have been appropriately edited in Adobe Lightroom. The editing process workflow can be learned about at `brilliantimagery.org <http://www.brilliantimagery.org/>`_
+In the below examples it's assumed that the photos are in a single folder and have been appropriately edited in Adobe Lightroom. The editing process workflow can be learned about at `brilliantimagery.org <https://www.brilliantimagery.org/>`_
 
 **Example: Smooth the exposure transitions but nothing else.**
 

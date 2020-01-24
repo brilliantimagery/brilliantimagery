@@ -13,7 +13,7 @@ A DNG based photo editing package. It can do things such as:
 Documentation
 -------------
 
-Docs can be found at `brilliantimagery.org/docs <http://www.brilliantimagery.org/docs/>`_
+Docs can be found at `brilliantimagery.org/docs <https://www.brilliantimagery.org/docs/>`_
 
 Installation
 ------------
