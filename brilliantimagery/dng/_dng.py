@@ -71,7 +71,12 @@ class DNG:
     _REFERENCE_FRAME_STARS = 3
 
     def __init__(self, path: str):
-        self._path = path
+        """
+        Initializes an image file representation.
+
+        :param str path: Path to the image file.
+        """
+        self.path = path
         self._ifds = dict()
         self._used_fields = dict()
         self._xmp = defaultdict(dict)
@@ -93,7 +98,7 @@ class DNG:
         :return: None
 
         """
-        with open(self._path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
+        with open(self.path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
             f = self._get_byte_order(f)
             assert (struct.unpack(f'{self._byte_order}H', f.read(2))[0] == 42)
             self._zeroth_ifd = struct.unpack(f'{self._byte_order}H', f.read(2))[0]
@@ -143,9 +148,9 @@ class DNG:
             return capture_datetime
         else:
             if platform.system() == 'Windows':
-                return str(os.path.getctime(self._path))
+                return str(os.path.getctime(self.path))
             else:
-                stat = os.stat(self._path)
+                stat = os.stat(self.path)
                 try:
                     return str(stat.st_birthtime)
                 except AttributeError:
@@ -335,7 +340,7 @@ class DNG:
 
         :return: None
         """
-        with open(self._path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
+        with open(self.path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
             f.seek(self._zeroth_ifd)
             self._get_ifd_fields(f)
 
@@ -369,7 +374,7 @@ class DNG:
         else:
             raise NotImplementedError(f'Compression not implemented in {__name__}.')
 
-        with open(self._path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
+        with open(self.path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
             if 'tile_byte_counts' in self._used_fields:
                 section_byte_counts = self._used_fields['tile_byte_counts']
                 section_offsets = self._used_fields['tile_offsets']
@@ -578,7 +583,7 @@ class DNG:
                             last_item = field.value_offset
 
                 if last_item == self._ifds[self._xmp_ifd_offset][700].value_offset:
-                    with open(self._path, 'r+b', DNG._BUFFER_SIZE) as f:
+                    with open(self.path, 'r+b', DNG._BUFFER_SIZE) as f:
                         f.seek(self._ifds[self._xmp_ifd_offset][700].value_offset)
                         f.write(self._ifds[self._xmp_ifd_offset][700].values[0])
                         if f.tell() % 1:
@@ -586,7 +591,7 @@ class DNG:
                 else:
                     self._write_dng()
             else:
-                with open(self._path, 'r+b', DNG._BUFFER_SIZE) as f:
+                with open(self.path, 'r+b', DNG._BUFFER_SIZE) as f:
                     f.seek(self._ifds[self._xmp_ifd_offset][700].value_offset)
                     f.write(self._ifds[self._xmp_ifd_offset][700].values[0])
 
@@ -599,11 +604,11 @@ class DNG:
 
         first_ifd_location = 8
         # TODO: https://www.tutorialspoint.com/How-to-create-an-empty-file-using-Python
-        with open(self._path + '.temp', 'w+b') as wf:
+        with open(self.path + '.temp', 'w+b') as wf:
             # this is done to ensure that the file exists
             pass
-        with open(self._path + '.temp', 'r+b', DNG._BUFFER_SIZE) as wf:
-            with open(self._path, 'rb', DNG._BUFFER_SIZE) as rf:
+        with open(self.path + '.temp', 'r+b', DNG._BUFFER_SIZE) as wf:
+            with open(self.path, 'rb', DNG._BUFFER_SIZE) as rf:
                 if self._byte_order == '>':
                     wf.write(bytes('MM', 'utf-8'))
                 else:
@@ -614,8 +619,8 @@ class DNG:
                 wf.seek(self._write_ifd(wf, rf, self._ifds[self._thumbnail_offset], first_ifd_location))
             if wf.tell() % 2:
                 self._write_value(wf, 0, data_type=1)
-        os.remove(self._path)
-        os.rename(self._path + '.temp', self._path)
+        os.remove(self.path)
+        os.rename(self.path + '.temp', self.path)
 
     def _write_ifd(self, wf: BytesIO, rf: BytesIO, ifd: Dict, write_location: int):
         """
@@ -862,4 +867,4 @@ class DNG:
         return d_cnst.XMP_TAGS
 
     def __str__(self):
-        return f'DNG {self._path}'
+        return f'DNG {self.path}'

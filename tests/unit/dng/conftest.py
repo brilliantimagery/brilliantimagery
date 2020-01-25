@@ -455,7 +455,7 @@ def storable_dng_xmp():
 @pytest.fixture()
 def dng_file_io_ifd(dng_canon_6d):
     from brilliantimagery.dng import DNG
-    with open(dng_canon_6d._path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
+    with open(dng_canon_6d.path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
         f.seek(8)
         yield dng_canon_6d, f
 

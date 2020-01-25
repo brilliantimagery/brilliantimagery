@@ -59,9 +59,9 @@ def test_get_capture_datetime_not_in_xmp(dng_pixel2):
     expected = '1556658902.9690008'
 
     if platform.system() == 'Windows':
-        expected = str(os.path.getctime(dng_pixel2._path))
+        expected = str(os.path.getctime(dng_pixel2.path))
     else:
-        stat = os.stat(dng_pixel2._path)
+        stat = os.stat(dng_pixel2.path)
         try:
             expected = str(stat.st_birthtime)
         except AttributeError:
@@ -328,7 +328,7 @@ def test_save_xmp_length_changed_success(copied_dng_canon_6d, post_save_ifds):
     copied_dng_canon_6d._ifds[copied_dng_canon_6d._xmp_ifd_offset][700].values[0] = xmp_buffer
     copied_dng_canon_6d.save()
 
-    path = copied_dng_canon_6d._path
+    path = copied_dng_canon_6d.path
     copied_dng_canon_6d = DNG(path)
     # copied_dng_canon_6d.parse()
     copied_dng_canon_6d._updated = False

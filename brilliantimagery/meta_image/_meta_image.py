@@ -19,6 +19,7 @@ class MetaImage:
         image (DNG): A representation of the underlying image file
         brightness (float): A value representing the brightness of the image.
     """
+
     def __init__(self, path: str):
         """
         Initializes an image file representation.
@@ -27,6 +28,15 @@ class MetaImage:
         """
         self.image = DNG(path)
         self.brightness = 0
+
+    def get_path(self):
+        """
+        Gets the path of the underlying image.
+
+        :return: A path to a file.
+        :rtype: str
+        """
+        return self.image.path
 
     def get_capture_datetime(self):
         """
