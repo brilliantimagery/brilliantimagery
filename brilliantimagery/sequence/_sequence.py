@@ -29,6 +29,7 @@ class Sequence:
     extrapolating between key frames. Key frames are denoted by rating them
     with 3 stars.
     """
+
     def __init__(self, path: str):
         tqdm.monitor_interval = 0
         self._path = path
@@ -36,7 +37,7 @@ class Sequence:
         self._images = dict()
         files = [join(self._path, f) for f in listdir(self._path) if
                  isfile(join(self._path, f)) and f.lower().endswith('dng')]
-                 # isfile(join(self._path, f)) and f[-3:].lower() == 'dng']
+        # isfile(join(self._path, f)) and f[-3:].lower() == 'dng']
 
         ###################### FASTER ##########################################
         with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -48,23 +49,13 @@ class Sequence:
         # self.is_single_threaded = True
         ###################### End bug section #################################
 
-        # self._images = {i.get_capture_datetime(): i for i in images}
-        self._images = {}
-        for i in images:
-            time = i.get_capture_datetime()
-            self._set_time(time, i)
+        # since dict orders are guarantied, sort it up front before storing it
+        labeled_images = {f'{i.get_capture_datetime()} {i.get_path()}': i for i in images}
+        image_keys = sorted(list(labeled_images.keys()))
+        self._images = {k: labeled_images[k] for k in image_keys}
 
-    def _set_time(self, time, image):
-        if time not in self._images:
-            self._images[time] = image
-        elif image.get_path() > self._images[time].get_path():
-            self._set_time(f'{time}1', image)
-        else:
-            keys = list(self._images.keys())
-            index = keys.index(time) - 1
-            self._set_time(f'{keys[index]}1', image)
-
-    def get_reference_image(self, rectangle=[0, 0, 1, 1], sub_image_type='thumbnail', index_order='cxy'):
+    def get_reference_image(self, rectangle=[0, 0, 1, 1], sub_image_type='thumbnail',
+                            index_order='cxy'):
         """
         Gets a reference image for the sequence.
 
