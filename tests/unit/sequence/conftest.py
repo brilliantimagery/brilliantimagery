@@ -14,11 +14,11 @@ Crops = namedtuple('Crops', ['left', 'top', 'right', 'bottom'])
 @pytest.fixture()
 def _base_sequence(data_folder_path):
     sequence = Sequence(str(data_folder_path))
-    sequence._images = {'2017-09-07T16:01:38.03': sequence._images['2017-09-07T16:01:38.03']}
-    time = next(iter(sequence._images))
-    image = sequence._images[time]
-    for i in range(1, 10):
-        sequence._images[time + str(i).zfill(3)] = deepcopy(image)
+    second_time = list(sequence._images)[1]
+    image = sequence._images[second_time]
+    sequence._images = {}
+    for i in range(0, 10):
+        sequence._images[f'image time {str(i).zfill(3)}'] = deepcopy(image)
     return sequence
 
 
@@ -85,10 +85,14 @@ def sequence_minimal_crop(_sequence_info):
 
     for offset, time in zip(offsets, times):
         image = _sequence._images[time].image
-        image.set_xmp_attribute(b'crs:CropLeft', (3 * pix_per_prcnt_wdth) - pix_per_prcnt_wdth * offset[0])
-        image.set_xmp_attribute(b'crs:CropTop', (3 * pix_per_prcnt_lngth) - pix_per_prcnt_lngth * offset[1])
-        image.set_xmp_attribute(b'crs:CropRight', (1 - 3 * pix_per_prcnt_wdth) - pix_per_prcnt_wdth * offset[0])
-        image.set_xmp_attribute(b'crs:CropBottom', (1 - 3 * pix_per_prcnt_lngth) - pix_per_prcnt_lngth * offset[1])
+        image.set_xmp_attribute(b'crs:CropLeft',
+                                (3 * pix_per_prcnt_wdth) - pix_per_prcnt_wdth * offset[0])
+        image.set_xmp_attribute(b'crs:CropTop',
+                                (3 * pix_per_prcnt_lngth) - pix_per_prcnt_lngth * offset[1])
+        image.set_xmp_attribute(b'crs:CropRight',
+                                (1 - 3 * pix_per_prcnt_wdth) - pix_per_prcnt_wdth * offset[0])
+        image.set_xmp_attribute(b'crs:CropBottom',
+                                (1 - 3 * pix_per_prcnt_lngth) - pix_per_prcnt_lngth * offset[1])
         image.store_xmp_field()
 
     return _sequence, deepcopy([0.1, 0.1, 0.4, 0.4]), offsets
@@ -115,49 +119,49 @@ def stabelized_sequence_minimal_crop(_base_sequence):
 
 @pytest.fixture()
 def sequence_wo_exposure_w_expected_values(_base_sequence):
-    xmp_update = [['2017-09-07T16:01:38.03', {b'xmp:Rating': 3,
-                                              b'crs:Temperature': 6000,
-                                              b'crs:Exposure2012': 1,
-                                              b'crs:Contrast2012': 0}],
-                  ['2017-09-07T16:01:38.03005', {b'xmp:Rating': 3,
+    xmp_update = [['image time 000', {b'xmp:Rating': 3,
+                                                 b'crs:Temperature': 6000,
+                                                 b'crs:Exposure2012': 1,
+                                                 b'crs:Contrast2012': 0}],
+                  ['image time 005', {b'xmp:Rating': 3,
                                                  b'crs:Temperature': 7000,
                                                  b'crs:Exposure2012': 2,
                                                  b'crs:Contrast2012': 50}],
-                  ['2017-09-07T16:01:38.03009', {b'xmp:Rating': 3,
+                  ['image time 009', {b'xmp:Rating': 3,
                                                  b'crs:Temperature': 5400,
                                                  b'crs:Exposure2012': 1.5,
                                                  b'crs:Contrast2012': 30}]
                   ]
-    non_exp_xmp = {'2017-09-07T16:01:38.03': {b'crs:Temperature': 6000,
-                                              b'crs:Contrast2012': 0.0},
-                   '2017-09-07T16:01:38.03001': {b'crs:Temperature': 6200,
+    non_exp_xmp = {'image time 000': {b'crs:Temperature': 6000,
+                                                 b'crs:Contrast2012': 0.0},
+                   'image time 001': {b'crs:Temperature': 6200,
                                                  b'crs:Contrast2012': 10.0},
-                   '2017-09-07T16:01:38.03002': {b'crs:Temperature': 6400,
+                   'image time 002': {b'crs:Temperature': 6400,
                                                  b'crs:Contrast2012': 20.0},
-                   '2017-09-07T16:01:38.03003': {b'crs:Temperature': 6600,
+                   'image time 003': {b'crs:Temperature': 6600,
                                                  b'crs:Contrast2012': 30.0},
-                   '2017-09-07T16:01:38.03004': {b'crs:Temperature': 6800,
+                   'image time 004': {b'crs:Temperature': 6800,
                                                  b'crs:Contrast2012': 40.0},
-                   '2017-09-07T16:01:38.03005': {b'crs:Temperature': 7000,
+                   'image time 005': {b'crs:Temperature': 7000,
                                                  b'crs:Contrast2012': 50.0},
-                   '2017-09-07T16:01:38.03006': {b'crs:Temperature': 6600,
+                   'image time 006': {b'crs:Temperature': 6600,
                                                  b'crs:Contrast2012': 45.0},
-                   '2017-09-07T16:01:38.03007': {b'crs:Temperature': 6200,
+                   'image time 007': {b'crs:Temperature': 6200,
                                                  b'crs:Contrast2012': 40.0},
-                   '2017-09-07T16:01:38.03008': {b'crs:Temperature': 5800,
+                   'image time 008': {b'crs:Temperature': 5800,
                                                  b'crs:Contrast2012': 35.0},
-                   '2017-09-07T16:01:38.03009': {b'crs:Temperature': 5400,
+                   'image time 009': {b'crs:Temperature': 5400,
                                                  b'crs:Contrast2012': 30.0}}
-    expected_exp = {'2017-09-07T16:01:38.03': 1,
-                    '2017-09-07T16:01:38.03001': 1.2630344058337941,
-                    '2017-09-07T16:01:38.03002': 1.485426827170242,
-                    '2017-09-07T16:01:38.03003': 1.678071905112638,
-                    '2017-09-07T16:01:38.03004': 1.8479969065549502,
-                    '2017-09-07T16:01:38.03005': 2,
-                    '2017-09-07T16:01:38.03006': 1.8902936717984415,
-                    '2017-09-07T16:01:38.03007': 1.7715533031636124,
-                    '2017-09-07T16:01:38.03008': 1.6421564297813922,
-                    '2017-09-07T16:01:38.03009': 1.5,
+    expected_exp = {'image time 000': 1,
+                    'image time 001': 1.2630344058337941,
+                    'image time 002': 1.485426827170242,
+                    'image time 003': 1.678071905112638,
+                    'image time 004': 1.8479969065549502,
+                    'image time 005': 2,
+                    'image time 006': 1.8902936717984415,
+                    'image time 007': 1.7715533031636124,
+                    'image time 008': 1.6421564297813922,
+                    'image time 009': 1.5,
                     }
 
     for image_time, xmp in xmp_update:
@@ -182,19 +186,20 @@ def sequence_w_exposure_and_expected_values(sequence_wo_exposure_w_expected_valu
     for time, brightness in zip(times[5:], np.arange(0.12, 0.02, -0.02)):
         _sequence._images[time].brightness = brightness
 
-    expected_exp = {'2017-09-07T16:01:38.03': 1,
-                    '2017-09-07T16:01:38.03001': 1.2186402864753403,
-                    '2017-09-07T16:01:38.03002': 1.3785116232537298,
-                    '2017-09-07T16:01:38.03003': 1.5011941430285582,
-                    '2017-09-07T16:01:38.03004': 1.598637437618233,
-                    '2017-09-07T16:01:38.03005': 2,
-                    '2017-09-07T16:01:38.03006': 1.957113267244116,
-                    '2017-09-07T16:01:38.03007': 1.8902936717984418,
-                    '2017-09-07T16:01:38.03008': 1.7715533031636124,
-                    '2017-09-07T16:01:38.03009': 1.5,
+    expected_exp = {'image time 000': 1,
+                    'image time 001': 1.2186402864753403,
+                    'image time 002': 1.3785116232537298,
+                    'image time 003': 1.5011941430285582,
+                    'image time 004': 1.598637437618233,
+                    'image time 005': 2,
+                    'image time 006': 1.957113267244116,
+                    'image time 007': 1.8902936717984418,
+                    'image time 008': 1.7715533031636124,
+                    'image time 009': 1.5,
                     }
 
     return _sequence, non_exp_xmp, expected_exp, rectangle
+
 
 # TODO: refactor with above stuff
 @pytest.fixture()

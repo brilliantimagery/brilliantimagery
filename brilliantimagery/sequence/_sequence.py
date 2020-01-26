@@ -51,7 +51,7 @@ class Sequence:
 
         # since dict orders are guarantied, sort it up front before storing it
         labeled_images = {f'{i.get_capture_datetime()} {i.get_path()}': i for i in images}
-        image_keys = sorted(list(labeled_images.keys()))
+        image_keys = sorted(list(labeled_images))
         self._images = {k: labeled_images[k] for k in image_keys}
 
     def get_reference_image(self, rectangle=[0, 0, 1, 1], sub_image_type='thumbnail',
