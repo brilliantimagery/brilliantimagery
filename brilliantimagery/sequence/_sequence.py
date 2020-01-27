@@ -31,13 +31,17 @@ class Sequence:
     """
 
     def __init__(self, path: str):
+        """
+        Initializes an image sequence representation.
+
+        :param str path: Path to the folder containing the relevant images.
+        """
         tqdm.monitor_interval = 0
         self._path = path
         self._ordered_capture_times = []
         self._images = dict()
         files = [join(self._path, f) for f in listdir(self._path) if
                  isfile(join(self._path, f)) and f.lower().endswith('dng')]
-        # isfile(join(self._path, f)) and f[-3:].lower() == 'dng']
 
         ###################### FASTER ##########################################
         with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -50,6 +54,8 @@ class Sequence:
         ###################### End bug section #################################
 
         # since dict orders are guarantied, sort it up front before storing it
+        # TODO: if the camera's numbers reset and pics end up with the
+        #  name time then they'll end up out of order
         labeled_images = {f'{i.get_capture_datetime()} {i.get_path()}': i for i in images}
         image_keys = sorted(list(labeled_images))
         self._images = {k: labeled_images[k] for k in image_keys}
