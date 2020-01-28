@@ -28,8 +28,9 @@ class Stabilizer:
         pool = multiprocessing.Pool()
         self._pbar = tqdm(total=len(images) - 1, desc='Finding misalignments: ')
         for time0, time1 in zip(ordered_times[:-1], ordered_times[1:]):
-            task = pool.apply_async(sutil.find_misalignment, (images[time0], images[time1], self._rectangle,
-                                                              keep_brightness, time1),
+            task = pool.apply_async(sutil.find_misalignment,
+                                    (images[time0], images[time1],
+                                     self._rectangle, keep_brightness, time1),
                                     callback=self._update_pbar)
             tasks.append(task)
         pool.close()
@@ -38,6 +39,7 @@ class Stabilizer:
             t, i = task.get()
             images[t] = i
         ###################### Avoids apparend pytest/pycharm # bug ##############
+        ############# might not be needed any more ###############################
         # for time0, time1 in zip(ordered_times[:-1], ordered_times[1:]):
         #     _, images[time1] = sutil.find_misalignment(images[time0], images[time1],
         #                                                self._rectangle, keep_brightness, time1)
@@ -68,28 +70,44 @@ class Stabilizer:
         example_image = next(iter(self._images.values()))
         min_x, min_y, max_x, max_y = sutil.misalignment_bounding_box(self._images.values())
         shape = example_image.get_rendered_shape()
-        left = example_image.get_xmp_attribute('CropLeft')
-        top = example_image.get_xmp_attribute('CropTop')
-        right = example_image.get_xmp_attribute('CropRight')
-        bottom = example_image.get_xmp_attribute('CropBottom')
-        if (max_x < left * shape[0] and max_y < top * shape[1] and
-                -min_x < (1 - right) * shape[0] and -min_y < (1 - bottom) * shape[1]):
+        left_crop = example_image.get_xmp_attribute('CropLeft')
+        top_crop = example_image.get_xmp_attribute('CropTop')
+        right_crop = example_image.get_xmp_attribute('CropRight')
+        bottom_crop = example_image.get_xmp_attribute('CropBottom')
+        if (max_x < left_crop * shape[0] and max_y < top_crop * shape[1] and
+                -min_x < (1 - right_crop) * shape[0] and -min_y < (1 - bottom_crop) * shape[1]):
             for image in self._images.values():
-                left = image.get_xmp_attribute('CropLeft') + image.misalignment[0] / shape[0]
+                left = left_crop + image.misalignment[0] / shape[0]
                 image.set_xmp_attribute('CropLeft', left)
-                top = image.get_xmp_attribute('CropTop') + image.misalignment[1] / shape[1]
+                top = top_crop + image.misalignment[1] / shape[1]
                 image.set_xmp_attribute('CropTop', top)
-                right = image.get_xmp_attribute('CropRight') + image.misalignment[0] / shape[0]
+                right = right_crop + image.misalignment[0] / shape[0]
                 image.set_xmp_attribute('CropRight', right)
-                bottom = image.get_xmp_attribute('CropBottom') + image.misalignment[1] / shape[1]
+                bottom = bottom_crop + image.misalignment[1] / shape[1]
                 image.set_xmp_attribute('CropBottom', bottom)
+                # left = image.get_xmp_attribute('CropLeft') + image.misalignment[0] / shape[0]
+                # image.set_xmp_attribute('CropLeft', left)
+                # top = image.get_xmp_attribute('CropTop') + image.misalignment[1] / shape[1]
+                # image.set_xmp_attribute('CropTop', top)
+                # right = image.get_xmp_attribute('CropRight') + image.misalignment[0] / shape[0]
+                # image.set_xmp_attribute('CropRight', right)
+                # bottom = image.get_xmp_attribute('CropBottom') + image.misalignment[1] / shape[1]
+                # image.set_xmp_attribute('CropBottom', bottom)
         else:
             for image in self._images.values():
-                left = image.get_xmp_attribute('CropLeft') + (max_x - min_x + image.misalignment[0]) / shape[0]
+                left = left_crop + (max_x - min_x + image.misalignment[0]) / shape[0]
                 image.set_xmp_attribute('CropLeft', left)
-                top = image.get_xmp_attribute('CropTop') + (max_y - min_y + image.misalignment[1]) / shape[1]
+                top = top_crop + (max_y - min_y + image.misalignment[1]) / shape[1]
                 image.set_xmp_attribute('CropTop', top)
-                right = image.get_xmp_attribute('CropRight') + (-max_x + min_x + image.misalignment[0]) / shape[0]
+                right = right_crop + (-max_x + min_x + image.misalignment[0]) / shape[0]
                 image.set_xmp_attribute('CropRight', right)
-                bottom = image.get_xmp_attribute('CropBottom') + (-max_y + min_y + image.misalignment[1]) / shape[1]
+                bottom = bottom_crop + (-max_y + min_y + image.misalignment[1]) / shape[1]
                 image.set_xmp_attribute('CropBottom', bottom)
+                # left = image.get_xmp_attribute('CropLeft') + (max_x - min_x + image.misalignment[0]) / shape[0]
+                # image.set_xmp_attribute('CropLeft', left)
+                # top = image.get_xmp_attribute('CropTop') + (max_y - min_y + image.misalignment[1]) / shape[1]
+                # image.set_xmp_attribute('CropTop', top)
+                # right = image.get_xmp_attribute('CropRight') + (-max_x + min_x + image.misalignment[0]) / shape[0]
+                # image.set_xmp_attribute('CropRight', right)
+                # bottom = image.get_xmp_attribute('CropBottom') + (-max_y + min_y + image.misalignment[1]) / shape[1]
+                # image.set_xmp_attribute('CropBottom', bottom)

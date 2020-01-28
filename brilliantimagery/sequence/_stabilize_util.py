@@ -7,7 +7,8 @@ import numpy as np
 def find_misalignment(image0, image1, rectangle, keep_brightness, time_index):
     rgb_image0 = image0.get_image(rectangle)
     rgb_image1 = image1.get_image(rectangle)
-    image1.misalignment = _find_offset(rgb_image0, rgb_image1)
+    if not image1.misalignment:
+        image1.misalignment = _find_offset(rgb_image0, rgb_image1)
     if keep_brightness:
         image1.get_brightness(image=rgb_image1)
 

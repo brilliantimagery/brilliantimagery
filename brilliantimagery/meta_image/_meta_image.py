@@ -27,7 +27,8 @@ class MetaImage:
         :param str path: Path to the image file.
         """
         self.image = DNG(path)
-        self.brightness = 0
+        self.brightness = None
+        self.misalignment = None
 
     def get_path(self):
         """
@@ -134,6 +135,8 @@ class MetaImage:
         :rtype: float
         """
 
+        if self.brightness:
+            return self.brightness
         self.brightness = self.image.get_brightness(rectangle, image)
         return self.brightness
 

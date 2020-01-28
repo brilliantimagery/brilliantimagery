@@ -1,5 +1,6 @@
 # from concurrent.futures.process import ProcessPoolExecutor as PoolExecutor
 import concurrent.futures
+import os
 from os import listdir
 from os.path import isfile, join
 
@@ -193,3 +194,21 @@ class Sequence:
         for image in tqdm(self._images.values(), desc='Updating files: ', total=len(self._images)):
             image.store_xmp_field()
             image.save()
+
+    def get_misalignments(self):
+        return {os.path.basename(image.get_path()).lower(): image.misalignment
+                for image in self._images}
+
+    def get_brightnesses(self):
+        return {os.path.basename(image.get_path()).lower(): image.brightness
+                for image in self._images}
+
+    def set_misalignments(self, misalignments):
+        for image in self._images:
+            file_name = os.path.basename(image.get_path())
+            image.misalignment = misalignments.get(file_name, [0, 0])
+
+    def set_brightnesses(self, brightnesses):
+        for image in self._images:
+            file_name = os.path.basename(image.get_path())
+            image.brightness = brightnesses.get(file_name, 0)
