@@ -180,6 +180,8 @@ class Sequence:
 
         :return: None
         """
+        if list(self._images.values())[0].misalignment:
+            return
         stabilizer = Stabilizer(self._images, rectangle)
         stabilizer.find_misalignments(keep_brightness)
         stabilizer.update_crop_xmp_attributes()
