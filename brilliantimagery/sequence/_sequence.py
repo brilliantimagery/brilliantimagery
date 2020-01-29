@@ -3,6 +3,8 @@ import concurrent.futures
 import os
 from os import listdir
 from os.path import isfile, join
+from pathlib import Path
+from typing import List
 
 import numpy as np
 from tqdm import tqdm
@@ -38,17 +40,17 @@ class Sequence:
         :param str path: Path to the folder containing the relevant images.
         """
         tqdm.monitor_interval = 0
-        self._path = path
+        self.path = path
         self._ordered_capture_times = []
         self._images = dict()
-        files = [join(self._path, f) for f in listdir(self._path) if
-                 isfile(join(self._path, f)) and f.lower().endswith('dng')]
+        files = [join(self.path, f) for f in listdir(self.path) if
+                 isfile(join(self.path, f)) and f.lower().endswith('dng')]
 
         ###################### FASTER ##########################################
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            images = list(tqdm(executor.map(MetaImage, files),
-                               total=len(files),
-                               desc='Parsing files: '))
+        # with concurrent.futures.ProcessPoolExecutor() as executor:
+        #     images = list(tqdm(executor.map(MetaImage, files),
+        #                        total=len(files),
+        #                        desc='Parsing files: '))
         ###################### Avoids apparend pytest/pycharm # bug ##############
         # images = [MetaImage(f) for f in files]
         # self.is_single_threaded = True
@@ -57,7 +59,8 @@ class Sequence:
         # since dict orders are guarantied, sort it up front before storing it
         # TODO: if the camera's numbers reset and pics end up with the
         #  name time then they'll end up out of order
-        labeled_images = {f'{i.get_capture_datetime()} {i.get_path()}': i for i in images}
+        labeled_images = Sequence._parse_images(files)
+        # labeled_images = {f'{i.get_capture_datetime()} {i.get_path()}': i for i in images}
         image_keys = sorted(list(labeled_images))
         self._images = {k: labeled_images[k] for k in image_keys}
 
@@ -103,6 +106,8 @@ class Sequence:
         """
 
         reference_image = self._images[next(iter(self._images))]
+        # reference_image = self._images[list(self._images)[0]]
+        reference_image.parse()
         image_array = reference_image.get_image(rectangle, sub_image_type)
 
         if index_order.lower() == 'cxy':
@@ -214,3 +219,24 @@ class Sequence:
         for image in self._images:
             file_name = os.path.basename(image.get_path())
             image.brightness = brightnesses.get(file_name, 0)
+
+    def parse_sequence(self):
+        files = [join(self.path, f) for f in listdir(self.path) if
+                 isfile(join(self.path, f)) and f.lower().endswith('dng')]
+
+        labeled_images = Sequence._parse_images(files)
+
+        # This seems hackey but it's allowing threading
+        for name, image in self._images.items():
+            image.image = labeled_images[name].image
+
+    @staticmethod
+    def _parse_images(images: List[str]):
+        with concurrent.futures.ProcessPoolExecutor() as executer:
+            images = list(tqdm(executer.map(MetaImage, images)))
+
+        return {Sequence._name_image(i): i for i in images}
+
+    @staticmethod
+    def _name_image(image: MetaImage):
+        return

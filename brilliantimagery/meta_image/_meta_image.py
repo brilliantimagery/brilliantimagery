@@ -291,3 +291,12 @@ class MetaImage:
         """
 
         return self.image.get_relevant_xmp_attributes()
+
+    def parse(self):
+        """
+        Reparse the underlying image
+
+        Returns:
+
+        """
+        self.image = DNG(self.image.path)
