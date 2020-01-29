@@ -300,3 +300,6 @@ class MetaImage:
 
         """
         self.image = DNG(self.image.path)
+
+    def __str__(self):
+        return f'MetaImage {self.get_path()}'

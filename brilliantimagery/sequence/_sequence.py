@@ -239,4 +239,4 @@ class Sequence:
 
     @staticmethod
     def _name_image(image: MetaImage):
-        return
+        return f'{image.get_capture_datetime()} {image.get_path()}'
