@@ -204,19 +204,19 @@ class Sequence:
 
     def get_misalignments(self):
         return {os.path.basename(image.get_path()).lower(): image.misalignment
-                for image in self._images}
+                for image in self._images.values()}
 
     def get_brightnesses(self):
         return {os.path.basename(image.get_path()).lower(): image.brightness
-                for image in self._images}
+                for image in self._images.values()}
 
     def set_misalignments(self, misalignments):
-        for image in self._images:
+        for image in self._images.values():
             file_name = os.path.basename(image.get_path())
             image.misalignment = misalignments.get(file_name, [0, 0])
 
     def set_brightnesses(self, brightnesses):
-        for image in self._images:
+        for image in self._images.values():
             file_name = os.path.basename(image.get_path())
             image.brightness = brightnesses.get(file_name, 0)
 
