@@ -112,7 +112,7 @@ class Ramper:
         self._pbar.update()
 
     def ramp_exposure(self, rectangle):
-        if not self._images[self._sorted_times[0]].brightness:
+        if self._images[self._sorted_times[0]].brightness == None:
             ###################### FASTER ##########################################
             tasks = []
             pool = multiprocessing.Pool()

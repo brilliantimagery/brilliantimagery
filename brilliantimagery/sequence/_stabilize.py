@@ -66,6 +66,9 @@ class Stabilizer:
         # for time, image in tasks:
         #     self._images[time] = image
 
+    def populate_crop_info(self):
+        next(self._images.values()).get_image(self._rectangle)
+
     def update_crop_xmp_attributes(self):
         example_image = next(iter(self._images.values()))
         min_x, min_y, max_x, max_y = sutil.misalignment_bounding_box(self._images.values())

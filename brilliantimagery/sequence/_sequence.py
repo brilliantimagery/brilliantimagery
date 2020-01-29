@@ -185,10 +185,12 @@ class Sequence:
 
         :return: None
         """
-        if list(self._images.values())[0].misalignment:
-            return
+
         stabilizer = Stabilizer(self._images, rectangle)
-        stabilizer.find_misalignments(keep_brightness)
+        if list(self._images.values())[0].misalignment == None:
+            stabilizer.find_misalignments(keep_brightness)
+        else:
+            stabilizer.populate_crop_info()
         stabilizer.update_crop_xmp_attributes()
 
     # TODO: this isn't tested
@@ -207,18 +209,23 @@ class Sequence:
                 for image in self._images.values()}
 
     def get_brightnesses(self):
-        return {os.path.basename(image.get_path()).lower(): image.brightness
-                for image in self._images.values()}
+        images = {}
+        for image in self._images.values():
+            file_name = os.path.basename(image.get_path()).lower()
+            brightness = str(image.brightness) if image.brightness else None
+            images[file_name] = brightness
+        return images
 
     def set_misalignments(self, misalignments):
         for image in self._images.values():
-            file_name = os.path.basename(image.get_path())
+            file_name = os.path.basename(image.get_path()).lower()
             image.misalignment = misalignments.get(file_name, [0, 0])
 
     def set_brightnesses(self, brightnesses):
         for image in self._images.values():
-            file_name = os.path.basename(image.get_path())
-            image.brightness = brightnesses.get(file_name, 0)
+            file_name = os.path.basename(image.get_path()).lower()
+            brightness = brightnesses.get(file_name, '0')
+            image.brightness = float(brightness) if brightness else None
 
     def parse_sequence(self):
         files = [join(self.path, f) for f in listdir(self.path) if
