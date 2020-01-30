@@ -370,7 +370,7 @@ def dng_rendered_to_rgb_even_offsets(dng_canon_6d, data_folder_path):
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
 
-    with open(str(data_folder_path / 'dng' / 'renderer_render_raw_even_even.np'), 'rb') as f:
+    with open(str(data_folder_path / 'dng' / 'renderer_render_raw_even_even.npy'), 'rb') as f:
         expected_renderd_area = np.load(f)
 
     yield ifd, expected_renderd_area, active_area_offset, rectangle
@@ -388,7 +388,7 @@ def dng_rendered_to_rgb_odd_offsets(dng_canon_6d, data_folder_path):
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
 
-    with open(str(data_folder_path / 'dng' / 'renderer_render_raw_odd_even.np'), 'rb') as f:
+    with open(str(data_folder_path / 'dng' / 'renderer_render_raw_odd_even.npy'), 'rb') as f:
         expected_renderd_area = np.load(f)
 
     yield ifd, expected_renderd_area, active_area_offset, rectangle
@@ -406,7 +406,7 @@ def dng_rendered_to_rgb_even_odd_offsets(dng_canon_6d, data_folder_path):
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
 
-    with open(str(data_folder_path / 'dng' / 'renderer_render_raw_even_odd.np'), 'rb') as f:
+    with open(str(data_folder_path / 'dng' / 'renderer_render_raw_even_odd.npy'), 'rb') as f:
         expected_renderd_area = np.load(f)
 
     yield ifd, expected_renderd_area, active_area_offset, rectangle
@@ -424,7 +424,7 @@ def dng_thumbnail_rendered_to_rgb_even_offsets(dng_canon_6d, data_folder_path):
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
 
-    with open(str(data_folder_path / 'dng' / 'renderer_render_thumbnail_even.np'), 'rb') as f:
+    with open(str(data_folder_path / 'dng' / 'renderer_render_thumbnail_even.npy'), 'rb') as f:
         expected_renderd_area = np.load(f)
 
     yield ifd, expected_renderd_area, active_area_offset, rectangle
@@ -442,7 +442,7 @@ def dng_thumbnail_rendered_to_rgb_odd_offsets(dng_canon_6d, data_folder_path):
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
 
-    with open(str(data_folder_path / 'dng' / 'renderer_render_thumbnail_odd.np'), 'rb') as f:
+    with open(str(data_folder_path / 'dng' / 'renderer_render_thumbnail_odd.npy'), 'rb') as f:
         expected_renderd_area = np.load(f)
     # expected_renderd_area = 1
 
@@ -652,7 +652,7 @@ def unpackable_ifd_w_compressed_tiles(dng_canon_6d, data_folder_path):
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
     ifd = dng_canon_6d._used_fields
 
-    with open(str(data_folder_path / 'dng' / 'unpacked_compressed_tiles.np'), 'rb') as f:
+    with open(str(data_folder_path / 'dng' / 'unpacked_compressed_tiles.npy'), 'rb') as f:
         expected_renderd_area = np.load(f)
 
     yield ifd, expected_renderd_area, active_area_offset, rectangle
