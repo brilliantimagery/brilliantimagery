@@ -237,6 +237,9 @@ class Sequence:
         for name, image in self._images.items():
             image.image = labeled_images[name].image
 
+    def __str__(self):
+        return f'Sequence {self.path}'
+
     @staticmethod
     def _parse_images(images: List[str]):
         with concurrent.futures.ProcessPoolExecutor() as executer:

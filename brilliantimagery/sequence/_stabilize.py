@@ -114,3 +114,6 @@ class Stabilizer:
                 # image.set_xmp_attribute('CropRight', right)
                 # bottom = image.get_xmp_attribute('CropBottom') + (-max_y + min_y + image.misalignment[1]) / shape[1]
                 # image.set_xmp_attribute('CropBottom', bottom)
+
+    def __str__(self):
+        return f'Stabilizer {self._images[list(self._images)[0]].get_path()}'

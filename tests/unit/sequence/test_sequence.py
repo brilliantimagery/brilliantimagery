@@ -87,6 +87,8 @@ def test_stabilize(rampable_and_stablizable_sequence):
         top = round(sequence._images[image_time].get_xmp_attribute(META_TO_DNG['CropTop']), 6)
         right = round(sequence._images[image_time].get_xmp_attribute(META_TO_DNG['CropRight']), 6)
         bottom = round(sequence._images[image_time].get_xmp_attribute(META_TO_DNG['CropBottom']), 6)
+        # a = (left, top, right, bottom)
+        # b = 0
         assert left == expected_crops.left
         assert top == expected_crops.top
         assert right == expected_crops.right

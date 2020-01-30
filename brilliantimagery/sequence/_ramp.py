@@ -152,6 +152,9 @@ class Ramper:
                 self._images[time].set_xmp_attribute('Exposure', exposure)
             target += ramp[key_frame_index]
 
+    def __str__(self):
+        return f'Ramper {self._images[list(self._images)[0]].get_path()}'
+
     @staticmethod
     def _get_brightness(time, image, rectangle):
         return time, image.get_brightness(rectangle=rectangle)
