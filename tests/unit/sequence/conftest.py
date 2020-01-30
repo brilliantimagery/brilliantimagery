@@ -1,5 +1,6 @@
 from collections import namedtuple
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 
@@ -13,12 +14,8 @@ Crops = namedtuple('Crops', ['left', 'top', 'right', 'bottom'])
 
 @pytest.fixture()
 def _base_sequence(data_folder_path):
-    sequence = Sequence(str(data_folder_path))
-    second_time = list(sequence._images)[1]
-    image = sequence._images[second_time]
-    sequence._images = {}
-    for i in range(0, 10):
-        sequence._images[f'image time {str(i).zfill(3)}'] = deepcopy(image)
+    sequence = Sequence(str(data_folder_path / 'dng' / 'sequence'))
+    sequence._images = {Path(name).name: image for name, image in sequence._images.items()}
     return sequence
 
 
@@ -119,49 +116,38 @@ def stabelized_sequence_minimal_crop(_base_sequence):
 
 @pytest.fixture()
 def sequence_wo_exposure_w_expected_values(_base_sequence):
-    xmp_update = [['image time 000', {b'xmp:Rating': 3,
-                                                 b'crs:Temperature': 6000,
-                                                 b'crs:Exposure2012': 1,
-                                                 b'crs:Contrast2012': 0}],
-                  ['image time 005', {b'xmp:Rating': 3,
-                                                 b'crs:Temperature': 7000,
-                                                 b'crs:Exposure2012': 2,
-                                                 b'crs:Contrast2012': 50}],
-                  ['image time 009', {b'xmp:Rating': 3,
-                                                 b'crs:Temperature': 5400,
-                                                 b'crs:Exposure2012': 1.5,
-                                                 b'crs:Contrast2012': 30}]
+    xmp_update = [['dng_canon_6d_0001.dng', {b'xmp:Rating': 3,
+                                             b'crs:Temperature': 6000,
+                                             b'crs:Exposure2012': 1,
+                                             b'crs:Contrast2012': 0}],
+                  ['dng_canon_6d_0004.dng', {b'xmp:Rating': 3,
+                                             b'crs:Temperature': 7500,
+                                             b'crs:Exposure2012': 2.5,
+                                             b'crs:Contrast2012': 30}],
+                  ['dng_canon_6d_0006.dng', {b'xmp:Rating': 3,
+                                             b'crs:Temperature': 7000,
+                                             b'crs:Exposure2012': 1.5,
+                                             b'crs:Contrast2012': 20}]
                   ]
-    non_exp_xmp = {'image time 000': {b'crs:Temperature': 6000,
-                                                 b'crs:Contrast2012': 0.0},
-                   'image time 001': {b'crs:Temperature': 6200,
-                                                 b'crs:Contrast2012': 10.0},
-                   'image time 002': {b'crs:Temperature': 6400,
-                                                 b'crs:Contrast2012': 20.0},
-                   'image time 003': {b'crs:Temperature': 6600,
-                                                 b'crs:Contrast2012': 30.0},
-                   'image time 004': {b'crs:Temperature': 6800,
-                                                 b'crs:Contrast2012': 40.0},
-                   'image time 005': {b'crs:Temperature': 7000,
-                                                 b'crs:Contrast2012': 50.0},
-                   'image time 006': {b'crs:Temperature': 6600,
-                                                 b'crs:Contrast2012': 45.0},
-                   'image time 007': {b'crs:Temperature': 6200,
-                                                 b'crs:Contrast2012': 40.0},
-                   'image time 008': {b'crs:Temperature': 5800,
-                                                 b'crs:Contrast2012': 35.0},
-                   'image time 009': {b'crs:Temperature': 5400,
-                                                 b'crs:Contrast2012': 30.0}}
-    expected_exp = {'image time 000': 1,
-                    'image time 001': 1.2630344058337941,
-                    'image time 002': 1.485426827170242,
-                    'image time 003': 1.678071905112638,
-                    'image time 004': 1.8479969065549502,
-                    'image time 005': 2,
-                    'image time 006': 1.8902936717984415,
-                    'image time 007': 1.7715533031636124,
-                    'image time 008': 1.6421564297813922,
-                    'image time 009': 1.5,
+    non_exp_xmp = {'dng_canon_6d_0001.dng': {b'crs:Temperature': 6000,
+                                             b'crs:Contrast2012': 0.0},
+                   'dng_canon_6d_0002.dng': {b'crs:Temperature': 6500,
+                                             b'crs:Contrast2012': 10.0},
+                   'dng_canon_6d_0003.dng': {b'crs:Temperature': 7000,
+                                             b'crs:Contrast2012': 20.0},
+                   'dng_canon_6d_0004.dng': {b'crs:Temperature': 7500,
+                                             b'crs:Contrast2012': 30.0},
+                   'dng_canon_6d_0005.dng': {b'crs:Temperature': 7250,
+                                             b'crs:Contrast2012': 25.0},
+                   'dng_canon_6d_0006.dng': {b'crs:Temperature': 7000,
+                                             b'crs:Contrast2012': 20.0},
+                   }
+    expected_exp = {'dng_canon_6d_0001.dng': 1,
+                    'dng_canon_6d_0002.dng': 1.5328466346945315,
+                    'dng_canon_6d_0003.dng': 1.9187567079026229,
+                    'dng_canon_6d_0004.dng': 2.5,
+                    'dng_canon_6d_0005.dng': 2.0837716217061923,
+                    'dng_canon_6d_0006.dng': 1.5,
                     }
 
     for image_time, xmp in xmp_update:
@@ -180,22 +166,18 @@ def sequence_w_exposure_and_expected_values(sequence_wo_exposure_w_expected_valu
 
     times = sorted(_sequence._images.keys())
 
-    for time, brightness in zip(times[:5], np.arange(0.1, 0.15, 0.01)):
+    for time, brightness in zip(times[:3], np.arange(0.1, 0.15, 0.01)):
         _sequence._images[time].brightness = brightness
 
-    for time, brightness in zip(times[5:], np.arange(0.12, 0.02, -0.02)):
+    for time, brightness in zip(times[3:], np.arange(0.11, 0.02, -0.02)):
         _sequence._images[time].brightness = brightness
 
-    expected_exp = {'image time 000': 1,
-                    'image time 001': 1.2186402864753403,
-                    'image time 002': 1.3785116232537298,
-                    'image time 003': 1.5011941430285582,
-                    'image time 004': 1.598637437618233,
-                    'image time 005': 2,
-                    'image time 006': 1.957113267244116,
-                    'image time 007': 1.8902936717984418,
-                    'image time 008': 1.7715533031636124,
-                    'image time 009': 1.5,
+    expected_exp = {'dng_canon_6d_0001.dng': 1,
+                    'dng_canon_6d_0002.dng': 1.631215732498853,
+                    'dng_canon_6d_0003.dng': 2.0045093171865456,
+                    'dng_canon_6d_0004.dng': 2.5,
+                    'dng_canon_6d_0005.dng': 2.1880559936852597,
+                    'dng_canon_6d_0006.dng': 1.5,
                     }
 
     return _sequence, non_exp_xmp, expected_exp, rectangle
