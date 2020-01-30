@@ -18,56 +18,13 @@ def _base_sequence(data_folder_path):
     sequence._images = {Path(name).name: image for name, image in sequence._images.items()}
     return sequence
 
-
-# @pytest.fixture()
-# def _sequence_info(_base_sequence):
-#     times = sorted(_base_sequence._images.keys())
-#     image = _base_sequence._images[times[0]].image
-#     image.get_xmp()
-#     image._get_fields_required_to_render('raw')
-#     image_width = image._used_fields['image_width']
-#     image_length = image._used_fields['image_length']
-#
-#     pix_per_percent_width = 1 / image_width
-#     pix_per_percent_length = 1 / image_length
-#
-#     left_crop = image._xmp[b'crs:CropLeft'].get('val', 0)
-#     top_crop = image._xmp[b'crs:CropTop'].get('val', 0)
-#     right_crop = image._xmp[b'crs:CropRight'].get('val', 1)
-#     bottom_crop = image._xmp[b'crs:CropBottom'].get('val', 1)
-#
-#     return (_base_sequence, times, pix_per_percent_width, pix_per_percent_length,
-#             left_crop, top_crop, right_crop, bottom_crop)
-
-
-# @pytest.fixture()
-# def sequence(_sequence_info):
-#     (_sequence, times, pix_per_prcnt_wdth, pix_per_prcnt_lngth,
-#      left_crop, top_crop, right_crop, bottom_crop) = _sequence_info
-#
-#     for offset, time in zip(offsets, times):
-#         image = _sequence._images[time].image
-#         image.set_xmp_attribute(b'crs:CropLeft', left_crop - pix_per_prcnt_wdth * offset[0])
-#         image.set_xmp_attribute(b'crs:CropTop', top_crop - pix_per_prcnt_lngth * offset[1])
-#         image.set_xmp_attribute(b'crs:CropRight', right_crop - pix_per_prcnt_wdth * offset[0])
-#         image.set_xmp_attribute(b'crs:CropBottom', bottom_crop - pix_per_prcnt_lngth * offset[1])
-#         image.store_xmp_field()
-#
-#     return _sequence, deepcopy(rectangle), offsets@pytest.fixture()
 @pytest.fixture()
 def sequence(_base_sequence):
     return _base_sequence, deepcopy(rectangle), offsets
 
 
 @pytest.fixture()
-def stabelized_sequence(_base_sequence):
-    # crops = [Crops(0.048838, 0.142125, 0.89261, 0.852893),
-    #          Crops(0.048191, 0.141358, 0.891963, 0.852126),
-    #          Crops(0.049269, 0.143658, 0.893041, 0.854426),
-    #          Crops(0.046034, 0.146724, 0.889806, 0.857492),
-    #          Crops(0.050132, 0.149024, 0.893904, 0.859792),
-    #          Crops(0.04625, 0.144041, 0.890022, 0.854809),
-    #          ]
+def stabilized_sequence(_base_sequence):
     crops = [Crops(0.048838, 0.142125, 0.89261, 0.852893),
              Crops(0.047975, 0.142508, 0.891747, 0.853276),
              Crops(0.048838, 0.142125, 0.89261, 0.852893),
@@ -179,14 +136,6 @@ def rampable_and_stablizable_sequence(sequence_wo_exposure_w_expected_values):
         image.set_xmp_attribute(b'crs:CropRight', right_crop - pix_per_percent_width * offset[0])
         image.set_xmp_attribute(b'crs:CropBottom', bottom_crop - pix_per_percent_length * offset[1])
         image.store_xmp_field()
-
-    # crops = [Crops(0.048838, 0.142125, 0.89261, 0.852893),
-    #          Crops(0.047113, 0.142892, 0.890885, 0.85366),
-    #          Crops(0.049269, 0.143658, 0.893041, 0.854426),
-    #          Crops(0.045819, 0.146724, 0.889591, 0.857492),
-    #          Crops(0.047328, 0.148258, 0.8911, 0.859026),
-    #          Crops(0.045387, 0.145575, 0.889159, 0.856343),
-    #          ]
 
     crops = [Crops(0.048838, 0.142125, 0.89261, 0.852893),
              Crops(0.047113, 0.142892, 0.890885, 0.85366),

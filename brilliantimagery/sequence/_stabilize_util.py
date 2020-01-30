@@ -1,10 +1,14 @@
 import collections
+from typing import List
 
 import cv2
 import numpy as np
 
+from brilliantimagery.meta_image import MetaImage
 
-def find_misalignment(image0, image1, rectangle, keep_brightness, time_index):
+
+def find_misalignment(image0: MetaImage, image1: MetaImage,
+                      rectangle: List[float], keep_brightness: bool, time_index: str):
     rgb_image0 = image0.get_image(rectangle)
     rgb_image1 = image1.get_image(rectangle)
     if not image1.misalignment:

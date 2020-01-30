@@ -2,7 +2,7 @@ from brilliantimagery.sequence._sequence import Stabilizer
 
 
 def test_find_misalignment_w_large_preexisting_crop_success(sequence):
-    # GIVEN an image sequence to stabelize and the expected offsets/misalignments
+    # GIVEN an image sequence to stabilize and the expected offsets/misalignments
     sequence, rectangle, offsets = sequence
     _stabilizer = Stabilizer(sequence._images, rectangle)
 
@@ -16,11 +16,11 @@ def test_find_misalignment_w_large_preexisting_crop_success(sequence):
         assert actual_misalignment == expected_offset
 
 
-def test_update_crop_w_large_preexisting_crop_success(stabelized_sequence):
+def test_update_crop_w_large_preexisting_crop_success(stabilized_sequence):
     # GIVEN a stabilized sequence where the needed offsets are found
     # and the resulting needed crops are given
     from brilliantimagery.meta_image import META_TO_DNG
-    sequence, rectangle, crops = stabelized_sequence
+    sequence, rectangle, crops = stabilized_sequence
     _stabilizer = Stabilizer(sequence._images, rectangle)
 
     # WHEN the crop values are assigned to the metadata and retrieved
@@ -43,7 +43,7 @@ def test_update_crop_w_large_preexisting_crop_success(stabelized_sequence):
 
 
 def test_is_multithreaded(sequence):
-    # GIVEN an image sequence to stabelize and the expected offsets/misalignments
+    # GIVEN an image sequence to stabilize and the expected offsets/misalignments
     sequence, rectangle, offsets = sequence
     _stabilizer = Stabilizer(sequence._images, rectangle)
 
