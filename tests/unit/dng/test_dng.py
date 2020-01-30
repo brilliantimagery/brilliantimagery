@@ -1,4 +1,5 @@
 import os
+import pickle
 import platform
 from io import BytesIO
 
@@ -8,8 +9,6 @@ import numpy as np
 
 def test_get_byte_order_bII_success(dng_canon_6d):
     # GIVEN an initialized DNG
-    # from brilliantimagery.dng import DNG
-    # dng = DNG('fake.file')
 
     # WHEN the dng has small ended IO bytes passes in
     dng_canon_6d._get_byte_order(BytesIO(b'II'))
@@ -20,7 +19,6 @@ def test_get_byte_order_bII_success(dng_canon_6d):
 
 def test_get_byte_order_bMM_success(dng_canon_6d):
     # GIVEN an initialized DNG
-    # dng = DNG('fake.file')
 
     # WHEN the dng has big ended IO bytes passes in
     dng_canon_6d._get_byte_order(BytesIO(b'MM'))
@@ -31,7 +29,6 @@ def test_get_byte_order_bMM_success(dng_canon_6d):
 
 def test_get_byte_order_bad_raises(dng_canon_6d):
     # GIVEN an initialized DNG
-    # dng = DNG('fake.file')
     expected = "Byte order should be b'II' or b'MM' but is"
 
     # WHEN the dng has small bad IO bytes passes in
@@ -44,7 +41,7 @@ def test_get_byte_order_bad_raises(dng_canon_6d):
 
 def test_get_capture_datetime(dng_canon_6d):
     # GIVEN an initialized DNG file and it's capture datetime
-    expected = '2017-09-07T16:01:38.03'
+    expected = '2016-05-24T07:14:56.19'
 
     # WHEN parsed
     # dng_canon_6d.parse()
@@ -55,8 +52,8 @@ def test_get_capture_datetime(dng_canon_6d):
 
 
 def test_get_capture_datetime_not_in_xmp(dng_pixel2):
-    # GIVEN an initialized DNG file and it's capture datetime
-    expected = '1556658902.9690008'
+    # GIVEN an initialized DNG file
+    # and it's calculated datetime
 
     if platform.system() == 'Windows':
         expected = str(os.path.getctime(dng_pixel2.path))
@@ -131,7 +128,6 @@ def test_get_image_cropped_raw(dng_canon_6d, numpy_cropped_canon_6d):
     # WHEN it's parsed and then rendered
     # dng_canon_6d.parse()
     actual_image = dng_canon_6d.get_image(rendered_area)
-
     # THEN the rendered image is as expected
     assert np.array_equal(actual_image, expected_image)
 
@@ -175,13 +171,15 @@ def test_get_tile_or_strip_bytes_compressed_tiles_success(dng_canon_6d, canon_6d
     rectangle, tiles = canon_6d_compressed_tiles
     expected_key = list(tiles.keys())[0]
 
-    # WHEN the dng's parsed and then the compressed tile data's retreaved
-    # dng_canon_6d.parse()
+    # WHEN the dng's parsed and then the compressed tile data's retrieved
     dng_canon_6d._get_fields_required_to_render('raw')
     dng_canon_6d._get_tile_or_strip_bytes(rectangle)
 
     # THEN the resulting dicts have the same keys and the key's values are the same
     actual = dng_canon_6d._used_fields['section_bytes']
+
+    # with open('E:\\Documents\\Python\\brilliantimagery\\tests\\data\\compressed_tiles.p', 'wb') as f:
+    #     pickle.dump(actual, f)
     assert tiles.keys() == actual.keys()
     assert np.array_equal(tiles[expected_key], actual[expected_key])
 
@@ -212,7 +210,7 @@ def test_get_ifd_offsets_success(dng_file_io_ifd):
 
     # THEN the retreived offsets should be as expected
     assert dng_canon_6d._thumbnail_offset == 8
-    assert dng_canon_6d._orig_img_offset == 202942
+    assert dng_canon_6d._orig_img_offset == 141564
     assert dng_canon_6d._xmp_ifd_offset == 8
 
 
@@ -248,7 +246,7 @@ def test_store_xmp_field(dng_canon_6d, storable_dng_xmp):
 
 def test_rendered_shape(dng_canon_6d):
     # GIVEN an initialized dng and an expected shape
-    expected_shape = [5027, 3351]
+    expected_shape = [4637, 2609]
 
     # WHEN it's parsed and then has it's rendered shape is read
     # dng_canon_6d.parse()
@@ -260,7 +258,7 @@ def test_rendered_shape(dng_canon_6d):
 
 def test_default_shape(dng_canon_6d):
     # GIVEN an initialized dng and an expected shape
-    expected_shape = [5472, 3648]
+    expected_shape = [5496, 3670]
 
     # WHEN it's parsed and then has it's default shape is read
     # dng_canon_6d.parse()
@@ -289,28 +287,23 @@ def test_default_shape(dng_canon_6d):
 
 def test_save_xmp_length_unchanged_success(copied_dng_canon_6d, dng_canon_6d):
     # GIVEN two copies of the same dng
+    from brilliantimagery.dng import DNG
 
     # WHEN one has the xmp data changed and then saved, and then reprocessed
     # and the other has equivalent operations other than the xmp change
-    # copied_dng_canon_6d.parse()
     copied_dng_canon_6d._updated = True
     copied_dng_canon_6d._xmp_length_changed = False
     xmp_buffer = copied_dng_canon_6d._ifds[copied_dng_canon_6d._xmp_ifd_offset][700].values[0]
     xmp_buffer = xmp_buffer[:3] + b'q' + xmp_buffer[4:]
     copied_dng_canon_6d._ifds[copied_dng_canon_6d._xmp_ifd_offset][700].values[0] = xmp_buffer
     copied_dng_canon_6d.save()
-    # copied_dng_canon_6d.parse()
-    copied_dng_canon_6d._updated = True
-    copied_dng_canon_6d._xmp_length_changed = False
 
-    # dng_canon_6d.parse()
-    dng_canon_6d._updated = False
-    dng_canon_6d._xmp_length_changed = False
-    dng_canon_6d.get_xmp()
+    dng = DNG(copied_dng_canon_6d.path)
+    xmp_buffer = copied_dng_canon_6d._ifds[copied_dng_canon_6d._xmp_ifd_offset][700].values[0]
 
     # THEN the xmp shows up as changed and the images have the same ifds
     assert xmp_buffer[3] == ord('q')
-    assert copied_dng_canon_6d._ifds == dng_canon_6d._ifds
+    assert dng._ifds == dng_canon_6d._ifds
 
 
 # def test_save_xmp_length_changed_success(copied_dng_canon_6d, saved_dng_canon_6d):
@@ -340,34 +333,33 @@ def test_save_xmp_length_changed_success(copied_dng_canon_6d, post_save_ifds):
     assert actual == post_save_ifds
 
 
-def test_not_is_key_frame_success(dng_canon_6d):
-    # GIVEN a initialized dng that isn't a reference frame (it's 2 stars)
+def test_is_key_frame_success(dng_canon_6d):
+    # GIVEN a initialized dng that is reference frame
 
     # WHEN it's parsed
     # dng_canon_6d.parse()
 
     # THEN it's found to not be a ref frame
-    assert not dng_canon_6d.is_key_frame
+    assert dng_canon_6d.is_key_frame
 
 
-def test_is_key_frame_success(dng_canon_6d):
-    # GIVEN a initialized dng that isn't a reference frame (it's 2 stars)
+def test_not_is_key_frame_success(dng_canon_6d):
+    # GIVEN a initialized dng that is a reference frame
     from brilliantimagery.dng import DNG
 
-    # WHEN it's parsed and has it's rating set to that of the ref frame rating
-    # dng_canon_6d.parse()
+    # WHEN it's parsed and has it's rating set to something other than ref frame rating
     dng_canon_6d.get_xmp()
-    dng_canon_6d.set_xmp_attribute(b'xmp:Rating', DNG._REFERENCE_FRAME_STARS)
+    dng_canon_6d.set_xmp_attribute(b'xmp:Rating', DNG._REFERENCE_FRAME_STARS + 1)
     dng_canon_6d.store_xmp_field()
 
     # THEN it's found to be a ref frame
-    assert dng_canon_6d.is_key_frame
+    assert not dng_canon_6d.is_key_frame
 
 
 def test_get_brightness(dng_canon_6d):
     # GIVEN an initialized dng and a rectangle and a brightness
     rectangle = [0.3, 0.3, 0.4, 0.4]
-    expected_brightness = np.float32(0.067557134)
+    expected_brightness = np.float32(0.13570714)
 
     # WHEN the the image is parsed and the brightness of the rectangle is calculated
     # dng_canon_6d.parse()
