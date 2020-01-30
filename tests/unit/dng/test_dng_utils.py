@@ -42,7 +42,7 @@ def test_convert_rectangle_percent_to_pixels_default(used_ifd_fields_raw):
     actual = _dng_utils.convert_rectangle_percent_to_pixels(used_ifd_fields_raw,
                                                             [.25, .35, .65, .75],
                                                             0.05, 0.06, 0.92, 0.97)
-    expected = [1547, 1430, 3451, 2757]
+    expected = [1542, 1427, 3454, 2762]
 
     # THEN
     assert actual == expected
@@ -68,7 +68,7 @@ def test_convert_rectangle_percent_to_pixels_raw(used_ifd_fields_raw):
     actual = _dng_utils.convert_rectangle_percent_to_pixels(used_ifd_fields_raw,
                                                             [.25, .35, .65, .75],
                                                             0.05, 0.06, 0.92, 0.97, 'RAW')
-    expected = [1547, 1430, 3451, 2757]
+    expected = [1542, 1427, 3454, 2762]
 
     # THEN
     assert actual == expected
@@ -94,7 +94,7 @@ def test_convert_rectangle_percent_to_pixels_thumbnail(used_ifd_fields_thumbnail
     actual = _dng_utils.convert_rectangle_percent_to_pixels(used_ifd_fields_thumbnail,
                                                             [.25, .35, .65, .75],
                                                             0.05, 0.06, 0.92, 0.97, 'thumbnail')
-    expected = [64, 64, 166, 137]
+    expected = [64, 50, 166, 108]
 
     # THEN
     assert actual == expected
