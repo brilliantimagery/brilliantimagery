@@ -14,6 +14,10 @@ class Stabilizer:
         self._pbar.update()
 
     def find_misalignments(self, keep_brightness=False):
+        if list(self._images.values())[0].misalignment != None:
+            self._images[list(self._images)[0]].get_image(self._rectangle)
+            return
+
         images = self._images
         ordered_times = sorted(images.keys())
         image0 = images[ordered_times[0]].get_image(self._rectangle)
@@ -65,9 +69,6 @@ class Stabilizer:
         #                  desc='Find misalignments: '))
         # for time, image in tasks:
         #     self._images[time] = image
-
-    def populate_crop_info(self):
-        self._images[list(self._images)[0]].get_image(self._rectangle)
 
     def update_crop_xmp_attributes(self):
         example_image = next(iter(self._images.values()))

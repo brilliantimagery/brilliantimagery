@@ -187,10 +187,7 @@ class Sequence:
         """
 
         stabilizer = Stabilizer(self._images, rectangle)
-        if list(self._images.values())[0].misalignment == None:
-            stabilizer.find_misalignments(keep_brightness)
-        else:
-            stabilizer.populate_crop_info()
+        stabilizer.find_misalignments(keep_brightness)
         stabilizer.update_crop_xmp_attributes()
 
     # TODO: this isn't tested
