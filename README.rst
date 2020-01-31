@@ -89,3 +89,10 @@ And then run clean and make the html docs:
 ::
 
 $ make clean && make html
+
+Changelog
+---------
+
+* 0.2.0: Enabled saving and loading projects as well as reusing offsets and brightnesses between runs.
+
+* 0.1.1: Fixed bug affecting sequences where multiple images have the same stored capture time.
