@@ -67,7 +67,7 @@ class Stabilizer:
         #     self._images[time] = image
 
     def populate_crop_info(self):
-        next(self._images.values()).get_image(self._rectangle)
+        self._images[list(self._images)[0]].get_image(self._rectangle)
 
     def update_crop_xmp_attributes(self):
         example_image = next(iter(self._images.values()))
