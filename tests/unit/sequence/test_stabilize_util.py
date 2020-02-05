@@ -15,5 +15,5 @@ def test_find_misalignment_success(sequence):
     # THEN the offset is correct, the time is passed back out, and the brightness is kept
     # assert image.misalignment == offsets[1]
     assert image.misalignment == [-4.140580359578448, 0.5651787914802656]
-    assert image.brightness == 0.0060796775
+    assert float(image.brightness) == 0.006079677492380142
     assert time == time1
