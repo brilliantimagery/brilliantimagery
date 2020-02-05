@@ -1,5 +1,5 @@
 DNG Module and Workflow
-=========================
+***********************
 
 .. note::
    While, between the DNG and LJPEG modules, much of the functionality exists which is required to edit the underlying raw data, this functionality has not yet been fully stitched together to make it fully operational. This will likely happen either when the primary developer has a need for this or when someone reaches out requesting it.
@@ -7,7 +7,7 @@ DNG Module and Workflow
 The DNG module allows DNG images to be read, rendered, edited, updated, and saved. Like with most other digital image technology, the top left corner of the image is the origin.
 
 Usage
------
+=====
 
 **Example: Getting the top left quarter of the raw image**
 
@@ -56,8 +56,8 @@ The below lines would be printed assuming the ``xmp:attr`` attribute started wit
   Is still: 10.5
 
 API
----
+===
 
 .. automodule:: brilliantimagery.dng
-   :members:
-   :imported-members:
+    :members:
+    :imported-members:

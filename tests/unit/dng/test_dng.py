@@ -333,18 +333,18 @@ def test_save_xmp_length_changed_success(copied_dng_canon_6d, post_save_ifds):
     assert actual == post_save_ifds
 
 
-def test_is_key_frame_success(dng_canon_6d):
-    # GIVEN a initialized dng that is reference frame
+def test_has_n_stars_success(dng_canon_6d):
+    # GIVEN a initialized dng that is rated 3 stars
 
     # WHEN it's parsed
     # dng_canon_6d.parse()
 
     # THEN it's found to not be a ref frame
-    assert dng_canon_6d.is_key_frame
+    assert dng_canon_6d.has_n_stars(3)
 
 
-def test_not_is_key_frame_success(dng_canon_6d):
-    # GIVEN a initialized dng that is a reference frame
+def test_not_has_n_stars_success(dng_canon_6d):
+    # GIVEN a initialized dng
     from brilliantimagery.dng import DNG
 
     # WHEN it's parsed and has it's rating set to something other than ref frame rating
@@ -353,7 +353,7 @@ def test_not_is_key_frame_success(dng_canon_6d):
     dng_canon_6d.store_xmp_field()
 
     # THEN it's found to be a ref frame
-    assert not dng_canon_6d.is_key_frame
+    assert not dng_canon_6d.has_n_stars(3)
 
 
 def test_get_brightness(dng_canon_6d):

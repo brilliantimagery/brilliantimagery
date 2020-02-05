@@ -26,7 +26,12 @@ class DNG:
     manufacturers but the standard is not fully implemented and not
     all edge cases for older versions of the standard are fully supported.
 
+    While the DNG 1.5 standard has come out since this was created,
+    the standard's updates haven't been implemented since they have, at most,
+    negligible impact on this project given this project's typical use cases.
+
     :param str path: The path to the represented DNG file.
+
     """
 
     class _Field:
@@ -51,6 +56,7 @@ class DNG:
                 :meth:`brilliantimagery.dng._dng_utils.get_values_from_type`
                 or some other similar process. Fields with 1 value should
                 have it in a list with a length of 1.
+
             """
             if not values:
                 values = []
@@ -74,7 +80,13 @@ class DNG:
         """
         Initializes an image file representation.
 
+        :Example - Create a :class:`DNG` instance:
+
+        >>> from brilliantimagery.dng import DNG
+        >>> dng = DNG('path/to/image.dng')
+
         :param str path: Path to the image file.
+
         """
         self.path = path
         self._ifds = dict()
@@ -92,8 +104,8 @@ class DNG:
         """
         Parses the image's IFDs so that other functions have data to work with.
 
-        Note: the image data is not read or stored with this call, only pointers and
-        sizes are.
+        Note: the image data is not read or stored with this call, only pointers
+        and strip/tile sizes are.
 
         :return: None
 
@@ -108,17 +120,21 @@ class DNG:
 
     def _get_byte_order(self, f: BytesIO) -> BytesIO:
         """
-        Gets the byte order used in the file.
+        Reads the byte order used in the file.
 
-        :param BytesIO f: The I/O stream to the file. Assumes the read index points
+        Rather than returning the byte order, it's stored in the :attr:`DNG._byte_order`
+        variable as "<" if the file is small ended or ">" if it's big ended.
+
+        :param BytesIO f: The :class:`I/O` stream to the file. Assumes the read index points
             to the first byte of the byte order denoting pair of bytes.
 
-        :return: The I/O stream to the file with the read index pointing
+        :return: The :class:`I/O` stream to the file with the read index pointing
             to the byte that immediately follows the byte order denoting pair.
         :rtype: BytesIO
 
         :raises ValueError: If the order denoting bytes aren't either of the
             expected options.
+
         """
         self._byte_order = f.read(2)
         if self._byte_order == b'II':
@@ -138,8 +154,16 @@ class DNG:
         should be consistent between images captured on the same camera
         and processed with the same workflow.
 
+        :Example - Get an images creation datetime:
+
+        >>> from brilliantimagery.dng import DNG
+        >>> dng = DNG('path/to/image.dng')
+        >>> dng.get_capture_datetime()
+        '2020-02-05 10:48:39.317369'
+
         :return: A creation time.
         :rtype: str
+
         """
         xmp = self._ifds.get(self._xmp_ifd_offset, {}). \
             get(700, DNG._Field(0, 0, 0, 0, [b''])).values[0]
@@ -156,20 +180,29 @@ class DNG:
                 except AttributeError:
                     return str(stat.st_mtime)
 
-    def _get_fields_required_to_render(self, sub_image: str):
+    def _get_fields_required_to_render(self, sub_image: str) -> None:
         """
-        Consolidate the info required to render the DNG file.
+        Consolidates the info required to render the DNG file.
 
-        Consolidate the fields from throughout the file into a
+        Rather than retuning them, they're stored in the
+        :attr:`DNG._used_fields` variable.
+
+        Consolidates the fields from throughout the file into a
         single IFD like structure holding all of the fields needed
-        to render the desired image.
+        to render the desired image. This avoids having to search
+        through multiple IFDs to get a value, or having to
+        determine which instance of a value to use if it's stored
+        multiple times for multiple images from within the file
+        (such as how there are often 2 :attr:`width` fields, one
+        for a thumbnail and one for the RAW image).
 
-        :param sub_image: 'thumbnail' or 'RAW' depending on which
+        :param str sub_image: 'thumbnail' or 'RAW' depending on which
             is to be rendered.
 
         :return: None
 
         :raises ValueError: If an invalid 'sub_image' is given.
+
         """
         if sub_image.lower() == 'thumbnail':
             offset = self._thumbnail_offset
@@ -189,12 +222,23 @@ class DNG:
                              **{'orientation': self._ifds[self._thumbnail_offset][274].values[0]},
                              }
 
-    def _get_ifd_fields(self, f: BytesIO):
+    def _get_ifd_fields(self, f: BytesIO) -> None:
         """
-        Parses the IFD fields and gets their values.
+        Recursively parses the IFD fields and gets their values.
 
-        :param BytesIO f: the ``IO`` holding the read index
-            of the start of the IFD from within the file
+        Passing it an :class:`IO` with the file's first IFD's index
+        will result in parsing the first IFD and all others that are
+        pointed to. Passing a later IFD that doesn't point to any
+        others results in just that one being parsed
+
+        Rather than returning the IFD, it's stored to :attr:`DNG._ifds`
+        which is a :class:`dict` where the key is the byte index of the
+        start of the respective IFD and each value is another
+        :class:`dict` where each key is a IFD field's tag with a value
+        of the respective :class:`Field`.
+
+        :param BytesIO f: the :class:`IO` holding the read index
+            of the start of the IFD to be parsed from within the file.
 
         :return: None
         """
@@ -246,7 +290,7 @@ class DNG:
 
     def get_image(self, rectangle=[0.0, 0.0, 1.0, 1.0], sub_image_type='RAW') -> numpy.ndarray:
         """
-        Get the desired portion of the desired reference image.
+        Gets the desired portion of the desired reference image.
 
         No transforms such as white balancing or exposure compensation
         are performed so the image may not look as expected (they're
@@ -255,14 +299,25 @@ class DNG:
         The rendering algorithm is relatively rudimentary so the
         results will be less refined than some other renderers.
 
-        Note that the output is a float in the range of 0 to 1 so for many
-        applications it'll have to be scaled.
+        :Example - Gets the shape and then rendered pixel values for a portion of the RAW data in a hypothetical DNG file.:
 
-        While many (most?) cameras are supported, or could with relative
-        ease once rare edge cases are pointed out,
-        some Fuji cameras (and presumably others)
-        will require further development (which can potentially happen if
-        it's requested).
+        >>> from brilliantimagery.dng import DNG
+        >>> dng = DNG('path/to/image.dng')
+        >>> rectangle = [100, 100, 600, 400]
+        >>> image = dng.get_image(rectangle, 'RAW')
+        >>> image.shape
+        (3, 500, 300)
+        >>> image
+        array([[[0.03698262, 0.03751407, ..., 0.04139052, 0.04229711],
+                ...,
+                [0.06149181, 0.06192947, ..., 0.05291047, 0.05264474]],
+               [[0.08861135, 0.08715768, ..., 0.09322246, 0.09294111],
+                ...,
+                [0.13045517, 0.13178901, ..., 0.11453253, 0.11304239]],
+               [[0.06405527, 0.06405527, ..., 0.06430537, 0.06463361],
+                ...,
+                [0.08818932, 0.08818932, ..., 0.07837314, 0.07571589]]], dtype=float32)
+
 
         :param rectangle: The bounding box of the portion of the image that's
             to be rendered. In the format X1, Y1, X2, Y2 where:
@@ -292,6 +347,14 @@ class DNG:
             * The third represents the height.
         :rtype: Numpy.ndarray
 
+        .. note:: Since the output is a float in the range of 0 to 1, for many
+            applications it'll have to be scaled.
+
+        .. note:: While this works for the vast majority of tested cameras,
+            cameras that don't have pure GRB and/or 2x2 Bayer Masks can't presently
+            be rendered. So while support will presumably eventually be added,
+            at present, the images from a number of Fuji cameras can't be rendered.
+
         """
 
         from brilliantimagery.dng import _renderer
@@ -317,10 +380,18 @@ class DNG:
 
         The XMP data holds all of the edits that have been made in Lightroom.
 
+        :Example - Get the XMP data stored in the underlying image:
+
+        >>> from brilliantimagery.dng import DNG
+        >>> dng = DNG('path/to/image.dng')
+        >>> dng.get_xmp()
+        {b'crs:Temperature': 7135.0, b'crs:Tint': 10.0, b'crs:Saturation': 35.0, b'crs:Vibrance': 76.0, b'crs:Sharpness': 25.0, b'crs:ShadowTint': 0.0, b'crs:RedHue': 0.0, b'crs:RedSaturation': 0.0, b'crs:GreenHue': 0.0, b'crs:GreenSaturation': 0.0, b'crs:BlueHue': 0.0, b'crs:BlueSaturation': 0.0, b'crs:HueAdjustmentRed': 0.0, b'crs:HueAdjustmentOrange': 0.0, b'crs:HueAdjustmentYellow': 0.0, b'crs:HueAdjustmentGreen': 0.0, b'crs:HueAdjustmentAqua': 0.0, b'crs:HueAdjustmentBlue': 27.0, b'crs:HueAdjustmentPurple': 0.0, b'crs:HueAdjustmentMagenta': 0.0, b'crs:SaturationAdjustmentRed': 0.0, b'crs:SaturationAdjustmentOrange': 0.0, b'crs:SaturationAdjustmentYellow': 0.0, b'crs:SaturationAdjustmentGreen': 0.0, b'crs:SaturationAdjustmentAqua': 0.0, b'crs:SaturationAdjustmentBlue': -31.0, b'crs:SaturationAdjustmentPurple': 0.0, b'crs:LuminanceAdjustmentRed': 0.0, b'crs:LuminanceAdjustmentOrange': 0.0, b'crs:LuminanceAdjustmentYellow': 0.0, b'crs:LuminanceAdjustmentGreen': 0.0, b'crs:LuminanceAdjustmentAqua': 0.0, b'crs:LuminanceAdjustmentBlue': 0.0, b'crs:LuminanceAdjustmentPurple': 0.0, b'crs:LuminanceAdjustmentMagenta': 0.0, b'crs:ParametricShadows': 0.0, b'crs:ParametricDarks': 0.0, b'crs:ParametricLights': 0.0, b'crs:ParametricHighlights': 0.0, b'crs:ParametricShadowSplit': 25.0, b'crs:ParametricMidtoneSplit': 50.0, b'crs:ParametricHighlightSplit': 75.0, b'crs:SharpenRadius': 1.0, b'crs:SharpenDetail': 25.0, b'crs:SharpenEdgeMasking': 0.0, b'crs:GrainAmount': 0.0, b'crs:LuminanceSmoothing': 0.0, b'crs:ColorNoiseReduction': 25.0, b'crs:ColorNoiseReductionDetail': 50.0, b'crs:ColorNoiseReductionSmoothness': 50.0, b'crs:LensManualDistortionAmount': 0.0, b'crs:Contrast2012': 0.0, b'crs:Highlights2012': -100.0, b'crs:Shadows2012': 48.0, b'crs:Whites2012': 71.0, b'crs:Blacks2012': 2.0, b'crs:Clarity2012': 29.0, b'crs:DefringePurpleAmount': 0.0, b'crs:DefringePurpleHueLo': 30.0, b'crs:DefringePurpleHueHi': 70.0, b'crs:DefringeGreenAmount': 0.0, b'crs:DefringeGreenHueLo': 40.0, b'crs:DefringeGreenHueHi': 60.0, b'crs:Dehaze': 10.0, b'crs:CropLeft': 0.048838, b'crs:CropBottom': 0.852893, b'crs:CropRight': 0.89261, b'crs:CropTop': 0.142125, b'xmp:Rating': 3.0, b'crs:Exposure2012': -0.1}
+
         :return: The xmp data as a dict with the keys being the properties
             as found in the XMP data and values being the associated values
             as floats.
         :rtype: dict[bytes, float]
+
         """
         if not self._xmp:
             if self._xmp_ifd_offset in self._ifds:
@@ -334,9 +405,9 @@ class DNG:
 
         return {k: v['val'] for k, v in self._xmp.items() if v}
 
-    def _parse_ifds(self):
+    def _parse_ifds(self) -> None:
         """
-        Read the IFDs from the file and organizes them into self._ifds
+        Read the IFDs from the file and organize them into :attr:`DNG._ifds`
 
         :return: None
         """
@@ -348,9 +419,10 @@ class DNG:
         """
         Retrieves the raw image data.
 
-        Gets the image data from the file for the relevant image,
-        whether it be stored as strips or tiles, as is needed to
-        render the portion of the image that's covered by the rectangle
+        Gets the image data from the file for the relevant image based on
+        :attr:`DNG._used_fields` which is set by
+        :func:`DNG._get_fields_required_to_render`,
+        whether it be stored as strips or tiles.
 
         :param rectangle: The bounding box of the area to be rendered.
         :return: None
@@ -414,10 +486,10 @@ class DNG:
 
     def _get_ifd_offsets(self) -> None:
         """
-        Gets the byte indexes relevant IFDs.
+        Gets the byte indexes of the commonly used IFDs.
 
-        Stores the offsets of the thumbnail and main uncompressed/raw
-        image IFDs for the image file for later use.
+        Stores the offsets of the thumbnail, main uncompressed/raw
+        image, and xmp containing IFDs.
 
         :return: None
         """
@@ -441,13 +513,27 @@ class DNG:
         """
         Updates the stored value of an XMP attribute.
 
+        This isn't updating the file or the sored :class:`Field`, only
+        a value in a :class:`dict` of xmp values.
+
         Cannot update attributes that aren't already present. If an
-        attribute wasn't previously present it can't be
-        updated.
+        attribute hasn't been set in photo editing software such as
+        Adobe Lightroom then it won't be present and subsequently can't
+        be updated.
 
         Only updates the representation in the :class:`DNG` object.
         :func:`DNG.store_xmp_field` and :func:`DNG.save` have to be called to
-        permanently save the updated values.
+        permanently save the updated values. This is done to minimize
+        redundant and time consuming read/write operations.
+
+        :Example - Set and then get the color temperature for an image.:
+
+        >>> from brilliantimagery.dng import DNG
+        >>> dng = DNG('path/to/image.dng')
+        >>> dng.set_xmp_attribute(b'crs:Temperature', 7000)
+        True
+        >>> dng.get_xmp()[b'crs:Temperature']
+        7000
 
         :param xmp_attribute: The XMP attribute to be updated. Should be
             a key from the :attr:`_dng_constants.XMP_TAGS` dict
@@ -455,8 +541,8 @@ class DNG:
         :type value: int, float, or str
 
         :return: True if it's successful, False if it isn't, presumably
-            because the attribute isn't present or the value was already
-            stored.
+            because the attribute isn't present or the specific value was
+            already stored.
         :rtype: bool
         """
 
@@ -470,10 +556,21 @@ class DNG:
 
     def store_xmp_field(self) -> None:
         """
-        Consolidate updated XMP attributes in the XMP data.
+        Consolidates the updated XMP attributes in the XMP data.
+
+        This updates values of the associated :class:`Field` but
+        doesn't change the underlying file.
 
         If this isn't called, the XMP data won't be updated in the
         file even if :func:`DNG.save` is called.
+
+        :Example - Set and then store the color temperature for an image.:
+
+        >>> from brilliantimagery.dng import DNG
+        >>> dng = DNG('path/to/image.dng')
+        >>> dng.set_xmp_attribute(b'crs:Temperature', 7000)
+        True
+        >>> dng.store_xmp_field()
 
         :return: None
         """
@@ -514,6 +611,13 @@ class DNG:
 
         Dimensions are in units of pixels.
 
+        :Example - Get the shape of an image as rendered:
+
+        >>> from brilliantimagery.dng import DNG
+        >>> dng = DNG('path/to/image.dng')
+        >>> dng.get_rendered_shape()
+        [4637, 2609]
+
         :return: A list of ints where the first is the width and the
             second is the length (height) of the image.
         :rtype: list[int, int]
@@ -536,6 +640,13 @@ class DNG:
 
         Dimensions are in units of pixels.
 
+        :Example - Get the shape of an image.:
+
+        >>> from brilliantimagery.dng import DNG
+        >>> dng = DNG('path/to/image.dng')
+        >>> dng.get_default_shape()()
+        [4637, 2609]
+
         :return: A list of ints where the first is the width and the
             second is the length (height) of the image.
         :rtype: list[int, int]
@@ -545,30 +656,11 @@ class DNG:
             self._get_fields_required_to_render('RAW')
         return [int(a) for a in self._used_fields['default_crop_size']]
 
-    # def get_xmp_attribute(self, xmp_attribute: bytes) -> Optional[float]:
-    #     """
-    #     Gets the value of an XMP attribute.
-    #
-    #     Only works for attributes with numeric values.
-    #
-    #     :param bytes xmp_attribute: The attribute to be interrogated.
-    #         Must include the full attribute name, the part before and after the :attr:`:`
-    #
-    #     :return: The value of the attribute if it's present and numeric, otherwise :attr:`None`.
-    #     :rtype: float or None
-    #     """
-    #
-    #     if not self._xmp:
-    #         self.get_xmp()
-    #
-    #     if xmp_attribute in self._xmp:
-    #         return self._xmp[xmp_attribute].get('val')
-    #     else:
-    #         return None
-
     def save(self) -> None:
         """
         Overwrites the dng's XMP data with the updated XMP data.
+
+        something about time and when it overwrites vs replaces outright
 
         :return: None
         """
@@ -782,26 +874,24 @@ class DNG:
 
         self._used_fields['section_bytes'] = None
 
-    @property
-    def is_key_frame(self):
+    def has_n_stars(self, n=_REFERENCE_FRAME_STARS):
         """
-        Says whether or not an image is a reference frame.
+        Says whether or not an image is rated :attr:`n` stars.
 
-        For timelapse sequences, specifies whether or not the given image is
-        intended to be used as a reference frame. This is determined by the
-        image star rating and whether or not it matches the number of stars
-        that a DNG image must have to be considered a reference frame, 3 by
-        default.
+        Can be used to determine whether or not an image is a key frame
+        in a timelapse sequence.
 
-        :return: True if it's a reference frame, otherwise false.
+        :return: True the image's star rating is equal to ``n``, otherwise false.
         :rtype: bool
 
         """
 
+        n = int(n)
+
         if not self._xmp:
             self.get_xmp()
 
-        return int(self._xmp[b'xmp:Rating'].get('val', 0)) == DNG._REFERENCE_FRAME_STARS
+        return int(self._xmp[b'xmp:Rating'].get('val', 0)) == n
 
     def get_brightness(self, rectangle=None, image=None):
         """

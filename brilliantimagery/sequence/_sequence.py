@@ -86,7 +86,7 @@ class Sequence:
             is to be rendered. If no thumbnail is embedded within the
             image then the raw image will be rendered.
         :param str index_order: The order of the array indexes. The two
-        options are 'cxy' and 'yxc'.
+            options are 'cxy' and 'yxc'.
 
             * 'cxy' equates to:
 
