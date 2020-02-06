@@ -249,7 +249,7 @@ class MetaImage:
 
         """
 
-        return self.image.is_key_frame
+        return self.image.has_n_stars(3)
 
     def get_xmp(self):
         """

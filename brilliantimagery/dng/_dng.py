@@ -15,6 +15,20 @@ from brilliantimagery.dng import _dng_constants as d_cnst
 from brilliantimagery.dng import _dng_utils as d_utils
 # from brilliantimagery.dng import _renderer
 
+rectangle_docstring = """:param rectangle: The bounding box of the portion of the image that's
+            to be rendered. In the format X1, Y1, X2, Y2 where:
+
+            * X1 is the x position of the top left corner,
+            * Y1 is the y position of the top left corner,
+            * X2 is the x position of the bottom right corner,
+            * Y2 is the y position of the top right corner.
+
+            The input values can either be in fractions of the way across the
+            image from the origin, or pixels from the origin.
+            The top left corner of the cropped area is assumed to be the
+            origin. If no crop is applied by the user than the
+            :attr:`DefaultCropOrigin` field data is used as the origin.
+        :type rectangle: list[int or float]"""
 
 class DNG:
     """
@@ -241,6 +255,7 @@ class DNG:
             of the start of the IFD to be parsed from within the file.
 
         :return: None
+
         """
         ifd_offset = f.tell()
         n_ifd_fields = d_utils.get_value_from_type(f.read(2), 3, self._byte_order, False)
@@ -410,6 +425,7 @@ class DNG:
         Read the IFDs from the file and organize them into :attr:`DNG._ifds`
 
         :return: None
+
         """
         with open(self.path, 'rb', buffering=DNG._BUFFER_SIZE) as f:
             f.seek(self._zeroth_ifd)
@@ -426,6 +442,7 @@ class DNG:
 
         :param rectangle: The bounding box of the area to be rendered.
         :return: None
+
         """
         self._used_fields['section_bytes'] = {}
         self._used_fields['rendered_section_bounding_box'] = []
@@ -473,9 +490,12 @@ class DNG:
                 y1 = index // n_tiles_wide * section_length
                 x2 = x1 + section_width
                 y2 = y1 + section_length
-                if x2 > rectangle[0] and x1 < rectangle[2] and y2 > rectangle[1] and y1 < rectangle[3]:
+                if (x2 > rectangle[0] and x1 < rectangle[2]
+                        and y2 > rectangle[1] and y1 < rectangle[3]):
                     self._used_fields['rendered_section_bounding_box'] = d_utils \
-                        .renderd_area_bounding_box(self._used_fields['rendered_section_bounding_box'], x1, y1, x2, y2)
+                        .renderd_area_bounding_box(self._used_fields[
+                                                       'rendered_section_bounding_box']
+                                                   , x1, y1, x2, y2)
                     if 'x_tile_offset' not in locals():
                         x_tile_offset = x1 // section_width
                         y_tile_offset = y1 // section_length
@@ -492,6 +512,7 @@ class DNG:
         image, and xmp containing IFDs.
 
         :return: None
+
         """
         self._thumbnail_offset = 0
         self._orig_img_offset = 0
@@ -544,6 +565,7 @@ class DNG:
             because the attribute isn't present or the specific value was
             already stored.
         :rtype: bool
+
         """
 
         if not self._xmp:
@@ -573,6 +595,7 @@ class DNG:
         >>> dng.store_xmp_field()
 
         :return: None
+
         """
 
         xmp_data = self._ifds[self._xmp_ifd_offset][700].values[0]
@@ -621,6 +644,7 @@ class DNG:
         :return: A list of ints where the first is the width and the
             second is the length (height) of the image.
         :rtype: list[int, int]
+
         """
 
         shape = self.get_default_shape()
@@ -644,12 +668,13 @@ class DNG:
 
         >>> from brilliantimagery.dng import DNG
         >>> dng = DNG('path/to/image.dng')
-        >>> dng.get_default_shape()()
-        [4637, 2609]
+        >>> dng.get_default_shape()
+        [5496, 3670]
 
         :return: A list of ints where the first is the width and the
             second is the length (height) of the image.
         :rtype: list[int, int]
+
         """
 
         if not self._used_fields:
@@ -658,11 +683,25 @@ class DNG:
 
     def save(self) -> None:
         """
-        Overwrites the dng's XMP data with the updated XMP data.
+        Replaces the dng's XMP data with the updated XMP data.
 
-        something about time and when it overwrites vs replaces outright
+        If the updated XMP is the same length as the XMP that's
+        to be replaced then it's simply overwritten, otherwise
+        the file is replaced with an updated file where all values
+        (other than internal pointers) are equivalent with the
+        XMP being the one exception.
+
+        :Example - Update an XMP value, store the updated XMP, and then save it:
+
+        >>> from brilliantimagery.dng import DNG
+        >>> dng = DNG('path/to/image.dng')
+        >>> dng.set_xmp_attribute(b'crs:Temperature', 7000)
+        True
+        >>> dng.store_xmp_field()
+        >>> dng.save()
 
         :return: None
+
         """
 
         if self._updated:
@@ -687,18 +726,24 @@ class DNG:
                     f.seek(self._ifds[self._xmp_ifd_offset][700].value_offset)
                     f.write(self._ifds[self._xmp_ifd_offset][700].values[0])
 
-    def _write_dng(self):
+    def _write_dng(self) -> None:
         """
-        Writes a whole new dng file as apposed to editing the xmp info.
+        Writes a new DNG file.
+
+        Creates a replacement file based on an existing DNG file
+        only with updated XMP data. It's slower than the other process
+        encompassed within :func:`DNG.save` but unlike that process this
+        one can deal with having increased amounts of XMP data (where
+        there isn't room to simply replace the existing data) and can
+        save space in cases where the replacement data is shorter than
+        the existing data.
 
         :return: None
+
         """
 
         first_ifd_location = 8
-        # TODO: https://www.tutorialspoint.com/How-to-create-an-empty-file-using-Python
-        with open(self.path + '.temp', 'w+b') as wf:
-            # this is done to ensure that the file exists
-            pass
+        open(self.path + '.temp', 'a').close()
         with open(self.path + '.temp', 'r+b', DNG._BUFFER_SIZE) as wf:
             with open(self.path, 'rb', DNG._BUFFER_SIZE) as rf:
                 if self._byte_order == '>':
@@ -708,23 +753,31 @@ class DNG:
 
                 wf = self._write_value(wf, 42, data_type=3)
                 wf = self._write_value(wf, first_ifd_location, data_type=4)
-                wf.seek(self._write_ifd(wf, rf, self._ifds[self._thumbnail_offset], first_ifd_location))
+                wf.seek(self._write_ifd(wf, rf, self._ifds[self._thumbnail_offset],
+                                        first_ifd_location))
             if wf.tell() % 2:
                 self._write_value(wf, 0, data_type=1)
         os.remove(self.path)
         os.rename(self.path + '.temp', self.path)
 
-    def _write_ifd(self, wf: BytesIO, rf: BytesIO, ifd: Dict, write_location: int):
+    def _write_ifd(self, wf: BytesIO, rf: BytesIO, ifd: Dict, write_location: int) -> int:
         """
-        Writes an IFD into a file.
+        Recursively writes IFDs into a :class:`BytesIO`.
 
-        :param BytesIO wf: The io buffer for the file being written to.
-        :param BytesIO rf: The io buffer for the file being referenced.
+        This is accomplished by calculating where the end of the IDF is, making
+        note of where this write index is, and then as needed appending data
+        that's pointed to by the IFD, after the IFD, and updating the write index
+        as needed.
+
+        :param BytesIO wf: The :class:`BytesIO` for the file being written to.
+        :param BytesIO rf: The :class:`BytesIO` for the file being referenced.
         :param dict ifd: The IFD to be written.
-        :param int write_location: The index of the start of the IFD from
-        the beginning of the file in units of bytes.
+        :param int write_location: The index of the start of the IFD that's to
+            be written, from the beginning of the file in units of bytes.
 
-        :return: None
+        :return: The index of the next byte after the data contained within the IFD
+        :rtype: int
+
         """
 
         end_write_index = len(ifd) * 12 + 6 + write_location
@@ -751,7 +804,6 @@ class DNG:
                 resume_index = wf.tell() + 4
                 if field.count == 1:
                     wf = self._write_value(wf, end_write_index)
-                    # end_write_index += 4
                     wf.seek(end_write_index)
                     rf.seek(section_offsets[0])
                     end_write_index += wf.write(rf.read(section_byte_counts[0]))
@@ -760,11 +812,11 @@ class DNG:
                     # TODO: theres a potential bug here if there were two shorts as the offsets
                 else:
                     wf = self._write_value(wf, end_write_index)
-                    section_write_offset = d_utils.get_num_of_bytes_in_type(field.type) * field.count + end_write_index
+                    section_write_offset = (d_utils.get_num_of_bytes_in_type(field.type)
+                                            * field.count + end_write_index)
 
                     for sec_len, sec_off in zip(section_byte_counts, section_offsets):
                         wf.seek(end_write_index)
-                        # end_write_index += wf.write(section_write_offset)
                         wf = self._write_value(wf, section_write_offset)
                         end_write_index += 4
                         wf.seek(section_write_offset)
@@ -817,22 +869,25 @@ class DNG:
 
         return end_write_index
 
-    def _write_value(self, f: BytesIO, value: int, data_type=4, values=None, n_bytes=None):
+    def _write_value(self, f: BytesIO, value: int, data_type=4,
+                     values=None, n_bytes=None) -> BytesIO:
         """
-        Writes a value/values to a write buffer.
+        Writes a value or values to a write buffer.
 
-        :param ByteIO f: The io buffer for the file being written to.
+        :param ByteIO f: The :class:`BytesIO` for the file being written to.
         :param value: The number to be written.
         :type value: int or float
         :param int data_type: The datatype , 1 - 12, of the value as
             defined by the TIFF standard.
         :param values: The values, as a list, to be written when there
-            are multiple.
+            are multiple values.
         :type values: list[int or float]
         :param int n_bytes: The number of bytes that should be used to
             write the value or values
 
-        :return: None
+        :return: The :class:`BytesIO` for the class that's being written to.
+        :rtype: BytesIO
+
         """
 
         # TODO: make this a dict?
@@ -862,7 +917,7 @@ class DNG:
 
         return f
 
-    def _clear_section_data(self):
+    def _clear_section_data(self) -> None:
         """
         Clears the tile/strip data from the :class:`DNG` object to save space.
 
@@ -870,16 +925,24 @@ class DNG:
         too much space.
 
         :return: None
+
         """
 
         self._used_fields['section_bytes'] = None
 
-    def has_n_stars(self, n=_REFERENCE_FRAME_STARS):
+    def has_n_stars(self, n=_REFERENCE_FRAME_STARS) -> bool:
         """
         Says whether or not an image is rated :attr:`n` stars.
 
         Can be used to determine whether or not an image is a key frame
         in a timelapse sequence.
+
+        :Example - Check to see if a :class:`DNG` instance is rated 3 stars:
+
+        >>> from brilliantimagery.dng import DNG
+        >>> dng = DNG('path/to/image.dng')
+        >>> dng.has_n_stars(3)
+        True
 
         :return: True the image's star rating is equal to ``n``, otherwise false.
         :rtype: bool
@@ -893,11 +956,27 @@ class DNG:
 
         return int(self._xmp[b'xmp:Rating'].get('val', 0)) == n
 
-    def get_brightness(self, rectangle=None, image=None):
+    def get_brightness(self, rectangle=[0, 0, 1, 1], image=None):
         """
         Gets a reference brightness value for the image.
 
-        The median green value for the image is used as the reference.
+        The median green value for of the selected rectangle (if used)
+        for the image is used as the reference.
+
+        Typically either :attr:`rectangle` or :attr:`image` will be used since
+        if the image hasn't been previously rendered :attr:`rectangle` can be
+        used to avoid rendering the whole image since that's usually
+        unnecessary. Otherwise, if the image has already been rendered and
+        is being stored in a variable, by passing that back in (since rendered
+        images aren't stored in :class:`DNG` objects for memory reasons),
+        otherwise the image has to be re-rendered.
+
+        :Example - Check to see if a :class:`DNG` instance is rated 3 stars:
+
+        >>> from brilliantimagery.dng import DNG
+        >>> dng = DNG('path/to/image.dng')
+        >>> dng.get_brightness([0.3, 0.3, 0.4, 0.4])
+        0.13570714
 
         :param rectangle: The bounding box of the portion of the image that's
             to be rendered. In the format X1, Y1, X2, Y2 where:
@@ -915,13 +994,15 @@ class DNG:
         :type rectangle: list[int or float]
         :param image: A 3D float array holding the rendered image.
 
-            * The first dimension represents the color channels: Red, Green, Blue at indices 0, 1, and 2 respectively.
+            * The first dimension represents the color channels: 
+                Red, Green, Blue at indices 0, 1, and 2 respectively.
             * The second represents the width.
             * The third represents the height.
 
         :type image: Numpy.ndarray
         :return: The median green value from the image as a float in the range from 0 to 1.
         :rtype: float
+
         """
 
         if image is None:
@@ -930,7 +1011,7 @@ class DNG:
 
     # def get_relevant_xmp_attributes() -> Dict[bytes, NamedTuple[int, str, bool, bool]]:
     @staticmethod
-    def get_relevant_xmp_attributes():
+    def get_relevant_xmp_attributes() -> Dict[bytes, NamedTuple]:
         """
         Gets the list of XMP attributes that are relevant to image rendering.
 
@@ -939,20 +1020,40 @@ class DNG:
         from a photo editing perspective, such as when the photo was
         taken, are not returned.
 
-        :return: A :class:`dict` of the below key value pairs:
+        :Example - Print all of the XMP values stored in a :class:`DNG` object
+            that are relevant to rendering while ignoring values that don't
+            effect rendering.:
 
-            | - :attr:`key` is the property name.
+        >>> from brilliantimagery.dng import DNG
+        >>> rendered_attributes = DNG.get_relevant_xmp_attributes()
+        >>> dng = DNG('path/to/image.dng')
+        >>> xmp = dng.get_xmp()
+        >>> for prop, val in xmp.items():
+        ...     if prop in rendered_attributes:
+        ...         print(prop, val)
+        ...
+        b'crs:Temperature' 7135.0
+        b'crs:Tint' 10.0
+        b'crs:Saturation' 35.0
+        b'crs:Exposure2012' -0.1
+
+        :return: A :class:`dict` with the below key value pairs:
+
+            | - :attr:`key` is the property name, as it appears in a DNG file when
+                edited with Adobe Lightroom, and is of type :class:`bytes`.
             | - :attr:`value` is a :class:`namedtuple` with the follow properties.
 
                 | - :attr:`n_decimal_places`: int - The number of decimal places
-                    to use when storing the attribute value.
+                    used when storing the attribute value.
                 | - :attr:`default_value`: str - The default value in Lightroom.
                 | - :attr:`is_vector`: bool - True if it always has a
-                    sign in a DNG file's XMP data, otherwise False.
+                    sign in a DNG file's XMP data (positive values will have a
+                    leading "+") , otherwise False.
                 | - :attr:`is_ramped`: bool - True if it should be linearly ramped
                     (i.e. Temperature), otherwise False (i.e. Rating or Exposure)
 
         :rtype: dict(bytes: namedtuple(int, str, bool, bool))
+
         """
         return d_cnst.XMP_TAGS
 

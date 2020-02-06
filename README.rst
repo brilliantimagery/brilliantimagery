@@ -23,7 +23,7 @@ From PyPI
 
 ::
 
->>> pip install brilliantimagery
+$ pip install brilliantimagery
 
 From Source
 ~~~~~~~~~~~
@@ -36,7 +36,7 @@ From within the top ``/brilliantimagery`` folder, the one that contains the ``py
 
 ::
 
->>> poetry install
+$ poetry install
 
 
 Development
@@ -53,7 +53,7 @@ To run all of the tests:
 
 ::
 
->>> poetry run pytest
+$ poetry run pytest
 
 **Coverage Reports**
 
@@ -61,13 +61,13 @@ Terminal coverage reports can be generated:
 
 ::
 
->>> poetry run pytest --cov=brilliantimagery
+$ poetry run pytest --cov=brilliantimagery
 
 HTML coverage reports can be generated when tests are run:
 
 ::
 
->>> poetry run pytest --cov=brilliantimagery --cov-report=html
+$ poetry run pytest --cov=brilliantimagery --cov-report=html
 
 Docs
 ~~~~
@@ -76,19 +76,19 @@ After making changes to the docs, to update them, assuming ``./brilliantiamgery`
 
 ::
 
->>> poetry shell
+$ poetry shell
 
 Change the working directory to the ``/docs`` folder:
 
 ::
 
->>> cd docs
+$ cd docs
 
 And then run clean and make the html docs:
 
 ::
 
->>> make clean && make html
+$ make clean && make html
 
 Changelog
 ---------
