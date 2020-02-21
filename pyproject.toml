@@ -3,7 +3,7 @@
 
 [tool.poetry]
 name = "brilliantimagery"
-version = "0.2.0"
+version = "0.2.1"
 description = "A python DNG editing package."
 license = "GPL-3.0-only"
 authors = ["Chad DeRosier <chad.derosier@gmail.com>"]
@@ -14,11 +14,11 @@ build = 'build.py'
 packages = [
     { include = "brilliantimagery"},
 ]
-include=['tests/unit/dng/renderer_exporter.pyx']
+include=['tests/unit/dng/renderer_exporter.pyx', 'brilliantimagery.ppm._save.pyx']
 
 [tool.poetry.dependencies]
-python = "^3.8"
-cython = "^0.29.14"
+python = "^3.8.0"
+cython = "^0.29.15"
 numpy = "^1.18.1"
 opencv-contrib-python = "^4.1.2"
 tqdm = "^4.41.1"

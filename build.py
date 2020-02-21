@@ -1,4 +1,7 @@
 import os
+from setuptools import dist
+
+dist.Distribution().fetch_build_eggs(['Cython>=0.29.15'])
 from Cython.Build import cythonize
 from setuptools import Extension
 
@@ -6,7 +9,7 @@ EXTENSIONS = [Extension(name='brilliantimagery.ljpeg._decode',
                         sources=['brilliantimagery/ljpeg/_decode.pyx']),
               Extension(name='brilliantimagery.ljpeg._encode',
                         sources=['brilliantimagery/ljpeg/_encode.pyx']),
-              Extension(name='brilliantimagery.ppm.save',
+              Extension(name='brilliantimagery.ppm._save',
                         sources=['brilliantimagery/ppm/_save.pyx']),
               Extension(name='brilliantimagery.dng._renderer',
                         sources=['brilliantimagery/dng/_renderer.pyx']),
