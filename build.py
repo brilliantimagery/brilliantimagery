@@ -1,7 +1,16 @@
 import os
+from pathlib import Path
 from setuptools import dist
 
-dist.Distribution().fetch_build_eggs(['Cython>=0.29.15'])
+import toml
+path = Path(__file__).parent
+try:
+    toml_file = toml.load(str(path /'pyproject.toml'))
+except:
+    toml_file = toml.load(str(path /'pyproject.tmp'))
+cython_version = toml_file.get('tool').get('poetry').get('dependencies').get('cython')
+
+dist.Distribution().fetch_build_eggs([f'Cython>={cython_version.replace("^", "")}'])
 from Cython.Build import cythonize
 from setuptools import Extension
 
