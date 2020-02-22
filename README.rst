@@ -93,6 +93,8 @@ $ make clean && make html
 Changelog
 ---------
 
+* 0.2.2: Fixed version bug.
+
 * 0.2.1: Fixed build bug and a test.
 
 * 0.2.0: Enabled saving and loading projects as well as reusing offsets and brightnesses between runs.
