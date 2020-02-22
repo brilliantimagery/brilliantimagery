@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from setuptools import dist
 
+dist.Distribution().fetch_build_eggs(['toml'])
 import toml
 path = Path(__file__).parent
 try:
